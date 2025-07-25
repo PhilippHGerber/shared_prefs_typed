@@ -1,0 +1,16 @@
+# This file defines the 'shared_prefs_typed' builder and configures how it
+# runs on other packages that depend on this one.
+
+builders:
+  shared_prefs_typed:
+    import: "package:shared_prefs_typed/builder.dart"
+    builder_factories: ["typedPrefsBuilder"]
+    build_extensions: { ".dart": [".g.dart"] }
+    # Apply this builder to packages that have a dependency on `shared_prefs_typed`.
+    auto_apply: dependents
+    # Write the generated files next to the source files.
+    build_to: source
+    # This restricts the builder to only run on files inside the
+    # `lib` directory of dependent packages.
+    # generate_for:
+    #  - "lib/**.dart"

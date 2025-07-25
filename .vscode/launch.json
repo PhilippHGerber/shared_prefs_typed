@@ -1,0 +1,38 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+
+
+
+    {
+      "name": "sharedpref",
+      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+      ]
+    },
+    {
+      "name": "sharedpref (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "sharedpref (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    },
+    {
+      "name": "shared_pref_macro",
+      "cwd": "packages/shared_pref_macro",
+      "request": "launch",
+      "type": "dart"
+    }
+  ]
+}

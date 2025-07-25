@@ -1,0 +1,28 @@
+name: shared_prefs_typed_testing
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 0.5.0
+
+environment:
+  sdk: ^3.7.0
+  flutter: ">=3.16.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.5.3
+  shared_prefs_typed_annotations: ^0.5.0
+
+dev_dependencies:
+  build_runner: ^2.5.4
+  flutter_test:
+    sdk: flutter
+  shared_preferences_platform_interface: ^2.4.1
+  shared_prefs_typed: ^0.5.0
+  very_good_analysis: ^9.0.0
+
+flutter:
+  uses-material-design: true

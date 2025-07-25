@@ -1,0 +1,8 @@
+# Changelog
+
+All notable changes to this package will be documented in this file.
+
+## 0.5.0
+
+* Initial stable release.
+* Provides the `@TypedPrefs` annotation with the optional `async` boolean parameter to control the generator's output mode.
