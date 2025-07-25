@@ -3,7 +3,7 @@
 
 builders:
   shared_prefs_typed:
-    import: "package:shared_prefs_typed/builder.dart"
+    import: "package:shared_prefs_typed/shared_prefs_typed.dart"
     builder_factories: ["typedPrefsBuilder"]
     build_extensions: { ".dart": [".g.dart"] }
     # Apply this builder to packages that have a dependency on `shared_prefs_typed`.

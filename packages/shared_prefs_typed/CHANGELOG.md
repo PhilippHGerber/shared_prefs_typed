@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.5.0 - 2025-07-25
+## 0.5.1
+
+* Fixed builder config
+
+## 0.5.0
+
+2025-07-25
 
 ### Initial Release
 
