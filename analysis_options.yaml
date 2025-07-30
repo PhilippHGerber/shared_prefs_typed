@@ -11,6 +11,8 @@ analyzer:
     - "test/.test_coverage.dart"
     - "bin/cache/**"
     - "lib/generated_plugin_registrant.dart"
+    - "packages/shared_prefs_typed/example/**"
+    - "tmp/**"
 
   errors:
     unused_import: warning
