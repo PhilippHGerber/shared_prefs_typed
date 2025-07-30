@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.5.2
+
+* Fixed supported plattforms
+
 ## 0.5.1
 
 * Fixed builder config
