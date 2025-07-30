@@ -26,11 +26,11 @@ After running the commands, your pubspec.yaml will be updated. It should look si
 
 ```yaml
 dependencies:
-  shared_prefs_typed_annotations: ^0.5.0
+  shared_prefs_typed_annotations: ^0.5.2
 
 dev_dependencies:
   build_runner: ^2.4.15
-  shared_prefs_typed: ^0.5.0
+  shared_prefs_typed: ^0.5.2
 ```
 
 Then, run `flutter pub get` or `dart pub get`.
