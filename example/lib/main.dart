@@ -162,8 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text('Hello, ', style: headlineStyle),
-                  SizedBox(
-                    width: 280,
+                  Flexible(
                     child: TextField(
                       controller: _nameController,
                       focusNode: _nameFocusNode,
