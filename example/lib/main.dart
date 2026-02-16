@@ -89,10 +89,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   /// Listener that triggers when the focus on the greeting field changes.
-  void _onGreetingFocusChange() {
+  Future<void> _onGreetingFocusChange() async {
     // If the field has lost focus, save the new name.
     if (!_nameFocusNode.hasFocus) {
-      _saveGreeting();
+      await _saveGreeting();
     }
   }
 

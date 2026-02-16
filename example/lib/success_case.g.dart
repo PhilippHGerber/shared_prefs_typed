@@ -1,0 +1,192 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
+
+// **************************************************************************
+// TypedPrefsGenerator
+// **************************************************************************
+
+// ignore_for_file: unnecessary_cast, unused_element, unused_field
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'success_case.dart';
+
+/// Provides type-safe, cached access to application preferences.
+///
+/// Use `await TestPrefs.init()` on app startup,
+/// then access values via the singleton `instance`.
+class TestPrefs {
+  TestPrefs._();
+
+  static final instance = TestPrefs._();
+
+  static late SharedPreferencesWithCache _prefs;
+
+  /// Initializes the preferences service.
+  static Future<void> init() async {
+    _prefs = await SharedPreferencesWithCache.create(
+      cacheOptions: const SharedPreferencesWithCacheOptions(),
+    );
+  }
+
+  /// Gets the value for `testInt` from the cache.
+  ///
+  /// If the key does not exist, the default value `10` is returned.
+  int get testInt {
+    return _prefs.getInt('testInt') ?? 10;
+  }
+
+  /// Asynchronously sets the value for `testInt`.
+  Future<void> setTestInt(int value) {
+    return _prefs.setInt('testInt', value);
+  }
+
+  /// Checks if a value has been explicitly set for `testInt`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestInt() {
+    return _prefs.containsKey('testInt');
+  }
+
+  /// Removes the stored value for `testInt`.
+  ///
+  /// After calling this, the getter will return the default value (`10`).
+  Future<void> removeTestInt() {
+    return _prefs.remove('testInt');
+  }
+
+  /// Gets the value for `testDouble` from the cache.
+  ///
+  /// If the key does not exist, the default value `3.14` is returned.
+  double get testDouble {
+    return _prefs.getDouble('testDouble') ?? 3.14;
+  }
+
+  /// Asynchronously sets the value for `testDouble`.
+  Future<void> setTestDouble(double value) {
+    return _prefs.setDouble('testDouble', value);
+  }
+
+  /// Checks if a value has been explicitly set for `testDouble`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestDouble() {
+    return _prefs.containsKey('testDouble');
+  }
+
+  /// Removes the stored value for `testDouble`.
+  ///
+  /// After calling this, the getter will return the default value (`3.14`).
+  Future<void> removeTestDouble() {
+    return _prefs.remove('testDouble');
+  }
+
+  /// Gets the value for `testBool` from the cache.
+  ///
+  /// If the key does not exist, the default value `true` is returned.
+  bool get testBool {
+    return _prefs.getBool('testBool') ?? true;
+  }
+
+  /// Asynchronously sets the value for `testBool`.
+  Future<void> setTestBool(bool value) {
+    return _prefs.setBool('testBool', value);
+  }
+
+  /// Checks if a value has been explicitly set for `testBool`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestBool() {
+    return _prefs.containsKey('testBool');
+  }
+
+  /// Removes the stored value for `testBool`.
+  ///
+  /// After calling this, the getter will return the default value (`true`).
+  Future<void> removeTestBool() {
+    return _prefs.remove('testBool');
+  }
+
+  /// Gets the value for `testString` from the cache.
+  ///
+  /// If the key does not exist, the default value `'Hello'` is returned.
+  String get testString {
+    return _prefs.getString('testString') ?? 'Hello';
+  }
+
+  /// Asynchronously sets the value for `testString`.
+  Future<void> setTestString(String value) {
+    return _prefs.setString('testString', value);
+  }
+
+  /// Checks if a value has been explicitly set for `testString`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestString() {
+    return _prefs.containsKey('testString');
+  }
+
+  /// Removes the stored value for `testString`.
+  ///
+  /// After calling this, the getter will return the default value (`'Hello'`).
+  Future<void> removeTestString() {
+    return _prefs.remove('testString');
+  }
+
+  /// Gets the value for `testStringList` from the cache.
+  ///
+  /// If the key does not exist, the default value `const <String>['a', 'b']` is returned.
+  List<String> get testStringList {
+    return _prefs.getStringList('testStringList') ?? const <String>['a', 'b'];
+  }
+
+  /// Asynchronously sets the value for `testStringList`.
+  Future<void> setTestStringList(List<String> value) {
+    return _prefs.setStringList('testStringList', value);
+  }
+
+  /// Checks if a value has been explicitly set for `testStringList`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestStringList() {
+    return _prefs.containsKey('testStringList');
+  }
+
+  /// Removes the stored value for `testStringList`.
+  ///
+  /// After calling this, the getter will return the default value (`const <String>['a', 'b']`).
+  Future<void> removeTestStringList() {
+    return _prefs.remove('testStringList');
+  }
+
+  /// Gets the value for `testNullableString` from the cache.
+  ///
+  /// If the key does not exist, the default value `null` is returned.
+  String? get testNullableString {
+    return _prefs.getString('testNullableString') ?? null;
+  }
+
+  /// Asynchronously sets the value for `testNullableString`.
+  ///
+  /// If the provided [value] is `null`, the preference is removed from storage.
+  Future<void> setTestNullableString(String? value) {
+    if (value == null) {
+      return _prefs.remove('testNullableString');
+    }
+    return _prefs.setString('testNullableString', value as String);
+  }
+
+  /// Checks if a value has been explicitly set for `testNullableString`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetTestNullableString() {
+    return _prefs.containsKey('testNullableString');
+  }
+
+  /// Removes the stored value for `testNullableString`.
+  ///
+  /// After calling this, the getter will return the default value (`null`).
+  Future<void> removeTestNullableString() {
+    return _prefs.remove('testNullableString');
+  }
+}
