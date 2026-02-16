@@ -1,4 +1,5 @@
-import 'package:analyzer/dart/element/element2.dart';
+import 'package:analyzer/dart/constant/value.dart';
+import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
@@ -12,18 +13,18 @@ import 'package:source_gen/source_gen.dart';
 class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
   @override
   String generateForAnnotatedElement(
-    Element2 element,
+    Element element,
     ConstantReader annotation,
     BuildStep buildStep,
   ) {
-    if (element is! ClassElement2) {
+    if (element is! ClassElement) {
       throw InvalidGenerationSourceError(
         '`@TypedPrefs` can only be used on classes.',
         element: element,
       );
     }
 
-    if (!(element.name3?.startsWith('_') ?? true)) {
+    if (element.name?.startsWith('_') == false) {
       throw InvalidGenerationSourceError(
         'The annotated class name must start with an underscore (`_`) to indicate it is private.',
         element: element,
@@ -33,26 +34,23 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     final classElement = element;
     final isAsyncMode = annotation.read('async').boolValue;
 
-    final fields =
-        classElement.fields2
-            .where((field) => field.isStatic && field.isConst)
-            .map(_SharedPrefField.new)
-            .toList();
+    final fields = classElement.fields
+        .where((FieldElement field) => field.isStatic && field.isConst)
+        .map<_SharedPrefField>(_SharedPrefField.new)
+        .toList();
 
-    final generatedClass =
-        isAsyncMode
-            ? _buildAsyncClass(classElement, fields)
-            : _buildSyncClass(classElement, fields);
+    final generatedClass = isAsyncMode
+        ? _buildAsyncClass(classElement, fields)
+        : _buildSyncClass(classElement, fields);
 
     final library = Library(
-      (b) =>
-          b
-            ..ignoreForFile.addAll(['unused_element', 'unnecessary_cast', 'unused_field'])
-            ..directives.addAll([
-              Directive.import('package:shared_preferences/shared_preferences.dart'),
-              Directive.import(buildStep.inputId.pathSegments.last),
-            ])
-            ..body.add(generatedClass),
+      (b) => b
+        ..ignoreForFile.addAll(['unused_element', 'unnecessary_cast', 'unused_field'])
+        ..directives.addAll([
+          Directive.import('package:shared_preferences/shared_preferences.dart'),
+          Directive.import(buildStep.inputId.pathSegments.last),
+        ])
+        ..body.add(generatedClass),
     );
 
     final emitter = DartEmitter(useNullSafetySyntax: true, orderDirectives: true);
@@ -62,129 +60,120 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
   }
 }
 
-Class _buildSyncClass(ClassElement2 classElement, List<_SharedPrefField> fields) {
-  final publicClassName = classElement.name3?.substring(1);
+Class _buildSyncClass(ClassElement classElement, List<_SharedPrefField> fields) {
+  final publicClassName = classElement.name?.substring(1);
   const prefsClassName = 'SharedPreferencesWithCache';
   const prefsOptionsName = 'SharedPreferencesWithCacheOptions';
 
   return Class(
-    (b) =>
-        b
-          ..name = publicClassName
-          ..docs.add('/// Provides type-safe, cached access to application preferences.')
-          ..docs.add('///')
-          ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
-          ..docs.add('/// then access values via the singleton `instance`.')
-          ..fields.add(
-            Field(
-              (f) =>
-                  f
-                    ..name = 'instance'
-                    ..static = true
-                    ..modifier = FieldModifier.final$
-                    ..assignment = Code('$publicClassName._()'),
+    (b) => b
+      ..name = publicClassName
+      ..docs.add('/// Provides type-safe, cached access to application preferences.')
+      ..docs.add('///')
+      ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
+      ..docs.add('/// then access values via the singleton `instance`.')
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = 'instance'
+            ..static = true
+            ..modifier = FieldModifier.final$
+            ..assignment = Code('$publicClassName._()'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = '_prefs'
+            ..type = refer(prefsClassName)
+            ..static = true
+            ..late = true,
+        ),
+      )
+      ..constructors.add(Constructor((c) => c..name = '_'))
+      ..methods.add(
+        Method(
+          (m) => m
+            ..name = 'init'
+            ..docs.add('/// Initializes the preferences service.')
+            ..returns = refer('Future<void>')
+            ..static = true
+            ..modifier = MethodModifier.async
+            ..body = const Code(
+              '_prefs = await $prefsClassName.create(cacheOptions: const $prefsOptionsName());',
             ),
-          )
-          ..fields.add(
-            Field(
-              (f) =>
-                  f
-                    ..name = '_prefs'
-                    ..type = refer(prefsClassName)
-                    ..static = true
-                    ..late = true,
-            ),
-          )
-          ..constructors.add(Constructor((c) => c..name = '_'))
-          ..methods.add(
-            Method(
-              (m) =>
-                  m
-                    ..name = 'init'
-                    ..docs.add('/// Initializes the preferences service.')
-                    ..returns = refer('Future<void>')
-                    ..static = true
-                    ..modifier = MethodModifier.async
-                    ..body = const Code(
-                      '_prefs = await $prefsClassName.create(cacheOptions: const $prefsOptionsName());',
-                    ),
-            ),
-          )
-          ..methods.addAll(
-            fields.expand(
-              (field) => [
-                _generateSyncGetter(field),
-                _generateSetter(field),
-                _generateIsSet(field, isAsync: false),
-                _generateRemover(field),
-              ],
-            ),
-          ),
+        ),
+      )
+      ..methods.addAll(
+        fields.expand(
+          (field) => [
+            _generateSyncGetter(field),
+            _generateSetter(field),
+            _generateIsSet(field, isAsync: false),
+            _generateRemover(field),
+          ],
+        ),
+      ),
   );
 }
 
-Class _buildAsyncClass(ClassElement2 classElement, List<_SharedPrefField> fields) {
-  final publicClassName = classElement.name3?.substring(1);
+Class _buildAsyncClass(ClassElement classElement, List<_SharedPrefField> fields) {
+  final publicClassName = classElement.name?.substring(1);
   const prefsClassName = 'SharedPreferencesAsync';
 
   return Class(
-    (b) =>
-        b
-          ..name = publicClassName
-          ..docs.add('/// Provides type-safe, asynchronous access to application preferences.')
-          ..docs.add('///')
-          ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
-          ..docs.add('/// then access values via the singleton `instance`.')
-          ..fields.add(
-            Field(
-              (f) =>
-                  f
-                    ..name = 'instance'
-                    ..static = true
-                    ..modifier = FieldModifier.final$
-                    ..assignment = Code('$publicClassName._()'),
-            ),
-          )
-          ..fields.add(
-            Field(
-              (f) =>
-                  f
-                    ..name = '_prefs'
-                    ..type = refer(prefsClassName)
-                    ..static = true
-                    ..late = true,
-            ),
-          )
-          ..constructors.add(Constructor((c) => c..name = '_'))
-          ..methods.add(
-            Method(
-              (m) =>
-                  m
-                    ..name = 'init'
-                    ..returns = refer('Future<void>')
-                    ..static = true
-                    ..modifier = MethodModifier.async
-                    ..body = const Code('_prefs = $prefsClassName(); return;'),
-            ),
-          )
-          ..methods.addAll(
-            fields.expand(
-              (field) => [
-                _generateAsyncGetter(field),
-                _generateSetter(field),
-                _generateIsSet(field, isAsync: true),
-                _generateRemover(field),
-              ],
-            ),
-          ),
+    (b) => b
+      ..name = publicClassName
+      ..docs.add('/// Provides type-safe, asynchronous access to application preferences.')
+      ..docs.add('///')
+      ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
+      ..docs.add('/// then access values via the singleton `instance`.')
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = 'instance'
+            ..static = true
+            ..modifier = FieldModifier.final$
+            ..assignment = Code('$publicClassName._()'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = '_prefs'
+            ..type = refer(prefsClassName)
+            ..static = true
+            ..late = true,
+        ),
+      )
+      ..constructors.add(Constructor((c) => c..name = '_'))
+      ..methods.add(
+        Method(
+          (m) => m
+            ..name = 'init'
+            ..returns = refer('Future<void>')
+            ..static = true
+            ..modifier = MethodModifier.async
+            ..body = const Code('_prefs = $prefsClassName(); return;'),
+        ),
+      )
+      ..methods.addAll(
+        fields.expand(
+          (field) => [
+            _generateAsyncGetter(field),
+            _generateSetter(field),
+            _generateIsSet(field, isAsync: true),
+            _generateRemover(field),
+          ],
+        ),
+      ),
   );
 }
 
 //--- Method Generators (No changes needed here as they depend on _SharedPrefField) ---//
 
 Method _generateSyncGetter(_SharedPrefField field) => Method(
-  (b) =>
-      b
+      (b) => b
         ..name = field.paramName
         ..docs.add('/// Gets the value for `${field.keyName}` from the cache.')
         ..docs.add('///')
@@ -196,11 +185,10 @@ Method _generateSyncGetter(_SharedPrefField field) => Method(
         ..body = Code(
           "return _prefs.get${field.prefTypeName}('${field.keyName}') ?? ${field.defaultValue};",
         ),
-);
+    );
 
 Method _generateAsyncGetter(_SharedPrefField field) => Method(
-  (b) =>
-      b
+      (b) => b
         ..name = field.paramName
         ..docs.add('/// Asynchronously gets the value for `${field.keyName}`.')
         ..docs.add('///')
@@ -213,16 +201,15 @@ Method _generateAsyncGetter(_SharedPrefField field) => Method(
         ..body = Code(
           "return (await _prefs.get${field.prefTypeName}('${field.keyName}')) ?? ${field.defaultValue};",
         ),
-);
+    );
 
 Method _generateSetter(_SharedPrefField field) {
-  final body =
-      field.isNullable
-          ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.set${field.prefTypeName}('${field.keyName}', value as ${field.nonNullableTypeReference.symbol});",
-          )
-          : Code("return _prefs.set${field.prefTypeName}('${field.keyName}', value);");
+  final body = field.isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+          "return _prefs.set${field.prefTypeName}('${field.keyName}', value as ${field.nonNullableTypeReference.symbol});",
+        )
+      : Code("return _prefs.set${field.prefTypeName}('${field.keyName}', value);");
 
   final docComments = <String>[
     '/// Asynchronously sets the value for `${field.keyName}`.',
@@ -236,37 +223,33 @@ Method _generateSetter(_SharedPrefField field) {
   }
 
   return Method(
-    (b) =>
-        b
-          ..name = 'set${field.publicName}'
-          ..docs.addAll(docComments)
-          ..returns = refer('Future<void>')
-          ..requiredParameters.add(
-            Parameter(
-              (p) =>
-                  p
-                    ..name = 'value'
-                    ..type = field.typeReference,
-            ),
-          )
-          ..body = body,
+    (b) => b
+      ..name = 'set${field.publicName}'
+      ..docs.addAll(docComments)
+      ..returns = refer('Future<void>')
+      ..requiredParameters.add(
+        Parameter(
+          (p) => p
+            ..name = 'value'
+            ..type = field.typeReference,
+        ),
+      )
+      ..body = body,
   );
 }
 
 Method _generateIsSet(_SharedPrefField field, {required bool isAsync}) => Method(
-  (b) =>
-      b
+      (b) => b
         ..name = 'isSet${field.publicName}'
         ..docs.add('/// Checks if a value has been explicitly set for `${field.keyName}`.')
         ..docs.add('///')
         ..docs.add('/// Returns `true` if the key exists in persistent storage, `false` otherwise.')
         ..returns = refer(isAsync ? 'Future<bool>' : 'bool')
         ..body = Code("return _prefs.containsKey('${field.keyName}');"),
-);
+    );
 
 Method _generateRemover(_SharedPrefField field) => Method(
-  (b) =>
-      b
+      (b) => b
         ..name = 'remove${field.publicName}'
         ..docs.add('/// Removes the stored value for `${field.keyName}`.')
         ..docs.add('///')
@@ -275,17 +258,17 @@ Method _generateRemover(_SharedPrefField field) => Method(
         )
         ..returns = refer('Future<void>')
         ..body = Code("return _prefs.remove('${field.keyName}');"),
-);
+    );
 
 //--- Helper class and extensions ---//
 
 class _SharedPrefField {
   _SharedPrefField(this.field);
-  final FieldElement2 field;
+  final FieldElement field;
 
   // The `!` is safe here because a `static const` field, which is the only
   // kind we process, is syntactically required to have a name.
-  String get name => field.name3!;
+  String get name => field.name!;
 
   String get keyName => name.startsWith('_') ? name.substring(1) : name;
   String get publicName => keyName.toPascalCase();
@@ -322,7 +305,7 @@ class _SharedPrefField {
     if (type.isDartCoreList) {
       final listValues = constantValue.toListValue()!;
       final stringValues = listValues
-          .map((e) => "'${e.toStringValue()!.replaceAll("'", r"\'")}'")
+          .map((DartObject e) => "'${e.toStringValue()!.replaceAll("'", r"\'")}'")
           .join(', ');
       return 'const <String>[$stringValues]';
     }
