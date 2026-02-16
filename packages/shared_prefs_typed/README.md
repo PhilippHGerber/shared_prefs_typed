@@ -33,7 +33,7 @@ dev_dependencies:
   shared_prefs_typed: ^0.5.2
 ```
 
-Then, run `flutter pub get` or `dart pub get`.
+Then, run `flutter pub get`.
 
 ## 💡 Usage
 
@@ -58,7 +58,7 @@ abstract class _AppPreferences {
 Execute the following command in your project root to generate the necessary service class:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs
+flutter pub run build_runner build
 ```
 
 This will generate the `app_preferences.g.dart` file containing your public `AppPreferences` service class.
