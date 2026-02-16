@@ -7,10 +7,9 @@ import 'package:test/test.dart';
 
 void main() async {
   final commonAssets = {
-    'shared_prefs_typed_annotations|lib/shared_prefs_typed_annotations.dart':
-        await File(
-          '../shared_prefs_typed_annotations/lib/shared_prefs_typed_annotations.dart',
-        ).readAsString(),
+    'shared_prefs_typed_annotations|lib/shared_prefs_typed_annotations.dart': await File(
+      '../shared_prefs_typed_annotations/lib/shared_prefs_typed_annotations.dart',
+    ).readAsString(),
   };
 
   group('TypedPrefsGenerator', () {
