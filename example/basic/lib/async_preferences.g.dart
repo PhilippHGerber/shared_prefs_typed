@@ -5,7 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_cast, unused_element, unused_field
+// ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,17 +14,36 @@ import 'async_preferences.dart';
 /// Provides type-safe, asynchronous access to application preferences.
 ///
 /// Use `await AsyncPreferences.init()` on app startup,
-/// then access values via the singleton `instance`.
+/// then access values via the singleton `instance`,
+/// or create an instance directly: `AsyncPreferences(prefs)`.
 class AsyncPreferences {
-  AsyncPreferences._();
+  AsyncPreferences(this._prefs);
 
-  static final instance = AsyncPreferences._();
+  static AsyncPreferences? _instance;
 
-  static late SharedPreferencesAsync _prefs;
+  final SharedPreferencesAsync _prefs;
 
+  /// The singleton instance. Throws a [StateError] if [init] has not been called.
+  static AsyncPreferences get instance {
+    final i = _instance;
+    if (i == null) {
+      throw StateError(
+        'AsyncPreferences has not been initialized. '
+        'Call `await AsyncPreferences.init()` before accessing `instance`, '
+        'or use the AsyncPreferences(prefs) constructor directly.',
+      );
+    }
+    return i;
+  }
+
+  /// Initializes the preferences service.
   static Future<void> init() async {
-    _prefs = SharedPreferencesAsync();
-    return;
+    _instance = AsyncPreferences(SharedPreferencesAsync());
+  }
+
+  /// Resets the singleton instance to `null`. Useful for test teardown.
+  static void resetInstance() {
+    _instance = null;
   }
 
   /// Asynchronously gets the value for `pingCount`.
@@ -57,7 +76,7 @@ class AsyncPreferences {
   ///
   /// If the key does not exist, the default value `null` is returned.
   Future<String?> get serverId async {
-    return (await _prefs.getString('serverId')) ?? null;
+    return (await _prefs.getString('serverId'));
   }
 
   /// Asynchronously sets the value for `serverId`.
@@ -67,7 +86,7 @@ class AsyncPreferences {
     if (value == null) {
       return _prefs.remove('serverId');
     }
-    return _prefs.setString('serverId', value as String);
+    return _prefs.setString('serverId', value);
   }
 
   /// Checks if a value has been explicitly set for `serverId`.

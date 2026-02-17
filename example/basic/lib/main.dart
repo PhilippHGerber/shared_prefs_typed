@@ -1,38 +1,48 @@
 // example/lib/main.dart
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_preferences.g.dart';
 
 /// The main entry point for the application.
 ///
-/// This function ensures that necessary Flutter bindings are initialized and then
-/// sets up the preferences service before running the app.
+/// Creates the preferences backend and injects it via the [AppPreferences]
+/// constructor. This keeps the preferences service lifecycle explicit and
+/// makes the app straightforward to test without global state.
 Future<void> main() async {
   // Required for plugin initialization before runApp().
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the preferences service. This must be done once on startup.
-  // It loads the preferences from disk into memory.
-  await AppPreferences.init();
+  // Create the storage backend once on startup.
+  final backend = await SharedPreferencesWithCache.create(
+    cacheOptions: const SharedPreferencesWithCacheOptions(),
+  );
 
-  runApp(const MyApp());
+  // Construct the preferences service by passing the backend directly.
+  final prefs = AppPreferences(backend);
+
+  runApp(MyApp(prefs: prefs));
 }
 
 /// The root widget of the application.
 class MyApp extends StatelessWidget {
   /// Creates the root application widget.
-  const MyApp({super.key});
+  const MyApp({required this.prefs, super.key});
+
+  /// The preferences service instance, injected from [main].
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Stateful Counter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: MyHomePage(prefs: prefs),
     );
   }
 }
@@ -40,16 +50,16 @@ class MyApp extends StatelessWidget {
 /// The main page of the application, demonstrating a seamless, auto-saving UI.
 class MyHomePage extends StatefulWidget {
   /// Creates the home page widget.
-  const MyHomePage({super.key});
+  const MyHomePage({required this.prefs, super.key});
+
+  /// The preferences service instance, injected by the parent.
+  final AppPreferences prefs;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // The singleton instance of our preferences service.
-  final AppPreferences prefs = AppPreferences.instance;
-
   // Local state variables to hold the current values for the UI.
   // They are initialized from SharedPreferences in `initState`.
   late int _counter;
@@ -61,13 +71,15 @@ class _MyHomePageState extends State<MyHomePage> {
   // A FocusNode to detect when the user taps away from the text field.
   late final FocusNode _nameFocusNode;
 
+  AppPreferences get _prefs => widget.prefs;
+
   @override
   void initState() {
     super.initState();
 
     // Initialize the local state from the persistent storage.
-    _counter = prefs.counter;
-    _greeting = prefs.displayGreeting ?? 'World';
+    _counter = _prefs.counter;
+    _greeting = _prefs.displayGreeting ?? 'World';
 
     // Set up the text controller with the currently stored name.
     _nameController = TextEditingController(text: _greeting);
@@ -96,18 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  /// Increments the counter, updates the UI, and persists the new value.
-  Future<void> _incrementCounter() async {
-    final newCounter = _counter + 1;
-    // Persist the change asynchronously.
-    await prefs.setCounter(newCounter);
-
-    // Update the local state to trigger a UI rebuild immediately.
-    setState(() {
-      _counter = newCounter;
-    });
-  }
-
   /// Saves the new greeting from the text field if it has changed.
   Future<void> _saveGreeting() async {
     final newGreeting = _nameController.text.trim();
@@ -115,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // Only save if the name is not empty and has actually changed.
     if (newGreeting.isNotEmpty && newGreeting != _greeting) {
       // Persist the new displayGreeting.
-      await prefs.setDisplayGreeting(newGreeting);
+      await _prefs.setDisplayGreeting(newGreeting);
 
       // Update the local state to reflect the change in the UI.
       setState(() {
@@ -137,6 +137,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  /// Increments the counter, updates the UI, and persists the new value.
+  Future<void> _incrementCounter() async {
+    final newCounter = _counter + 1;
+    // Persist the change asynchronously.
+    await _prefs.setCounter(newCounter);
+
+    // Update the local state to trigger a UI rebuild immediately.
+    setState(() {
+      _counter = newCounter;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -156,8 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               // --- INLINE GREETING & EDITING WIDGET ---
               Row(
-                mainAxisSize: MainAxisSize.min, // Keep the row's width tight.
-                // Align text and text field on the same visual line.
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
@@ -168,19 +179,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       focusNode: _nameFocusNode,
                       style: headlineStyle,
                       decoration: const InputDecoration(
-                        // Use thin border to avoid visual clutter.
                         border: OutlineInputBorder(
                           borderSide: BorderSide(width: 0.5),
                         ),
-                        // Remove extra padding.
-                        // isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      // Trigger save when the user presses 'done' on the keyboard.
                       onSubmitted: (_) => _saveGreeting(),
                     ),
                   ),
-                  Text('!', style: headlineStyle),
+                  Text(' !', style: headlineStyle),
                 ],
               ),
               const SizedBox(height: 80),

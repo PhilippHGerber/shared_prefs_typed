@@ -1,12 +1,12 @@
+// Import the generated preferences service and the main app widget.
+import 'package:basic_example/theme_example.dart';
+import 'package:basic_example/theme_example.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 // IMPORTANT: These three imports are required for mocking the shared_preferences backend.
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
-// Import the generated preferences service and the main app widget.
-import 'package:shared_prefs_typed_testing/theme_example.dart';
-import 'package:shared_prefs_typed_testing/theme_example.g.dart';
 
 void main() {
   /// This block runs once before any tests in this file.

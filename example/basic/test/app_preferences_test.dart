@@ -6,12 +6,13 @@
 /// for all supported data types and scenarios (getting, setting, removing, etc.).
 library;
 
+// Import the generated code.
+import 'package:basic_example/app_preferences.g.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
-// Import the generated code.
-import 'package:shared_prefs_typed_testing/app_preferences.g.dart';
 
 void main() {
   /// This `setUpAll` block runs once before any tests in this suite.
@@ -48,7 +49,7 @@ void main() {
         const SharedPreferencesOptions(),
       );
 
-      // 3. Initialize our generated `AppPrAppPreferencesefs` service. It will automatically
+      // 3. Initialize our generated `AppPreferences` service. It will automatically
       //    use the `InMemorySharedPreferencesAsync` instance we set up in `setUpAll`.
       await AppPreferences.init();
       prefs = AppPreferences.instance;
@@ -205,6 +206,48 @@ void main() {
         expect(prefs.nullableCounterWithDefault, 100);
         expect(prefs.isSetNullableCounterWithDefault(), isFalse);
       });
+    });
+  });
+
+  // Demonstrates constructor injection: no singleton management required.
+  group('AppPreferences (constructor injection)', () {
+    late AppPreferences prefs;
+
+    setUp(() async {
+      // Clear the platform store so each test starts clean.
+      await SharedPreferencesAsyncPlatform.instance?.clear(
+        const ClearPreferencesParameters(filter: PreferencesFilters()),
+        const SharedPreferencesOptions(),
+      );
+      final backend = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      // Construct directly — no init() call needed, no global state touched.
+      prefs = AppPreferences(backend);
+    });
+
+    tearDown(AppPreferences.resetInstance);
+
+    test('returns default value for counter initially', () {
+      expect(prefs.counter, 0);
+      expect(prefs.isSetCounter(), isFalse);
+    });
+
+    test('sets and gets a value correctly', () async {
+      await prefs.setCounter(7);
+      expect(prefs.counter, 7);
+      expect(prefs.isSetCounter(), isTrue);
+    });
+
+    test('each test constructs its own independent instance', () {
+      // Constructing AppPreferences(backend) directly never touches
+      // AppPreferences._instance — the singleton and this instance coexist.
+      expect(prefs.counter, 0);
+    });
+
+    test('instance getter throws StateError before init()', () {
+      AppPreferences.resetInstance();
+      expect(() => AppPreferences.instance, throwsStateError);
     });
   });
 }

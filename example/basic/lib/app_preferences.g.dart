@@ -5,7 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_cast, unused_element, unused_field
+// ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,19 +14,39 @@ import 'app_preferences.dart';
 /// Provides type-safe, cached access to application preferences.
 ///
 /// Use `await AppPreferences.init()` on app startup,
-/// then access values via the singleton `instance`.
+/// then access values via the singleton `instance`,
+/// or create an instance directly: `AppPreferences(prefs)`.
 class AppPreferences {
-  AppPreferences._();
+  AppPreferences(this._prefs);
 
-  static final instance = AppPreferences._();
+  static AppPreferences? _instance;
 
-  static late SharedPreferencesWithCache _prefs;
+  final SharedPreferencesWithCache _prefs;
+
+  /// The singleton instance. Throws a [StateError] if [init] has not been called.
+  static AppPreferences get instance {
+    final i = _instance;
+    if (i == null) {
+      throw StateError(
+        'AppPreferences has not been initialized. '
+        'Call `await AppPreferences.init()` before accessing `instance`, '
+        'or use the AppPreferences(prefs) constructor directly.',
+      );
+    }
+    return i;
+  }
 
   /// Initializes the preferences service.
   static Future<void> init() async {
-    _prefs = await SharedPreferencesWithCache.create(
+    final prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
+    _instance = AppPreferences(prefs);
+  }
+
+  /// Resets the singleton instance to `null`. Useful for test teardown.
+  static void resetInstance() {
+    _instance = null;
   }
 
   /// Gets the value for `counter` from the cache.
@@ -59,7 +79,7 @@ class AppPreferences {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get displayGreeting {
-    return _prefs.getString('displayGreeting') ?? null;
+    return _prefs.getString('displayGreeting');
   }
 
   /// Asynchronously sets the value for `displayGreeting`.
@@ -69,7 +89,7 @@ class AppPreferences {
     if (value == null) {
       return _prefs.remove('displayGreeting');
     }
-    return _prefs.setString('displayGreeting', value as String);
+    return _prefs.setString('displayGreeting', value);
   }
 
   /// Checks if a value has been explicitly set for `displayGreeting`.
@@ -194,7 +214,7 @@ class AppPreferences {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get sessionId {
-    return _prefs.getString('sessionId') ?? null;
+    return _prefs.getString('sessionId');
   }
 
   /// Asynchronously sets the value for `sessionId`.
@@ -204,7 +224,7 @@ class AppPreferences {
     if (value == null) {
       return _prefs.remove('sessionId');
     }
-    return _prefs.setString('sessionId', value as String);
+    return _prefs.setString('sessionId', value);
   }
 
   /// Checks if a value has been explicitly set for `sessionId`.
@@ -225,7 +245,7 @@ class AppPreferences {
   ///
   /// If the key does not exist, the default value `null` is returned.
   int? get lastLoginTimestamp {
-    return _prefs.getInt('lastLoginTimestamp') ?? null;
+    return _prefs.getInt('lastLoginTimestamp');
   }
 
   /// Asynchronously sets the value for `lastLoginTimestamp`.
@@ -235,7 +255,7 @@ class AppPreferences {
     if (value == null) {
       return _prefs.remove('lastLoginTimestamp');
     }
-    return _prefs.setInt('lastLoginTimestamp', value as int);
+    return _prefs.setInt('lastLoginTimestamp', value);
   }
 
   /// Checks if a value has been explicitly set for `lastLoginTimestamp`.
@@ -266,7 +286,7 @@ class AppPreferences {
     if (value == null) {
       return _prefs.remove('nullableCounterWithDefault');
     }
-    return _prefs.setInt('nullableCounterWithDefault', value as int);
+    return _prefs.setInt('nullableCounterWithDefault', value);
   }
 
   /// Checks if a value has been explicitly set for `nullableCounterWithDefault`.

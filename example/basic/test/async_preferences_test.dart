@@ -6,12 +6,12 @@
 /// used as expected for all supported data types.
 library;
 
+// Import the generated code for the asynchronous preferences.
+import 'package:basic_example/async_preferences.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
-// Import the generated code for the asynchronous preferences.
-import 'package:shared_prefs_typed_testing/async_preferences.g.dart';
 
 void main() {
   /// This `setUpAll` block runs once before any tests in this suite.

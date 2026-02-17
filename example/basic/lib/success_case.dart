@@ -2,8 +2,6 @@
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
-import 'success_case.g.dart';
-
 @TypedPrefs()
 abstract class _TestPrefs {
   static const int testInt = 10;

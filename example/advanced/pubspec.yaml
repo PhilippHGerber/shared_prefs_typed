@@ -1,0 +1,32 @@
+name: advanced_example
+description: "A new Flutter project."
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 0.5.0
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get_it: ^9.2.0
+  shared_preferences: ^2.5.3
+  shared_prefs_typed_annotations: ^0.6.0
+  textf: ^1.1.1
+
+dev_dependencies:
+  build_runner: ^2.11.1
+
+  flutter_test:
+    sdk: flutter
+  shared_preferences_platform_interface: ^2.4.1
+  shared_prefs_typed: ^0.6.0
+  very_good_analysis: ^10.2.0
+
+
+flutter:
+  uses-material-design: true
