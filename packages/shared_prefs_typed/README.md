@@ -137,48 +137,100 @@ await prefs.setPingCount(count + 1);
 
 ### ✅ Testing
 
-The generated code is designed to be easily testable. By replacing the `shared_preferences` platform implementation with an in-memory mock, you can run tests quickly and reliably without accessing device storage.
+The generated class supports two testing strategies.
 
-Here is a complete test example:
+#### Option A: Constructor injection (recommended)
+
+Pass a `SharedPreferencesWithCache` (or `SharedPreferencesAsync`) directly to the constructor. No global platform state required:
 
 ```dart
-// test/app_preferences_test.dart
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+import 'package:shared_preferences_platform_interface/types.dart';
 import 'package:test_app/app_preferences.g.dart';
 
 void main() {
   setUpAll(() {
-    // Ensure the test framework is initialized.
     TestWidgetsFlutterBinding.ensureInitialized();
-
-    // CRITICAL: Replace the platform-specific implementation with a mock
-    // in-memory version for all tests in this file.
     SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
   });
 
-  // A helper to initialize the service for each test.
-  Future<AppPreferences> initPrefs() async {
-    await AppPreferences.init();
-    return AppPreferences.instance;
-  }
+  late AppPreferences prefs;
 
-  test('Counter returns default value and can be set', () async {
-    // ARRANGE: Clear previous values and initialize.
-    await SharedPreferencesAsyncPlatform.instance?.clear();
-    final prefs = await initPrefs();
+  setUp(() async {
+    await SharedPreferencesAsyncPlatform.instance?.clear(
+      const ClearPreferencesParameters(filter: PreferencesFilters()),
+      const SharedPreferencesOptions(),
+    );
+    final backend = await SharedPreferencesWithCache.create(
+      cacheOptions: const SharedPreferencesWithCacheOptions(),
+    );
+    prefs = AppPreferences(backend); // direct constructor — no init() needed
+  });
 
-    // ASSERT: Check default value.
+  tearDown(AppPreferences.resetInstance);
+
+  test('counter returns default and can be set', () async {
     expect(prefs.counter, 0);
-
-    // ACT: Set a new value.
     await prefs.setCounter(42);
-
-    // ASSERT: Verify the new value.
     expect(prefs.counter, 42);
   });
 }
+```
+
+#### Option B: Singleton pattern (backward compatible)
+
+The `init()` / `instance` pattern still works exactly as before:
+
+```dart
+setUp(() async {
+  await AppPreferences.init();
+});
+
+test('counter', () {
+  expect(AppPreferences.instance.counter, 0);
+});
+```
+
+### 🔌 Dependency Injection
+
+The public constructor integrates naturally with DI frameworks.
+
+**GetIt:**
+
+```dart
+final backend = await SharedPreferencesWithCache.create(
+  cacheOptions: const SharedPreferencesWithCacheOptions(),
+);
+getIt.registerSingleton<AppPreferences>(AppPreferences(backend));
+```
+
+**Riverpod:**
+
+```dart
+final appPrefsProvider = Provider<AppPreferences>((ref) {
+  // Obtain backend from another provider or pass it in.
+  return AppPreferences(ref.read(sharedPrefsBackendProvider));
+});
+```
+
+**Optional interface for mock-friendly DI** — add `generateInterface: true` to your annotation:
+
+```dart
+@TypedPrefs(generateInterface: true)
+abstract class _AppPreferences { ... }
+```
+
+This generates `AppPreferencesBase` (an abstract class with the same API), allowing typed registrations and mock objects:
+
+```dart
+// GetIt with interface
+getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
+
+// Mocktail mock
+class MockAppPreferences extends Mock implements AppPreferencesBase {}
 ```
 
 For more detailed examples, please see the `example/` directory in the project repository.

@@ -5,7 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_cast, unused_element, unused_field
+// ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,19 +14,39 @@ import 'success_case.dart';
 /// Provides type-safe, cached access to application preferences.
 ///
 /// Use `await TestPrefs.init()` on app startup,
-/// then access values via the singleton `instance`.
+/// then access values via the singleton `instance`,
+/// or create an instance directly: `TestPrefs(prefs)`.
 class TestPrefs {
-  TestPrefs._();
+  TestPrefs(this._prefs);
 
-  static final instance = TestPrefs._();
+  static TestPrefs? _instance;
 
-  static late SharedPreferencesWithCache _prefs;
+  final SharedPreferencesWithCache _prefs;
+
+  /// The singleton instance. Throws a [StateError] if [init] has not been called.
+  static TestPrefs get instance {
+    final i = _instance;
+    if (i == null) {
+      throw StateError(
+        'TestPrefs has not been initialized. '
+        'Call `await TestPrefs.init()` before accessing `instance`, '
+        'or use the TestPrefs(prefs) constructor directly.',
+      );
+    }
+    return i;
+  }
 
   /// Initializes the preferences service.
   static Future<void> init() async {
-    _prefs = await SharedPreferencesWithCache.create(
+    final prefs = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
+    _instance = TestPrefs(prefs);
+  }
+
+  /// Resets the singleton instance to `null`. Useful for test teardown.
+  static void resetInstance() {
+    _instance = null;
   }
 
   /// Gets the value for `testInt` from the cache.
@@ -163,7 +183,7 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get testNullableString {
-    return _prefs.getString('testNullableString') ?? null;
+    return _prefs.getString('testNullableString');
   }
 
   /// Asynchronously sets the value for `testNullableString`.
@@ -173,7 +193,7 @@ class TestPrefs {
     if (value == null) {
       return _prefs.remove('testNullableString');
     }
-    return _prefs.setString('testNullableString', value as String);
+    return _prefs.setString('testNullableString', value);
   }
 
   /// Checks if a value has been explicitly set for `testNullableString`.
