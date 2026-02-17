@@ -1,7 +1,7 @@
 name: shared_prefs_typed
 description: Code generator for creating type-safe, boilerplate-free SharedPreferences classes in Dart & Flutter.
 repository: https://github.com/PhilippHGerber/shared_prefs_typed.git
-version: 0.6.0
+version: 0.6.1
 
 environment:
   sdk: ^3.9.0

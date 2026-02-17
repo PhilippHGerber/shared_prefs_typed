@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.6.1
+
+* Fixed README.md
+
 ## 0.6.0
 
 **Breaking change** — re-run `flutter pub run build_runner build` after upgrading. No user code changes required unless you accessed `_prefs` directly (which was private and unsupported).
