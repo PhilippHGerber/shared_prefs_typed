@@ -26,11 +26,11 @@ After running the commands, your pubspec.yaml will be updated. It should look si
 
 ```yaml
 dependencies:
-  shared_prefs_typed_annotations: ^0.5.2
+  shared_prefs_typed_annotations: ^0.6.0
 
 dev_dependencies:
-  build_runner: ^2.4.15
-  shared_prefs_typed: ^0.5.2
+  build_runner: ^2.11.1
+  shared_prefs_typed: ^0.6.0
 ```
 
 Then, run `flutter pub get`.
@@ -198,13 +198,30 @@ test('counter', () {
 
 The public constructor integrates naturally with DI frameworks.
 
-**GetIt:**
+**GetIt (simple — no interface):**
 
 ```dart
 final backend = await SharedPreferencesWithCache.create(
   cacheOptions: const SharedPreferencesWithCacheOptions(),
 );
 getIt.registerSingleton<AppPreferences>(AppPreferences(backend));
+```
+
+**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesBase`, then register the concrete type under the abstract base. Production code never imports `AppPreferences` directly:
+
+```dart
+// schema
+@TypedPrefs(generateInterface: true)
+abstract class _AppPreferences { ... }
+
+// startup
+getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
+
+// everywhere else
+getIt<AppPreferencesBase>().counter
+
+// Mocktail mock in tests
+class MockAppPreferences extends Mock implements AppPreferencesBase {}
 ```
 
 **Riverpod:**
@@ -216,24 +233,7 @@ final appPrefsProvider = Provider<AppPreferences>((ref) {
 });
 ```
 
-**Optional interface for mock-friendly DI** — add `generateInterface: true` to your annotation:
-
-```dart
-@TypedPrefs(generateInterface: true)
-abstract class _AppPreferences { ... }
-```
-
-This generates `AppPreferencesBase` (an abstract class with the same API), allowing typed registrations and mock objects:
-
-```dart
-// GetIt with interface
-getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
-
-// Mocktail mock
-class MockAppPreferences extends Mock implements AppPreferencesBase {}
-```
-
-For more detailed examples, please see the `example/` directory in the project repository.
+For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesBase`).
 
 ## 🤔 Why `shared_prefs_typed`?
 
