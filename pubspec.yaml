@@ -15,7 +15,6 @@ dependencies:
   analyzer: ^10.0.1
   flutter:
     sdk: flutter
-  meta: ^1.16.0
   shared_preferences: ^2.5.4
 
 dev_dependencies:

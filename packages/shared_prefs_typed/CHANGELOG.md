@@ -24,7 +24,7 @@ flutter pub run build_runner build
 
 The `init()` / `instance` API is fully backward compatible.
 
-## 0.5.3
+### Fixed
 
 * **Fix**: Removed redundant `?? null` from generated nullable getters
 * **Fix**: Removed unnecessary `as TypeName` casts in generated nullable setters

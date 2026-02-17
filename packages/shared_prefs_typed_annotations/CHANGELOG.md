@@ -2,7 +2,7 @@
 
 All notable changes to this package will be documented in this file.
 
-## 0.5.3
+## 0.6.0
 
 * Added `@Target({TargetKind.classType})` to `TypedPrefs` — misuse on non-class declarations now produces an IDE-level error
 * Added `meta` as a dependency
