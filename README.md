@@ -8,9 +8,9 @@ This repository is a monorepo containing the core packages and a comprehensive e
 
 | Package | Description | Version |
 |---|---|---|
-| **`shared_prefs_typed`** | The main package containing the `build_runner` generator to create your type-safe classes. | `0.5.0` |
-| **`shared_prefs_typed_annotations`** | Provides the `@TypedPrefs` annotation to mark your schemas for code generation. | `0.5.0` |
-| **`example`** | A complete Flutter application demonstrating features and best practices, including testing. | `0.5.0` |
+| **`shared_prefs_typed`** | The main package containing the `build_runner` generator to create your type-safe classes. | `0.6.0` |
+| **`shared_prefs_typed_annotations`** | Provides the `@TypedPrefs` annotation to mark your schemas for code generation. | `0.6.0` |
+| **`example`** | A complete Flutter application demonstrating features and best practices, including testing. | — |
 
 ---
 
