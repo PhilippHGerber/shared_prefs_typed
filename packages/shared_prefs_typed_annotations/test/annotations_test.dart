@@ -23,11 +23,11 @@ void main() {
     });
 
     test('can be instantiated with async mode explicitly disabled', () {
-      // ARRANGE & ACT: Instantiate the annotation with async set to false.
-      const annotation = TypedPrefs();
+      // ARRANGE & ACT: Instantiate the annotation with async explicitly false.
+      // ignore: avoid_redundant_argument_values
+      const annotation = TypedPrefs(async: false);
 
       // ASSERT: Verify the value of the 'async' property is correctly set.
-      expect(annotation, isA<TypedPrefs>());
       expect(annotation.async, isFalse);
     });
   });
