@@ -5,6 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
+/// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,13 +14,20 @@ import 'async_preferences.dart';
 
 /// Provides type-safe, asynchronous access to application preferences.
 ///
-/// Use `await AsyncPreferences.init()` on app startup,
-/// then access values via the singleton `instance`,
-/// or create an instance directly: `AsyncPreferences(prefs)`.
+/// **Simple apps**: call `await AsyncPreferences.init()` on startup,
+/// then access values via the singleton `AsyncPreferences.instance`.
+///
+/// **DI & Testing**: inject a backend directly: `AsyncPreferences(backend)`.
 class AsyncPreferences {
-  AsyncPreferences(this._prefs);
+  /// Creates an instance backed by the given [SharedPreferencesAsync].
+  ///
+  /// Use this for dependency injection and testing.
+  /// For global access, use [init] and [instance] instead.
+  const AsyncPreferences(this._prefs);
 
   static AsyncPreferences? _instance;
+
+  static Future<AsyncPreferences>? _initFuture;
 
   final SharedPreferencesAsync _prefs;
 
@@ -29,21 +37,29 @@ class AsyncPreferences {
     if (i == null) {
       throw StateError(
         'AsyncPreferences has not been initialized. '
-        'Call `await AsyncPreferences.init()` before accessing `instance`, '
-        'or use the AsyncPreferences(prefs) constructor directly.',
+        'Call `await AsyncPreferences.init()` before accessing `instance`.',
       );
     }
     return i;
   }
 
-  /// Initializes the preferences service.
-  static Future<void> init() async {
-    _instance = AsyncPreferences(SharedPreferencesAsync());
+  /// Initializes and returns the singleton [instance].
+  ///
+  /// Safe to call multiple times — concurrent calls share the same future
+  /// and do not trigger additional I/O.
+  static Future<AsyncPreferences> init() {
+    if (_instance != null) return Future.value(_instance!);
+    return _initFuture ??= _doInit();
+  }
+
+  static Future<AsyncPreferences> _doInit() {
+    return Future.value(_instance = AsyncPreferences(SharedPreferencesAsync()));
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
   static void resetInstance() {
     _instance = null;
+    _initFuture = null;
   }
 
   /// Asynchronously gets the value for `pingCount`.

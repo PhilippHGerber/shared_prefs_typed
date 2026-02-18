@@ -5,6 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
+/// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,13 +14,20 @@ import 'theme_example.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// Use `await SettingsPrefs.init()` on app startup,
-/// then access values via the singleton `instance`,
-/// or create an instance directly: `SettingsPrefs(prefs)`.
+/// **Simple apps**: call `await SettingsPrefs.init()` on startup,
+/// then access values via the singleton `SettingsPrefs.instance`.
+///
+/// **DI & Testing**: inject a backend directly: `SettingsPrefs(backend)`.
 class SettingsPrefs {
-  SettingsPrefs(this._prefs);
+  /// Creates an instance backed by the given [SharedPreferencesWithCache].
+  ///
+  /// Use this for dependency injection and testing.
+  /// For global access, use [init] and [instance] instead.
+  const SettingsPrefs(this._prefs);
 
   static SettingsPrefs? _instance;
+
+  static Future<SettingsPrefs>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -29,24 +37,37 @@ class SettingsPrefs {
     if (i == null) {
       throw StateError(
         'SettingsPrefs has not been initialized. '
-        'Call `await SettingsPrefs.init()` before accessing `instance`, '
-        'or use the SettingsPrefs(prefs) constructor directly.',
+        'Call `await SettingsPrefs.init()` before accessing `instance`.',
       );
     }
     return i;
   }
 
-  /// Initializes the preferences service.
-  static Future<void> init() async {
-    final prefs = await SharedPreferencesWithCache.create(
-      cacheOptions: const SharedPreferencesWithCacheOptions(),
-    );
-    _instance = SettingsPrefs(prefs);
+  /// Initializes and returns the singleton [instance].
+  ///
+  /// Safe to call multiple times — concurrent calls share the same future
+  /// and do not trigger additional I/O.
+  static Future<SettingsPrefs> init() {
+    if (_instance != null) return Future.value(_instance!);
+    return _initFuture ??= _doInit();
+  }
+
+  static Future<SettingsPrefs> _doInit() async {
+    try {
+      final prefs = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      return _instance = SettingsPrefs(prefs);
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
   static void resetInstance() {
     _instance = null;
+    _initFuture = null;
   }
 
   /// Gets the value for `isLight` from the cache.

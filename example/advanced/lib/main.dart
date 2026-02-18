@@ -1,21 +1,43 @@
+// =============================================================================
+// Constructor injection via get_it
+// =============================================================================
+//
+// This example registers AppPreferences(backend) with get_it so that widgets
+// resolve it via getIt<AppPreferencesBase>() — fully decoupled from the
+// concrete type and easy to swap for a mock in tests.
+//
+// For simpler apps that don't need a DI framework, use the singleton instead:
+//
+//   await AppPreferences.init();
+//   AppPreferences.instance.counter;   // sync read anywhere in the app
+//
+// =============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
 import 'app_preferences.g.dart';
 import 'service_locator.dart';
 
+/// The main entry point for the application.
+///
+/// Sets up the service locator before handing control to [MyApp].
+/// [AppPreferences] is registered under [AppPreferencesBase] so widgets
+/// depend only on the abstract interface — making them easy to test with mocks.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Register services. The AppPreferences public constructor receives the
-  // storage backend here — no global init() call needed anywhere else.
+  // Register AppPreferences(backend) with get_it.
+  // See service_locator.dart for details.
   await setupLocator();
 
   runApp(const MyApp());
 }
 
-/// Root widget. Holds theme state so [_MyHomePageState] can toggle it via
-/// a callback without any navigation tricks.
+/// Root widget.
+///
+/// Holds theme state so [_MyHomePageState] can toggle it via a callback.
+/// Resolves [AppPreferencesBase] from get_it — no concrete type dependency.
 class MyApp extends StatefulWidget {
   /// Creates the root application widget.
   const MyApp({super.key});
@@ -64,8 +86,10 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-/// The main page. Reads/writes preferences via get_it and relays theme
-/// toggle requests up to [MyApp] via [onToggleTheme].
+/// The main page.
+///
+/// Reads/writes preferences via get_it ([AppPreferencesBase]) and relays
+/// theme-toggle requests up to [MyApp] via [onToggleTheme].
 class MyHomePage extends StatefulWidget {
   /// Creates the home page.
   const MyHomePage({required this.onToggleTheme, required this.isDarkMode, super.key});

@@ -1,37 +1,47 @@
-// example/lib/main.dart
+// =============================================================================
+// Two ways to start this app
+// =============================================================================
+//
+// ① SINGLETON (this file)
+//   Call `await AppPreferences.init()` once, then access via
+//   `AppPreferences.instance` anywhere in the widget tree.
+//
+// ② CONSTRUCTOR INJECTION (see app_preferences_test.dart)
+//   Create a backend and pass it directly to the constructor:
+//
+//     final backend = await SharedPreferencesWithCache.create(
+//       cacheOptions: const SharedPreferencesWithCacheOptions(),
+//     );
+//     final prefs = AppPreferences(backend);
+//     runApp(MyApp(prefs: prefs));
+//
+//   No global state is touched; ideal for tests and DI frameworks.
+// =============================================================================
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_preferences.g.dart';
 
 /// The main entry point for the application.
 ///
-/// Creates the preferences backend and injects it via the [AppPreferences]
-/// constructor. This keeps the preferences service lifecycle explicit and
-/// makes the app straightforward to test without global state.
+/// Initializes [AppPreferences] once via the singleton [AppPreferences.init]
+/// before handing control to [MyApp]. After the `await`, every widget can
+/// read `AppPreferences.instance` synchronously without an async gap.
 Future<void> main() async {
   // Required for plugin initialization before runApp().
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Create the storage backend once on startup.
-  final backend = await SharedPreferencesWithCache.create(
-    cacheOptions: const SharedPreferencesWithCacheOptions(),
-  );
+  // Initialize the preferences singleton. Safe to call multiple times —
+  // concurrent callers share the same Future and do not trigger extra I/O.
+  await AppPreferences.init();
 
-  // Construct the preferences service by passing the backend directly.
-  final prefs = AppPreferences(backend);
-
-  runApp(MyApp(prefs: prefs));
+  runApp(const MyApp());
 }
 
 /// The root widget of the application.
 class MyApp extends StatelessWidget {
   /// Creates the root application widget.
-  const MyApp({required this.prefs, super.key});
-
-  /// The preferences service instance, injected from [main].
-  final AppPreferences prefs;
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
         useMaterial3: true,
       ),
-      home: MyHomePage(prefs: prefs),
+      home: const MyHomePage(),
     );
   }
 }
@@ -50,16 +60,16 @@ class MyApp extends StatelessWidget {
 /// The main page of the application, demonstrating a seamless, auto-saving UI.
 class MyHomePage extends StatefulWidget {
   /// Creates the home page widget.
-  const MyHomePage({required this.prefs, super.key});
-
-  /// The preferences service instance, injected by the parent.
-  final AppPreferences prefs;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Access the singleton — safe because init() completed in main() before runApp().
+  AppPreferences get _prefs => AppPreferences.instance;
+
   // Local state variables to hold the current values for the UI.
   // They are initialized from SharedPreferences in `initState`.
   late int _counter;
@@ -70,8 +80,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // A FocusNode to detect when the user taps away from the text field.
   late final FocusNode _nameFocusNode;
-
-  AppPreferences get _prefs => widget.prefs;
 
   @override
   void initState() {

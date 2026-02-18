@@ -33,6 +33,18 @@ abstract class _AppPreferences {
   /// A list of user-defined tags.
   static const List<String> tagList = <String>['default'];
 
+  /// Recently viewed item IDs, stored newest-first.
+  ///
+  /// Serialized transparently as `List<String>` in storage; parsed back to
+  /// `List<int>` on read. Defaults to an empty list.
+  static const List<int> recentItemIds = <int>[];
+
+  /// Historical price samples for display in a chart.
+  ///
+  /// Serialized as `List<String>` in storage; parsed back to `List<double>`
+  /// on read. Defaults to a sample set of three prices.
+  static const List<double> priceHistory = <double>[9.99, 14.99, 19.99];
+
   // --- Nullable types ---
   // Useful for values that don't have a logical default and may not exist.
 

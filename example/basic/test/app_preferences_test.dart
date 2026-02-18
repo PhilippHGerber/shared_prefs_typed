@@ -49,7 +49,11 @@ void main() {
         const SharedPreferencesOptions(),
       );
 
-      // 3. Initialize our generated `AppPreferences` service. It will automatically
+      // 3. Reset the singleton so init() creates a fresh SharedPreferencesWithCache
+      //    that reads from the now-empty in-memory store (no stale cache).
+      AppPreferences.resetInstance();
+
+      // 4. Initialize our generated `AppPreferences` service. It will automatically
       //    use the `InMemorySharedPreferencesAsync` instance we set up in `setUpAll`.
       await AppPreferences.init();
       prefs = AppPreferences.instance;
@@ -154,6 +158,51 @@ void main() {
         await prefs.removeTagList();
         expect(prefs.tagList, ['default']);
         expect(prefs.isSetTagList(), isFalse);
+      });
+    });
+
+    group('for List<int> (recentItemIds)', () {
+      test('returns default value (empty list) initially', () {
+        expect(prefs.recentItemIds, isEmpty);
+        expect(prefs.isSetRecentItemIds(), isFalse);
+      });
+
+      test('sets and gets a value correctly', () async {
+        await prefs.setRecentItemIds([1, 2, 3]);
+        expect(prefs.recentItemIds, [1, 2, 3]);
+        expect(prefs.isSetRecentItemIds(), isTrue);
+      });
+
+      test('removes a value, reverting to default', () async {
+        await prefs.setRecentItemIds([10, 20]);
+        await prefs.removeRecentItemIds();
+        expect(prefs.recentItemIds, isEmpty);
+        expect(prefs.isSetRecentItemIds(), isFalse);
+      });
+
+      test('round-trips negative values correctly', () async {
+        await prefs.setRecentItemIds([-1, 0, 42]);
+        expect(prefs.recentItemIds, [-1, 0, 42]);
+      });
+    });
+
+    group('for List<double> (priceHistory)', () {
+      test('returns default value initially', () {
+        expect(prefs.priceHistory, [9.99, 14.99, 19.99]);
+        expect(prefs.isSetPriceHistory(), isFalse);
+      });
+
+      test('sets and gets a value correctly', () async {
+        await prefs.setPriceHistory([1.5, 2.5, 3.5]);
+        expect(prefs.priceHistory, [1.5, 2.5, 3.5]);
+        expect(prefs.isSetPriceHistory(), isTrue);
+      });
+
+      test('removes a value, reverting to default', () async {
+        await prefs.setPriceHistory([0.99]);
+        await prefs.removePriceHistory();
+        expect(prefs.priceHistory, [9.99, 14.99, 19.99]);
+        expect(prefs.isSetPriceHistory(), isFalse);
       });
     });
 

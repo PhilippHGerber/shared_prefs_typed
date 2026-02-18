@@ -5,6 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
+/// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,13 +14,20 @@ import 'app_preferences.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// Use `await AppPreferences.init()` on app startup,
-/// then access values via the singleton `instance`,
-/// or create an instance directly: `AppPreferences(prefs)`.
+/// **Simple apps**: call `await AppPreferences.init()` on startup,
+/// then access values via the singleton `AppPreferences.instance`.
+///
+/// **DI & Testing**: inject a backend directly: `AppPreferences(backend)`.
 class AppPreferences {
-  AppPreferences(this._prefs);
+  /// Creates an instance backed by the given [SharedPreferencesWithCache].
+  ///
+  /// Use this for dependency injection and testing.
+  /// For global access, use [init] and [instance] instead.
+  const AppPreferences(this._prefs);
 
   static AppPreferences? _instance;
+
+  static Future<AppPreferences>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -29,24 +37,37 @@ class AppPreferences {
     if (i == null) {
       throw StateError(
         'AppPreferences has not been initialized. '
-        'Call `await AppPreferences.init()` before accessing `instance`, '
-        'or use the AppPreferences(prefs) constructor directly.',
+        'Call `await AppPreferences.init()` before accessing `instance`.',
       );
     }
     return i;
   }
 
-  /// Initializes the preferences service.
-  static Future<void> init() async {
-    final prefs = await SharedPreferencesWithCache.create(
-      cacheOptions: const SharedPreferencesWithCacheOptions(),
-    );
-    _instance = AppPreferences(prefs);
+  /// Initializes and returns the singleton [instance].
+  ///
+  /// Safe to call multiple times — concurrent calls share the same future
+  /// and do not trigger additional I/O.
+  static Future<AppPreferences> init() {
+    if (_instance != null) return Future.value(_instance!);
+    return _initFuture ??= _doInit();
+  }
+
+  static Future<AppPreferences> _doInit() async {
+    try {
+      final prefs = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      return _instance = AppPreferences(prefs);
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
   static void resetInstance() {
     _instance = null;
+    _initFuture = null;
   }
 
   /// Gets the value for `counter` from the cache.
@@ -208,6 +229,68 @@ class AppPreferences {
   /// After calling this, the getter will return the default value (`const <String>['default']`).
   Future<void> removeTagList() {
     return _prefs.remove('tagList');
+  }
+
+  /// Gets the value for `recentItemIds` from the cache.
+  ///
+  /// If the key does not exist, the default value `const <int>[]` is returned.
+  List<int> get recentItemIds {
+    final raw = _prefs.getStringList('recentItemIds');
+    return raw == null ? const <int>[] : raw.map(int.parse).toList();
+  }
+
+  /// Asynchronously sets the value for `recentItemIds`.
+  Future<void> setRecentItemIds(List<int> value) {
+    return _prefs.setStringList(
+      'recentItemIds',
+      value.map((e) => e.toString()).toList(),
+    );
+  }
+
+  /// Checks if a value has been explicitly set for `recentItemIds`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetRecentItemIds() {
+    return _prefs.containsKey('recentItemIds');
+  }
+
+  /// Removes the stored value for `recentItemIds`.
+  ///
+  /// After calling this, the getter will return the default value (`const <int>[]`).
+  Future<void> removeRecentItemIds() {
+    return _prefs.remove('recentItemIds');
+  }
+
+  /// Gets the value for `priceHistory` from the cache.
+  ///
+  /// If the key does not exist, the default value `const <double>[9.99, 14.99, 19.99]` is returned.
+  List<double> get priceHistory {
+    final raw = _prefs.getStringList('priceHistory');
+    return raw == null
+        ? const <double>[9.99, 14.99, 19.99]
+        : raw.map(double.parse).toList();
+  }
+
+  /// Asynchronously sets the value for `priceHistory`.
+  Future<void> setPriceHistory(List<double> value) {
+    return _prefs.setStringList(
+      'priceHistory',
+      value.map((e) => e.toString()).toList(),
+    );
+  }
+
+  /// Checks if a value has been explicitly set for `priceHistory`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool isSetPriceHistory() {
+    return _prefs.containsKey('priceHistory');
+  }
+
+  /// Removes the stored value for `priceHistory`.
+  ///
+  /// After calling this, the getter will return the default value (`const <double>[9.99, 14.99, 19.99]`).
+  Future<void> removePriceHistory() {
+    return _prefs.remove('priceHistory');
   }
 
   /// Gets the value for `sessionId` from the cache.

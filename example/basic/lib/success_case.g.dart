@@ -5,6 +5,7 @@
 // TypedPrefsGenerator
 // **************************************************************************
 
+/// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,13 +14,20 @@ import 'success_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// Use `await TestPrefs.init()` on app startup,
-/// then access values via the singleton `instance`,
-/// or create an instance directly: `TestPrefs(prefs)`.
+/// **Simple apps**: call `await TestPrefs.init()` on startup,
+/// then access values via the singleton `TestPrefs.instance`.
+///
+/// **DI & Testing**: inject a backend directly: `TestPrefs(backend)`.
 class TestPrefs {
-  TestPrefs(this._prefs);
+  /// Creates an instance backed by the given [SharedPreferencesWithCache].
+  ///
+  /// Use this for dependency injection and testing.
+  /// For global access, use [init] and [instance] instead.
+  const TestPrefs(this._prefs);
 
   static TestPrefs? _instance;
+
+  static Future<TestPrefs>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -29,24 +37,37 @@ class TestPrefs {
     if (i == null) {
       throw StateError(
         'TestPrefs has not been initialized. '
-        'Call `await TestPrefs.init()` before accessing `instance`, '
-        'or use the TestPrefs(prefs) constructor directly.',
+        'Call `await TestPrefs.init()` before accessing `instance`.',
       );
     }
     return i;
   }
 
-  /// Initializes the preferences service.
-  static Future<void> init() async {
-    final prefs = await SharedPreferencesWithCache.create(
-      cacheOptions: const SharedPreferencesWithCacheOptions(),
-    );
-    _instance = TestPrefs(prefs);
+  /// Initializes and returns the singleton [instance].
+  ///
+  /// Safe to call multiple times — concurrent calls share the same future
+  /// and do not trigger additional I/O.
+  static Future<TestPrefs> init() {
+    if (_instance != null) return Future.value(_instance!);
+    return _initFuture ??= _doInit();
+  }
+
+  static Future<TestPrefs> _doInit() async {
+    try {
+      final prefs = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      return _instance = TestPrefs(prefs);
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
   static void resetInstance() {
     _instance = null;
+    _initFuture = null;
   }
 
   /// Gets the value for `testInt` from the cache.
