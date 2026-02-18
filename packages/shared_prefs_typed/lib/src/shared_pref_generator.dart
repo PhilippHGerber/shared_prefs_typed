@@ -40,6 +40,36 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
         .map<_SharedPrefField>(_SharedPrefField.new)
         .toList();
 
+    // Validate fields.
+    final seenKeys = <String, _SharedPrefField>{};
+    for (final field in fields) {
+      // Validate no duplicate SharedPreferences keys.
+      final key = field.keyName;
+      final existing = seenKeys[key];
+      if (existing != null) {
+        throw InvalidGenerationSourceError(
+          'Duplicate SharedPreferences key "$key". '
+          'Fields `${existing.name}` and `${field.name}` resolve to the same '
+          'storage key. Use @PrefKey to assign distinct keys.',
+          element: field.field,
+        );
+      }
+      seenKeys[key] = field;
+
+      // Validate DateTime fields have @PrefDateTime.
+      if (field.isDateTime && field.dateTimeEncoding == null) {
+        throw InvalidGenerationSourceError(
+          'The field `${field.name}` is a DateTime but has no @PrefDateTime annotation. '
+          'Add `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)` or '
+          '`@PrefDateTime(DateTimeEncoding.iso8601)` to specify the encoding.',
+          element: field.field,
+        );
+      }
+
+      // Validate type is supported (triggers error for unknown types).
+      field.prefTypeName;
+    }
+
     final publicClassName = classElement.name!.substring(1);
     final bodyItems = <Spec>[];
 
@@ -63,10 +93,16 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
         ..body.addAll(bodyItems),
     );
 
+    const warning =
+        '/// WARNING: Storage keys are derived from field names. '
+        'Renaming a field changes its key and causes data loss '
+        'unless @PrefKey is used to pin the key explicitly.\n';
+
     final emitter = DartEmitter(useNullSafetySyntax: true, orderDirectives: true);
-    return DartFormatter(
+    final formatted = DartFormatter(
       languageVersion: Version(3, 9, 0),
     ).format(library.accept(emitter).toString());
+    return '$warning$formatted';
   }
 }
 
@@ -84,9 +120,10 @@ Class _buildSyncClass(
       ..name = publicClassName
       ..docs.add('/// Provides type-safe, cached access to application preferences.')
       ..docs.add('///')
-      ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
-      ..docs.add('/// then access values via the singleton `instance`,')
-      ..docs.add('/// or create an instance directly: `$publicClassName(prefs)`.')
+      ..docs.add('/// **Simple apps**: call `await $publicClassName.init()` on startup,')
+      ..docs.add('/// then access values via the singleton `$publicClassName.instance`.')
+      ..docs.add('///')
+      ..docs.add('/// **DI & Testing**: inject a backend directly: `$publicClassName(backend)`.')
       ..implements.addAll(generateInterface ? [refer('${publicClassName}Base')] : [])
       ..fields.add(
         Field(
@@ -94,6 +131,14 @@ Class _buildSyncClass(
             ..name = '_instance'
             ..static = true
             ..type = refer('$publicClassName?'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = '_initFuture'
+            ..static = true
+            ..type = refer('Future<$publicClassName>?'),
         ),
       )
       ..fields.add(
@@ -107,6 +152,13 @@ Class _buildSyncClass(
       ..constructors.add(
         Constructor(
           (c) => c
+            ..constant = true
+            ..docs.add(
+              '/// Creates an instance backed by the given [$prefsClassName].',
+            )
+            ..docs.add('///')
+            ..docs.add('/// Use this for dependency injection and testing.')
+            ..docs.add('/// For global access, use [init] and [instance] instead.')
             ..requiredParameters.add(
               Parameter(
                 (p) => p
@@ -131,8 +183,7 @@ Class _buildSyncClass(
               'if (i == null) {\n'
               '  throw StateError(\n'
               "    '$publicClassName has not been initialized. '\n"
-              "    'Call `await $publicClassName.init()` before accessing `instance`, '\n"
-              "    'or use the $publicClassName(prefs) constructor directly.',\n"
+              "    'Call `await $publicClassName.init()` before accessing `instance`.',\n"
               '  );\n'
               '}\n'
               'return i;',
@@ -143,13 +194,35 @@ Class _buildSyncClass(
         Method(
           (m) => m
             ..name = 'init'
-            ..docs.add('/// Initializes the preferences service.')
-            ..returns = refer('Future<void>')
+            ..docs.add('/// Initializes and returns the singleton [instance].')
+            ..docs.add('///')
+            ..docs.add(
+              '/// Safe to call multiple times — concurrent calls share the same future',
+            )
+            ..docs.add('/// and do not trigger additional I/O.')
+            ..returns = refer('Future<$publicClassName>')
             ..static = true
+            ..body = const Code(
+              'if (_instance != null) return Future.value(_instance!);\n'
+              'return _initFuture ??= _doInit();',
+            ),
+        ),
+      )
+      ..methods.add(
+        Method(
+          (m) => m
+            ..name = '_doInit'
+            ..static = true
+            ..returns = refer('Future<$publicClassName>')
             ..modifier = MethodModifier.async
             ..body = Code(
-              'final prefs = await $prefsClassName.create(cacheOptions: const $prefsOptionsName());\n'
-              '_instance = $publicClassName(prefs);',
+              'try {\n'
+              '  final prefs = await $prefsClassName.create(cacheOptions: const $prefsOptionsName());\n'
+              '  return _instance = $publicClassName(prefs);\n'
+              '} catch (e) {\n'
+              '  _initFuture = null;\n'
+              '  rethrow;\n'
+              '}',
             ),
         ),
       )
@@ -160,7 +233,7 @@ Class _buildSyncClass(
             ..docs.add('/// Resets the singleton instance to `null`. Useful for test teardown.')
             ..static = true
             ..returns = refer('void')
-            ..body = const Code('_instance = null;'),
+            ..body = const Code('_instance = null;\n_initFuture = null;'),
         ),
       )
       ..methods.addAll(
@@ -189,9 +262,10 @@ Class _buildAsyncClass(
       ..name = publicClassName
       ..docs.add('/// Provides type-safe, asynchronous access to application preferences.')
       ..docs.add('///')
-      ..docs.add('/// Use `await $publicClassName.init()` on app startup,')
-      ..docs.add('/// then access values via the singleton `instance`,')
-      ..docs.add('/// or create an instance directly: `$publicClassName(prefs)`.')
+      ..docs.add('/// **Simple apps**: call `await $publicClassName.init()` on startup,')
+      ..docs.add('/// then access values via the singleton `$publicClassName.instance`.')
+      ..docs.add('///')
+      ..docs.add('/// **DI & Testing**: inject a backend directly: `$publicClassName(backend)`.')
       ..implements.addAll(generateInterface ? [refer('${publicClassName}Base')] : [])
       ..fields.add(
         Field(
@@ -199,6 +273,14 @@ Class _buildAsyncClass(
             ..name = '_instance'
             ..static = true
             ..type = refer('$publicClassName?'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = '_initFuture'
+            ..static = true
+            ..type = refer('Future<$publicClassName>?'),
         ),
       )
       ..fields.add(
@@ -212,6 +294,13 @@ Class _buildAsyncClass(
       ..constructors.add(
         Constructor(
           (c) => c
+            ..constant = true
+            ..docs.add(
+              '/// Creates an instance backed by the given [$prefsClassName].',
+            )
+            ..docs.add('///')
+            ..docs.add('/// Use this for dependency injection and testing.')
+            ..docs.add('/// For global access, use [init] and [instance] instead.')
             ..requiredParameters.add(
               Parameter(
                 (p) => p
@@ -236,8 +325,7 @@ Class _buildAsyncClass(
               'if (i == null) {\n'
               '  throw StateError(\n'
               "    '$publicClassName has not been initialized. '\n"
-              "    'Call `await $publicClassName.init()` before accessing `instance`, '\n"
-              "    'or use the $publicClassName(prefs) constructor directly.',\n"
+              "    'Call `await $publicClassName.init()` before accessing `instance`.',\n"
               '  );\n'
               '}\n'
               'return i;',
@@ -248,11 +336,29 @@ Class _buildAsyncClass(
         Method(
           (m) => m
             ..name = 'init'
-            ..docs.add('/// Initializes the preferences service.')
-            ..returns = refer('Future<void>')
+            ..docs.add('/// Initializes and returns the singleton [instance].')
+            ..docs.add('///')
+            ..docs.add(
+              '/// Safe to call multiple times — concurrent calls share the same future',
+            )
+            ..docs.add('/// and do not trigger additional I/O.')
+            ..returns = refer('Future<$publicClassName>')
             ..static = true
-            ..modifier = MethodModifier.async
-            ..body = Code('_instance = $publicClassName($prefsClassName());'),
+            ..body = const Code(
+              'if (_instance != null) return Future.value(_instance!);\n'
+              'return _initFuture ??= _doInit();',
+            ),
+        ),
+      )
+      ..methods.add(
+        Method(
+          (m) => m
+            ..name = '_doInit'
+            ..static = true
+            ..returns = refer('Future<$publicClassName>')
+            ..body = Code(
+              'return Future.value(_instance = $publicClassName($prefsClassName()));',
+            ),
         ),
       )
       ..methods.add(
@@ -262,7 +368,7 @@ Class _buildAsyncClass(
             ..docs.add('/// Resets the singleton instance to `null`. Useful for test teardown.')
             ..static = true
             ..returns = refer('void')
-            ..body = const Code('_instance = null;'),
+            ..body = const Code('_instance = null;\n_initFuture = null;'),
         ),
       )
       ..methods.addAll(
@@ -334,10 +440,28 @@ Class _buildInterface(
 //--- Method Generators (No changes needed here as they depend on _SharedPrefField) ---//
 
 Method _generateSyncGetter(_SharedPrefField field) {
-  final getExpr = "_prefs.get${field.prefTypeName}('${field.keyName}')";
-  final body = field.defaultValue == 'null'
-      ? 'return $getExpr;'
-      : 'return $getExpr ?? ${field.defaultValue};';
+  String body;
+  if (field.isEnum) {
+    final rawExpr = "_prefs.getString('${field.keyName}')";
+    if (field.isNullable) {
+      body = 'final raw = $rawExpr;\n'
+          'if (raw == null) return null;\n'
+          'return ${field.enumTypeName}.values.byName(raw);';
+    } else {
+      body = 'final raw = $rawExpr;\n'
+          'if (raw == null) return ${field.defaultValue};\n'
+          'return ${field.enumTypeName}.values.byName(raw);';
+    }
+  } else if (field.isDateTime) {
+    body = _buildDateTimeSyncGetterBody(field);
+  } else if (field.numericListElementType != null) {
+    body = _buildNumericListSyncGetterBody(field);
+  } else {
+    final getExpr = "_prefs.get${field.prefTypeName}('${field.keyName}')";
+    body = field.defaultValue == 'null'
+        ? 'return $getExpr;'
+        : 'return $getExpr ?? ${field.defaultValue};';
+  }
 
   return Method(
     (b) => b
@@ -354,10 +478,28 @@ Method _generateSyncGetter(_SharedPrefField field) {
 }
 
 Method _generateAsyncGetter(_SharedPrefField field) {
-  final getExpr = "(await _prefs.get${field.prefTypeName}('${field.keyName}'))";
-  final body = field.defaultValue == 'null'
-      ? 'return $getExpr;'
-      : 'return $getExpr ?? ${field.defaultValue};';
+  String body;
+  if (field.isEnum) {
+    final rawExpr = "(await _prefs.getString('${field.keyName}'))";
+    if (field.isNullable) {
+      body = 'final raw = $rawExpr;\n'
+          'if (raw == null) return null;\n'
+          'return ${field.enumTypeName}.values.byName(raw);';
+    } else {
+      body = 'final raw = $rawExpr;\n'
+          'if (raw == null) return ${field.defaultValue};\n'
+          'return ${field.enumTypeName}.values.byName(raw);';
+    }
+  } else if (field.isDateTime) {
+    body = _buildDateTimeAsyncGetterBody(field);
+  } else if (field.numericListElementType != null) {
+    body = _buildNumericListAsyncGetterBody(field);
+  } else {
+    final getExpr = "(await _prefs.get${field.prefTypeName}('${field.keyName}'))";
+    body = field.defaultValue == 'null'
+        ? 'return $getExpr;'
+        : 'return $getExpr ?? ${field.defaultValue};';
+  }
 
   return Method(
     (b) => b
@@ -375,12 +517,33 @@ Method _generateAsyncGetter(_SharedPrefField field) {
 }
 
 Method _generateSetter(_SharedPrefField field) {
-  final body = field.isNullable
-      ? Code(
-          "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-          "return _prefs.set${field.prefTypeName}('${field.keyName}', value);",
-        )
-      : Code("return _prefs.set${field.prefTypeName}('${field.keyName}', value);");
+  final Code body;
+  if (field.isEnum) {
+    body = field.isNullable
+        ? Code(
+            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+            "return _prefs.setString('${field.keyName}', value.name);",
+          )
+        : Code("return _prefs.setString('${field.keyName}', value.name);");
+  } else if (field.isDateTime) {
+    body = _buildDateTimeSetterBody(field);
+  } else if (field.numericListElementType != null) {
+    body = field.isNullable
+        ? Code(
+            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
+          )
+        : Code(
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
+          );
+  } else {
+    body = field.isNullable
+        ? Code(
+            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+            "return _prefs.set${field.prefTypeName}('${field.keyName}', value);",
+          )
+        : Code("return _prefs.set${field.prefTypeName}('${field.keyName}', value);");
+  }
 
   final docComments = <String>[
     '/// Asynchronously sets the value for `${field.keyName}`.',
@@ -431,19 +594,118 @@ Method _generateRemover(_SharedPrefField field) => Method(
     ..body = Code("return _prefs.remove('${field.keyName}');"),
 );
 
+//--- DateTime helpers ---//
+
+String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
+  if (isMillis) {
+    return "final raw = _prefs.getInt('$key');\n"
+        'if (raw == null) return null;\n'
+        'return DateTime.fromMillisecondsSinceEpoch(raw);';
+  }
+  return "final raw = _prefs.getString('$key');\n"
+      'if (raw == null) return null;\n'
+      'try {\n'
+      'return DateTime.parse(raw);\n'
+      '} catch (_) {\n'
+      'return null;\n'
+      '}';
+}
+
+String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
+  if (isMillis) {
+    return "final raw = (await _prefs.getInt('$key'));\n"
+        'if (raw == null) return null;\n'
+        'return DateTime.fromMillisecondsSinceEpoch(raw);';
+  }
+  return "final raw = (await _prefs.getString('$key'));\n"
+      'if (raw == null) return null;\n'
+      'try {\n'
+      'return DateTime.parse(raw);\n'
+      '} catch (_) {\n'
+      'return null;\n'
+      '}';
+}
+
+Code _buildDateTimeSetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
+  final setExpr = isMillis
+      ? "return _prefs.setInt('$key', value.millisecondsSinceEpoch);"
+      : "return _prefs.setString('$key', value.toIso8601String());";
+  // DateTime fields are always nullable.
+  return Code("if (value == null) { return _prefs.remove('$key'); } $setExpr");
+}
+
+//--- Numeric list helpers ---//
+
+String _buildNumericListSyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final elementType = field.numericListElementType!;
+  final rawExpr = "_prefs.getStringList('$key')";
+  if (field.isNullable) {
+    return 'final raw = $rawExpr;\n'
+        'return raw?.map($elementType.parse).toList();';
+  }
+  return 'final raw = $rawExpr;\n'
+      'return raw == null ? ${field.defaultValue} : raw.map($elementType.parse).toList();';
+}
+
+String _buildNumericListAsyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final elementType = field.numericListElementType!;
+  final rawExpr = "await _prefs.getStringList('$key')";
+  if (field.isNullable) {
+    return 'final raw = $rawExpr;\n'
+        'return raw?.map($elementType.parse).toList();';
+  }
+  return 'final raw = $rawExpr;\n'
+      'return raw == null ? ${field.defaultValue} : raw.map($elementType.parse).toList();';
+}
+
 //--- Helper class and extensions ---//
 
 class _SharedPrefField {
   _SharedPrefField(this.field);
   final FieldElement field;
 
+  static const _prefKeyChecker = TypeChecker.fromUrl(
+    'package:shared_prefs_typed_annotations/src/pref_key.dart#PrefKey',
+  );
+
   // The `!` is safe here because a `static const` field, which is the only
   // kind we process, is syntactically required to have a name.
   String get name => field.name!;
 
-  String get keyName => name.startsWith('_') ? name.substring(1) : name;
-  String get publicName => keyName.toPascalCase();
-  String get paramName => keyName.toCamelCase();
+  String? get _prefKeyOverride {
+    final value = _prefKeyChecker.firstAnnotationOfExact(field);
+    if (value == null) return null;
+    final key = value.getField('key')?.toStringValue();
+    if (key != null && key.isEmpty) {
+      throw InvalidGenerationSourceError(
+        'The @PrefKey on field `$name` has an empty key. '
+        'Provide a non-empty string.',
+        element: field,
+      );
+    }
+    return key;
+  }
+
+  /// The field name with a leading `_` stripped, used for Dart API names.
+  String get _baseName => name.startsWith('_') ? name.substring(1) : name;
+
+  /// The SharedPreferences storage key — uses `@PrefKey` override if present.
+  String get keyName {
+    final override = _prefKeyOverride;
+    if (override != null) return override;
+    return _baseName;
+  }
+
+  String get publicName => _baseName.toPascalCase();
+  String get paramName => _baseName.toCamelCase();
 
   Reference get typeReference => refer(field.type.getDisplayString());
   bool get isNullable => field.type.nullabilitySuffix == NullabilitySuffix.question;
@@ -456,15 +718,64 @@ class _SharedPrefField {
     return refer(nonNullableString);
   }
 
-  static const _supportedTypes = {'int', 'double', 'bool', 'String', 'List<String>'};
+  bool get isEnum {
+    final element = field.type.element;
+    return element is EnumElement;
+  }
+
+  /// The enum type name (e.g. `'ThemeMode'`), only valid when [isEnum] is true.
+  String get enumTypeName => nonNullableTypeReference.symbol!;
+
+  bool get isDateTime => nonNullableTypeReference.symbol == 'DateTime';
+
+  static const _prefDateTimeChecker = TypeChecker.fromUrl(
+    'package:shared_prefs_typed_annotations/src/pref_date_time.dart#PrefDateTime',
+  );
+
+  /// Returns the [DateTimeEncoding] for this field, or `null` if no
+  /// `@PrefDateTime` annotation is present.
+  DateTimeEncoding? get dateTimeEncoding {
+    final value = _prefDateTimeChecker.firstAnnotationOfExact(field);
+    if (value == null) return null;
+    final index = value.getField('encoding')?.getField('index')?.toIntValue();
+    if (index == null) return null;
+    return DateTimeEncoding.values[index];
+  }
+
+  static const _supportedTypes = {
+    'int', 'double', 'bool', 'String', 'List<String>', 'List<int>', 'List<double>'
+  };
+
+  /// Returns `'int'` or `'double'` for `List<int>`/`List<double>`, `null` otherwise.
+  String? get numericListElementType {
+    final typeString = nonNullableTypeReference.symbol!;
+    if (typeString == 'List<int>') return 'int';
+    if (typeString == 'List<double>') return 'double';
+    return null;
+  }
 
   String get prefTypeName {
+    if (isEnum) return 'String';
+    if (isDateTime) {
+      final encoding = dateTimeEncoding;
+      if (encoding == null) {
+        throw InvalidGenerationSourceError(
+          'The field `$name` is a DateTime but has no @PrefDateTime annotation. '
+          'Add `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)` or '
+          '`@PrefDateTime(DateTimeEncoding.iso8601)` to specify the encoding.',
+          element: field,
+        );
+      }
+      return encoding == DateTimeEncoding.millisecondsSinceEpoch ? 'Int' : 'String';
+    }
     final typeString = nonNullableTypeReference.symbol!;
     if (typeString == 'List<String>') return 'StringList';
+    if (typeString == 'List<int>' || typeString == 'List<double>') return 'StringList';
     if (!_supportedTypes.contains(typeString)) {
       throw InvalidGenerationSourceError(
         'The field `$name` has unsupported type `${field.type.getDisplayString()}`. '
-        'Supported types are: ${_supportedTypes.join(', ')} (and their nullable variants).',
+        'Supported types are: ${_supportedTypes.join(', ')}, Enum types, '
+        'DateTime (and their nullable variants).',
         element: field,
       );
     }
@@ -477,14 +788,29 @@ class _SharedPrefField {
 
     final type = constantValue.type;
     if (type == null) return 'null';
-    if (type.isDartCoreInt) return constantValue.toIntValue().toString();
-    if (type.isDartCoreString) {
-      return "'${_escapeDartString(constantValue.toStringValue()!)}'";
+    if (isEnum) {
+      final enumName = constantValue.getField('_name')?.toStringValue();
+      if (enumName != null) return '$enumTypeName.$enumName';
+      return 'null';
     }
-    if (type.isDartCoreBool) return constantValue.toBoolValue().toString();
-    if (type.isDartCoreDouble) return constantValue.toDoubleValue().toString();
+    if (type.isDartCoreInt) return constantValue.toIntValue()?.toString() ?? 'null';
+    if (type.isDartCoreString) {
+      final s = constantValue.toStringValue();
+      return s != null ? "'${_escapeDartString(s)}'" : 'null';
+    }
+    if (type.isDartCoreBool) return constantValue.toBoolValue()?.toString() ?? 'null';
+    if (type.isDartCoreDouble) return constantValue.toDoubleValue()?.toString() ?? 'null';
     if (type.isDartCoreList) {
       final listValues = constantValue.toListValue()!;
+      final typeStr = nonNullableTypeReference.symbol!;
+      if (typeStr == 'List<int>') {
+        final values = listValues.map((e) => e.toIntValue()!.toString()).join(', ');
+        return 'const <int>[$values]';
+      }
+      if (typeStr == 'List<double>') {
+        final values = listValues.map((e) => e.toDoubleValue()!.toString()).join(', ');
+        return 'const <double>[$values]';
+      }
       final stringValues = listValues
           .map((DartObject e) => "'${_escapeDartString(e.toStringValue()!)}'")
           .join(', ');

@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+**Breaking change** — re-run `flutter pub run build_runner build` after upgrading. `create()` and `fromBackend()` are removed; use `init()` or the public constructor instead.
+
+### New
+
+* **`List<int>` and `List<double>` support** — numeric lists are transparently serialized to `List<String>` storage (via `.toString()`) and deserialized back (`int.parse` / `double.parse`). Nullable variants (`List<int>?`, `List<double>?`) are supported. Default values are rendered as typed literals (`const <int>[1, 2, 3]`).
+* **`@PrefKey('storage_key')` annotation** — override the SharedPreferences storage key per field while keeping the field-derived Dart API name. Generator rejects empty keys and duplicate resolved keys.
+* **Native `Enum` support** — enum fields are stored as `String` (via `.name`) and parsed back via `.values.byName()`. Non-nullable enums use the const default value; nullable enums return `null` when absent.
+* **`DateTime` support** (nullable only) — requires `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)` or `@PrefDateTime(DateTimeEncoding.iso8601)` per field. Generator reports a clear build-time error when the annotation is missing.
+* **Public `const` constructor** — `ClassName(prefs)` is now the single way to create an instance with a custom backend. Enables standard constructor injection for DI frameworks (GetIt, Riverpod) and clean per-test instances.
+* **Concurrency-safe `init()`** — memoizes the underlying `Future` so concurrent calls (e.g. from multiple widgets or isolates) share the same future and never double-initialize. Safe to call multiple times; returns immediately when already initialized.
+* **`resetInstance()`** now clears both `_instance` and the memoized `_initFuture`, giving tests a fully clean slate.
+
+### Removed
+
+* `create()` factory method — use `init()` for the singleton or `ClassName(prefs)` for DI/testing.
+* `fromBackend()` named constructor — replaced by the public `const` constructor `ClassName(prefs)`.
+
+### Fixed
+
+* **`DateTime.parse` crash** — getter now wraps `DateTime.parse()` in a `try-catch`; returns `null` on malformed stored data instead of throwing `FormatException`.
+* **Data-loss warning** — generated file now includes a header comment warning that renaming a field changes its storage key (causing silent data loss) unless `@PrefKey` is used.
+* **`analyzer` 10.0.1 compatibility** — `constantValue.type` is now null-checked before accessing `isDartCoreInt` / `isDartCoreDouble` / etc.
+
+### Migration
+
+After upgrading, re-run:
+
+```bash
+flutter pub run build_runner build
+```
+
+Replace any calls to `ClassName.create()` or `ClassName.fromBackend(prefs)` with `ClassName(prefs)`.
+
 ## 0.6.1
 
 * Fixed README.md
