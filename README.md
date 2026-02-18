@@ -76,7 +76,7 @@ abstract class _AppPreferences {
 ### 2. Run the generator
 
 ```sh
-dart run build_runner build
+flutter pub run build_runner build
 ```
 
 This produces `lib/app_preferences.g.dart` containing the `AppPreferences` class.
