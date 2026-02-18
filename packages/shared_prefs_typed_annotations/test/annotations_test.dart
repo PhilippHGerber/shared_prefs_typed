@@ -31,4 +31,37 @@ void main() {
       expect(annotation.async, isFalse);
     });
   });
+
+  group('PrefDateTime Annotation', () {
+    test('can be instantiated with millisecondsSinceEpoch encoding', () {
+      const annotation = PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch);
+      expect(annotation, isA<PrefDateTime>());
+      expect(annotation.encoding, DateTimeEncoding.millisecondsSinceEpoch);
+    });
+
+    test('can be instantiated with iso8601 encoding', () {
+      const annotation = PrefDateTime(DateTimeEncoding.iso8601);
+      expect(annotation.encoding, DateTimeEncoding.iso8601);
+    });
+  });
+
+  group('DateTimeEncoding', () {
+    test('has exactly two values', () {
+      expect(DateTimeEncoding.values, hasLength(2));
+    });
+  });
+
+  group('PrefKey Annotation', () {
+    test('can be instantiated with a key', () {
+      const annotation = PrefKey('my_key');
+      expect(annotation, isA<PrefKey>());
+      expect(annotation.key, 'my_key');
+    });
+
+    test('can be instantiated with an empty key', () {
+      // The annotation itself allows empty strings; the generator validates.
+      const annotation = PrefKey('');
+      expect(annotation.key, '');
+    });
+  });
 }
