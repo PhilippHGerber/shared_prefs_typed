@@ -2,6 +2,15 @@
 
 All notable changes to this package will be documented in this file.
 
+## Unreleased
+
+### New
+
+* **`@PrefKey(String key)`** — field-level annotation to override the SharedPreferences storage key. Added `@Target({TargetKind.field})`.
+* **`@PrefDateTime(DateTimeEncoding encoding)`** — field-level annotation to specify how a `DateTime` field is encoded in storage. Added `@Target({TargetKind.field})`.
+* **`DateTimeEncoding` enum** — two variants: `millisecondsSinceEpoch` (stored as `int`) and `iso8601` (stored as `String`).
+* **`generateInterface`** parameter added to `TypedPrefs` — when `true`, the generator also produces an abstract `{ClassName}Base` interface.
+
 ## 0.6.0
 
 * Added `@Target({TargetKind.classType})` to `TypedPrefs` — misuse on non-class declarations now produces an IDE-level error
