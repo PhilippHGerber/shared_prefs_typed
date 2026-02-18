@@ -37,9 +37,11 @@ Then, run `flutter pub get`.
 
 ## 💡 Usage
 
-### 1. Define Your Preferences
+### 1. Define Your Preferences Schema
 
 Create a Dart file (e.g., `lib/app_preferences.dart`) and define your preferences using a private abstract class annotated with `@TypedPrefs()`.
+
+The supported field types are: `int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `DateTime` (via `@PrefDateTime`), and any `Enum` type — plus nullable variants of each.
 
 ```dart
 // lib/app_preferences.dart
@@ -47,101 +49,103 @@ import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.da
 
 @TypedPrefs()
 abstract class _AppPreferences {
+  // Primitives with defaults
   static const int counter = 0;
-  static const String? username = null;
+  static const bool isDarkMode = false;
+  static const String greeting = 'Hello';
+
+  // Lists — numeric lists are transparently stored as List<String>
   static const List<String> tagList = ['default'];
+  static const List<int> recentItemIds = <int>[];
+  static const List<double> priceHistory = <double>[9.99, 14.99];
+
+  // Nullable — returns null when the key is absent
+  static const String? username = null;
 }
 ```
 
 ### 2. Run the Code Generator
 
-Execute the following command in your project root to generate the necessary service class:
-
 ```bash
 flutter pub run build_runner build
 ```
 
-This will generate the `app_preferences.g.dart` file containing your public `AppPreferences` service class.
+This generates `app_preferences.g.dart` containing your public `AppPreferences` service class.
 
-### 3. Initialize and Access
+---
 
-The generated class is a singleton that must be initialized asynchronously once, typically in your `main` function. After initialization, you can access your preferences synchronously through the `instance`.
+## 🟢 Simple Usage — Singleton
 
-#### Default Mode: Synchronous Access (`@TypedPrefs()`)
+**Best for:** Small/medium apps with a single entrypoint.
 
-This is the recommended mode for most UI-related preferences. Getters are fast and synchronous.
+Call `await AppPreferences.init()` once at startup; then read values synchronously from anywhere via `AppPreferences.instance`.
 
 ```dart
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'app_preferences.g.dart'; // Import the generated file
+import 'app_preferences.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the preferences service.
-  // It's crucial to wrap this in a try-catch block to handle potential
-  // storage access errors on startup.
-  try {
-    await AppPreferences.init();
-  } catch (e) {
-    print('Failed to initialize preferences: $e');
-  }
-
+  await AppPreferences.init();
   runApp(const MyApp());
 }
 
-// In your widgets:
+// Anywhere in the app — no context needed:
 class MyWidget extends StatelessWidget {
   const MyWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 1. Access the singleton instance
     final prefs = AppPreferences.instance;
 
-    // 2. Getters are synchronous
-    final currentCounter = prefs.counter;
-
     return FloatingActionButton(
-      onPressed: () {
-        // 3. Setters are always asynchronous
-        prefs.setCounter(currentCounter + 1);
-      },
-      child: Text('$currentCounter'),
+      // Getters are synchronous
+      child: Text('${prefs.counter}'),
+      // Setters are always async
+      onPressed: () => prefs.setCounter(prefs.counter + 1),
     );
   }
 }
 ```
 
-#### Alternative Mode: Asynchronous Access (`@TypedPrefs(async: true)`)
+`init()` is safe to call multiple times — concurrent callers share the same `Future` and no double-initialization occurs.
 
-Use this mode if your preference data can be changed by another isolate or native code, and you need to ensure you're always fetching the latest value from disk.
+### Async mode
+
+Use `@TypedPrefs(async: true)` when preferences can be modified from another isolate or native code and you always need the freshest value from disk. Getters return `Future`s instead of plain values.
 
 ```dart
-// lib/async_prefs.dart
-@TypedPrefs(async: true) // Enable async mode
+@TypedPrefs(async: true)
 abstract class _AsyncPrefs {
   static const int pingCount = 0;
 }
 
-// --- Usage ---
-// final prefs = AsyncPrefs.instance;
-
-// Getters now return a Future and must be awaited.
-final count = await prefs.pingCount;
-
-// Setters remain asynchronous.
+// Usage:
+final count = await prefs.pingCount;     // Future getter
 await prefs.setPingCount(count + 1);
 ```
 
-### ✅ Testing
+---
 
-The generated class supports two testing strategies.
+## 🔵 Advanced Usage — DI & Testing
 
-#### Option A: Constructor injection (recommended)
+**Best for:** Large apps, testable architectures, and any test file that needs isolated preference state.
 
-Pass a `SharedPreferencesWithCache` (or `SharedPreferencesAsync`) directly to the constructor. No global platform state required:
+The generated class exposes a **public `const` constructor** that accepts the storage backend directly. This is the preferred pattern for both dependency injection and testing: pass a real or in-memory backend explicitly, touch no global state.
+
+```dart
+final backend = await SharedPreferencesWithCache.create(
+  cacheOptions: const SharedPreferencesWithCacheOptions(),
+);
+
+// No init() call needed — no global singleton touched.
+final prefs = AppPreferences(backend);
+```
+
+### Testing
+
+Pass a backend built on `InMemorySharedPreferencesAsync` — no platform channel, no singleton cleanup, each test gets a completely isolated instance:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
@@ -149,7 +153,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
-import 'package:test_app/app_preferences.g.dart';
+import 'package:my_app/app_preferences.g.dart';
 
 void main() {
   setUpAll(() {
@@ -160,6 +164,7 @@ void main() {
   late AppPreferences prefs;
 
   setUp(() async {
+    // Clear the in-memory store between tests.
     await SharedPreferencesAsyncPlatform.instance?.clear(
       const ClearPreferencesParameters(filter: PreferencesFilters()),
       const SharedPreferencesOptions(),
@@ -167,7 +172,8 @@ void main() {
     final backend = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
-    prefs = AppPreferences(backend); // direct constructor — no init() needed
+    // Construct directly — AppPreferences(backend) is the preferred mock injection point.
+    prefs = AppPreferences(backend);
   });
 
   tearDown(AppPreferences.resetInstance);
@@ -180,23 +186,9 @@ void main() {
 }
 ```
 
-#### Option B: Singleton pattern (backward compatible)
+### Dependency Injection
 
-The `init()` / `instance` pattern still works exactly as before:
-
-```dart
-setUp(() async {
-  await AppPreferences.init();
-});
-
-test('counter', () {
-  expect(AppPreferences.instance.counter, 0);
-});
-```
-
-### 🔌 Dependency Injection
-
-The public constructor integrates naturally with DI frameworks.
+The constructor integrates naturally with any DI framework.
 
 **GetIt (simple — no interface):**
 
@@ -207,17 +199,17 @@ final backend = await SharedPreferencesWithCache.create(
 getIt.registerSingleton<AppPreferences>(AppPreferences(backend));
 ```
 
-**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesBase`, then register the concrete type under the abstract base. Production code never imports `AppPreferences` directly:
+**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesBase`. Production code depends only on the abstract base and is trivially mockable with Mocktail:
 
 ```dart
-// schema
+// Schema
 @TypedPrefs(generateInterface: true)
 abstract class _AppPreferences { ... }
 
-// startup
+// Startup
 getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
 
-// everywhere else
+// Everywhere else
 getIt<AppPreferencesBase>().counter
 
 // Mocktail mock in tests
@@ -228,12 +220,13 @@ class MockAppPreferences extends Mock implements AppPreferencesBase {}
 
 ```dart
 final appPrefsProvider = Provider<AppPreferences>((ref) {
-  // Obtain backend from another provider or pass it in.
   return AppPreferences(ref.read(sharedPrefsBackendProvider));
 });
 ```
 
 For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesBase`).
+
+---
 
 ## 🤔 Why `shared_prefs_typed`?
 
