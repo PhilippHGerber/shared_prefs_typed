@@ -1,5 +1,8 @@
 import 'package:meta/meta_meta.dart';
 
+export 'src/pref_date_time.dart';
+export 'src/pref_key.dart';
+
 /// Annotates a private abstract class to generate a type-safe singleton
 /// service for the modern `shared_preferences` plugin APIs.
 ///
