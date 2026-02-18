@@ -14,6 +14,12 @@ void main() async {
     'shared_prefs_typed_annotations|lib/shared_prefs_typed_annotations.dart': await File(
       '../shared_prefs_typed_annotations/lib/shared_prefs_typed_annotations.dart',
     ).readAsString(),
+    'shared_prefs_typed_annotations|lib/src/pref_key.dart': await File(
+      '../shared_prefs_typed_annotations/lib/src/pref_key.dart',
+    ).readAsString(),
+    'shared_prefs_typed_annotations|lib/src/pref_date_time.dart': await File(
+      '../shared_prefs_typed_annotations/lib/src/pref_date_time.dart',
+    ).readAsString(),
     'meta|lib/meta.dart': await File('$metaDir/lib/meta.dart').readAsString(),
     'meta|lib/meta_meta.dart': await File('$metaDir/lib/meta_meta.dart').readAsString(),
   };
@@ -66,12 +72,59 @@ void main() async {
     );
 
     test(
-      'should generate abstract interface when generateInterface is true',
+      'should generate correct code for List<int> and List<double> types',
       () async {
         final sourceAssets = {
           ...commonAssets,
-          'my_package|lib/interface_case.dart': await File(
-            'test/src/interface_case.dart',
+          'my_package|lib/numeric_list_case.dart': await File(
+            'test/src/numeric_list_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/numeric_list_case.g.dart': await File(
+            'test/goldens/numeric_list_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for nullable primitive types (int?, double?, bool?) '
+      'and empty List<String> default',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/nullable_primitives_case.dart': await File(
+            'test/src/nullable_primitives_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/nullable_primitives_case.g.dart': await File(
+            'test/goldens/nullable_primitives_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should correctly escape special characters in string default values',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/string_escaping_case.dart': await File(
+            'test/src/string_escaping_case.dart',
           ).readAsString(),
         };
         await testBuilder(
@@ -79,25 +132,213 @@ void main() async {
           sourceAssets,
           rootPackage: 'my_package',
           outputs: {
-            'my_package|lib/interface_case.g.dart': predicate<List<int>>(
+            'my_package|lib/string_escaping_case.g.dart': predicate<List<int>>(
               (bytes) {
                 final content = utf8.decode(bytes);
-                return content.contains('abstract class InterfacePrefsBase') &&
-                    content.contains('int get counter;') &&
-                    content.contains('String? get name;') &&
-                    content.contains('Future<void> setCounter(int value);') &&
-                    content.contains('bool isSetCounter();') &&
-                    content.contains('Future<void> removeCounter();') &&
-                    content.contains(
-                      'class InterfacePrefs implements InterfacePrefsBase',
-                    ) &&
-                    content.contains('InterfacePrefs(this._prefs)') &&
-                    content.contains('static InterfacePrefs get instance') &&
-                    content.contains('static void resetInstance()');
+                // Backslash is doubled: path\to\file → 'path\\to\\file'
+                final hasBackslash = content.contains(r"'path\\to\\file'") ||
+                    content.contains(r'"path\\to\\file"');
+                // Dollar sign is escaped: cost is $10 → 'cost is \$10'
+                final hasDollar = content.contains(r"'cost is \$10'") ||
+                    content.contains(r'"cost is \$10"');
+                // Actual newline char is represented as \n escape sequence
+                final hasNewline = content.contains(r"'line1\nline2'") ||
+                    content.contains(r'"line1\nline2"');
+                // Actual tab char is represented as \t escape sequence
+                final hasTab = content.contains(r"'col1\tcol2'") ||
+                    content.contains(r'"col1\tcol2"');
+                // Single quote is escaped or string uses double quotes
+                final hasSingleQuote = content.contains(r"it\'s here") ||
+                    content.contains("it's here");
+                return hasBackslash && hasDollar && hasNewline && hasTab && hasSingleQuote;
               },
-              'contains expected interface and concrete class declarations',
+              'contains correctly escaped string default values',
             ),
           },
+        );
+      },
+    );
+
+    test(
+      'should strip leading underscore from field name and handle single-char field names',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/field_naming_case.dart': await File(
+            'test/src/field_naming_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/field_naming_case.g.dart': await File(
+            'test/goldens/field_naming_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate a valid singleton class for a class with no fields',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/empty_class_case.dart': await File(
+            'test/src/empty_class_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/empty_class_case.g.dart': await File(
+            'test/goldens/empty_class_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate abstract interface and concrete class when generateInterface is true',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/interface_case.dart': await File(
+            'test/src/interface_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/interface_case.g.dart': await File(
+            'test/goldens/interface_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should silently ignore non-const fields and only generate methods for static const fields',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/non_const_field_case.dart': await File(
+            'test/src/non_const_field_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/non_const_field_case.g.dart': await File(
+            'test/goldens/non_const_field_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code combining async mode and generateInterface',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/async_interface_case.dart': await File(
+            'test/src/async_interface_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/async_interface_case.g.dart': await File(
+            'test/goldens/async_interface_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should use @PrefKey value as storage key while keeping field-derived API names',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/pref_key_case.dart': await File(
+            'test/src/pref_key_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/pref_key_case.g.dart': await File(
+            'test/goldens/pref_key_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should report error for duplicate SharedPreferences keys',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_duplicate_pref_key.dart': await File(
+            'test/src/error_duplicate_pref_key.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(contains('Duplicate SharedPreferences key')),
+        );
+      },
+    );
+
+    test(
+      'should report error when @TypedPrefs is used on a non-class element',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_on_function.dart': await File(
+            'test/src/error_on_function.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(contains('can only be used on classes')),
         );
       },
     );
@@ -121,6 +362,121 @@ void main() async {
         expect(
           logs.map((l) => l.message),
           contains(contains('must start with an underscore')),
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for enum types',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/enum_case.dart': await File(
+            'test/src/enum_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/enum_case.g.dart': await File(
+            'test/goldens/enum_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for DateTime with millisecondsSinceEpoch encoding',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/date_time_millis_case.dart': await File(
+            'test/src/date_time_millis_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/date_time_millis_case.g.dart': await File(
+            'test/goldens/date_time_millis_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for DateTime with iso8601 encoding',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/date_time_iso_case.dart': await File(
+            'test/src/date_time_iso_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/date_time_iso_case.g.dart': await File(
+            'test/goldens/date_time_iso_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for async DateTime with iso8601 encoding',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/async_date_time_iso_case.dart': await File(
+            'test/src/async_date_time_iso_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/async_date_time_iso_case.g.dart': await File(
+            'test/goldens/async_date_time_iso_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should report error for DateTime field without @PrefDateTime annotation',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_date_time_no_annotation.dart': await File(
+            'test/src/error_date_time_no_annotation.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(contains('has no @PrefDateTime annotation')),
         );
       },
     );

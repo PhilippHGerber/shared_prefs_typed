@@ -5,6 +5,8 @@ import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.da
 
 @TypedPrefs()
 abstract class _BadPrefs {
-  static const int counter = 0;
-  static const Map<String, int> lookup = {};
+  @PrefKey('shared_key')
+  static const int fieldA = 0;
+  @PrefKey('shared_key')
+  static const bool fieldB = false;
 }

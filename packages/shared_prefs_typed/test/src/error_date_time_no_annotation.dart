@@ -4,7 +4,6 @@
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
 @TypedPrefs()
-abstract class _BadPrefs {
-  static const int counter = 0;
-  static const Map<String, int> lookup = {};
+abstract class _BadDateTimePrefs {
+  static const DateTime? createdAt = null;
 }
