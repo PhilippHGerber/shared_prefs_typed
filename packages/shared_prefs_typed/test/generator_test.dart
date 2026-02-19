@@ -493,6 +493,52 @@ void main() async {
     );
 
     test(
+      'should generate correct code for non-nullable DateTime with millisecondsSinceEpoch encoding',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/date_time_non_null_millis_case.dart': await File(
+            'test/src/date_time_non_null_millis_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/date_time_non_null_millis_case.g.dart': await File(
+            'test/goldens/date_time_non_null_millis_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for non-nullable DateTime with iso8601 encoding',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/date_time_non_null_iso_case.dart': await File(
+            'test/src/date_time_non_null_iso_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/date_time_non_null_iso_case.g.dart': await File(
+            'test/goldens/date_time_non_null_iso_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
       'should generate correct code for async DateTime with iso8601 encoding',
       () async {
         final sourceAssets = {
