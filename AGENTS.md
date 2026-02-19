@@ -10,19 +10,17 @@ Annotate a **private abstract class** with `@TypedPrefs()` and declare `static c
 
 Add to `pubspec.yaml`:
 
-```yaml
-dependencies:
-  shared_preferences: ^2.5.0
-  shared_prefs_typed_annotations: ^0.6.0
+```sh
+# Adds the annotations package to your dependencies
+flutter pub add shared_prefs_typed_annotations
 
-dev_dependencies:
-  build_runner: ^2.4.0
-  shared_prefs_typed: ^0.6.0
+# Adds the builder and generator to your dev_dependencies
+flutter pub add --dev build_runner shared_prefs_typed
 ```
 
 Run code generation:
 
-```bash
+```sh
 flutter pub run build_runner build
 ```
 
@@ -30,7 +28,7 @@ flutter pub run build_runner build
 
 `int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>` — plus nullable variants (`int?`, `double?`, `bool?`, `String?`).
 
-Also supported: **Enum types** (any Dart enum) and **`DateTime`** (requires `@PrefDateTime` annotation; always nullable).
+Also supported: **Enum types** (any Dart enum) and **`DateTime`** (requires `@PrefDateTime` annotation; nullable by default, non-nullable when `defaultMillis:` is provided).
 
 ## Usage Pattern
 
@@ -50,7 +48,9 @@ abstract class _AppPreferences {
   static const List<String> tags = <String>[];
   static const List<int> scores = <int>[];
   @PrefDateTime(DateTimeEncoding.iso8601)
-  static const DateTime? lastLogin = null; // DateTime always nullable
+  static const DateTime? lastLogin = null; // nullable getter (DateTime?)
+  @PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch, defaultMillis: 0)
+  static const DateTime? installDate = null; // non-nullable getter (DateTime)
   @PrefKey('legacy_theme_key')
   static const ThemeMode theme = ThemeMode.system; // Enum with custom key
 }
@@ -60,9 +60,9 @@ abstract class _AppPreferences {
 
 The generator creates class `AppPreferences` (leading `_` stripped) with:
 
-- **Constructor**: `const AppPreferences(SharedPreferencesWithCache prefs)` — for DI/testing
+- **Constructor**: `AppPreferences(SharedPreferencesWithCache prefs)` — for DI/testing
 - **Singleton**: `static Future<AppPreferences> init()` (concurrency-safe, idempotent) + `static AppPreferences get instance` (throws `StateError` if `init` not called)
-- **Teardown**: `static void resetInstance()` — clears both `_instance` and `_initFuture`; use in test teardown
+- **Teardown**: `@visibleForTesting static void resetInstance()` — clears both `_instance` and `_initFuture`; use in test teardown only
 - **Per field** (e.g. `counter`):
   - `int get counter` -- sync getter, returns default if unset
   - `Future<void> setCounter(int value)` -- async setter
@@ -92,13 +92,13 @@ void main() async {
 
 | Option | Default | Effect |
 |---|---|---|
-| `async` | `false` | `true` = async getters via `SharedPreferencesAsync` (reads from platform each time). `false` = sync getters via `SharedPreferencesWithCache`. |
+| `mode` | `null` | `PrefsMode.async` = async getters via `SharedPreferencesAsync`. `PrefsMode.cached` or omitted = sync getters via `SharedPreferencesWithCache`. |
 | `generateInterface` | `false` | `true` = generates an abstract `${ClassName}Base` class that the concrete class implements. Useful for mocking and DI. |
 
 ### Async mode
 
 ```dart
-@TypedPrefs(async: true)
+@TypedPrefs(mode: PrefsMode.async)
 abstract class _AsyncPreferences {
   static const int pingCount = 0;
 }
@@ -130,17 +130,21 @@ static const int counter = 0;
 
 ### `@PrefDateTime` — DateTime encoding
 
-Required on every `DateTime` field. DateTime fields are always nullable.
+Required on every `DateTime` field. Fields must be declared `DateTime?` (no const DateTime constructors exist in Dart).
 
 ```dart
 @PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)
-static const DateTime? lastSeen = null;  // stored as int (ms since epoch)
+static const DateTime? lastSeen = null;  // stored as int; getter returns DateTime?
 
 @PrefDateTime(DateTimeEncoding.iso8601)
-static const DateTime? createdAt = null; // stored as ISO-8601 string
+static const DateTime? createdAt = null; // stored as ISO-8601 string; getter returns DateTime?
+
+// Non-nullable getter: pass defaultMillis to get DateTime instead of DateTime?
+@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch, defaultMillis: 0)
+static const DateTime? installDate = null; // getter returns DateTime (epoch fallback)
 ```
 
-`iso8601` getters wrap `DateTime.parse` in a try/catch and return `null` on parse failure.
+`iso8601` getters wrap `DateTime.parse` in a try/catch and return the default on parse failure.
 
 ### Enum types
 

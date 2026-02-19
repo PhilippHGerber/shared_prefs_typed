@@ -39,13 +39,12 @@ await prefs.removeUsername();
 
 Add to your `pubspec.yaml`:
 
-```yaml
-dependencies:
-  shared_prefs_typed_annotations: ^0.7.0
+```sh
+# Adds the annotations package to your dependencies
+flutter pub add shared_prefs_typed_annotations
 
-dev_dependencies:
-  build_runner: ^2.11.1
-  shared_prefs_typed: ^0.7.0
+# Adds the builder and generator to your dev_dependencies
+flutter pub add --dev build_runner shared_prefs_typed
 ```
 
 ---
@@ -175,8 +174,12 @@ when(() => prefs.counter).thenReturn(42);
 | `List<String>` | *(not supported)* |
 | `List<int>` | *(not supported)* |
 | `List<double>` | *(not supported)* |
+| `DateTime?` (requires `@PrefDateTime`) | — |
+| Any `Enum` type | nullable variant |
 
 > **Nullable with non-null default:** If a field is declared `int?` but given a non-null default (e.g. `static const int? retryCount = 3`), the getter returns the non-nullable type `int`. The setter still accepts `int?` so passing `null` removes the key.
+>
+> **Non-nullable `DateTime`:** `DateTime` has no const constructors, so fields must be declared `DateTime?`. Pass `defaultMillis:` to `@PrefDateTime` to get a non-nullable getter: `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch, defaultMillis: 0)` produces `DateTime get installDate` with epoch as the fallback.
 
 Unsupported types produce a build-time error.
 

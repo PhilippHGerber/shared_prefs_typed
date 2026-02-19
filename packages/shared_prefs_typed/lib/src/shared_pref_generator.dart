@@ -643,43 +643,45 @@ Method _generateRemover(_SharedPrefField field) => Method(
 
 String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
+  final defaultExpr = field.defaultValue;
   final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
   if (isMillis) {
     return 'try {\n'
         "  final raw = _prefs.getInt('$key');\n"
-        '  if (raw == null) return null;\n'
+        '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (_) {\n'
-        '  return null;\n'
+        '  return $defaultExpr;\n'
         '}';
   }
   return "final raw = _prefs.getString('$key');\n"
-      'if (raw == null) return null;\n'
+      'if (raw == null) return $defaultExpr;\n'
       'try {\n'
       'return DateTime.parse(raw);\n'
       '} catch (_) {\n'
-      'return null;\n'
+      'return $defaultExpr;\n'
       '}';
 }
 
 String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
+  final defaultExpr = field.defaultValue;
   final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
   if (isMillis) {
     return 'try {\n'
         "  final raw = (await _prefs.getInt('$key'));\n"
-        '  if (raw == null) return null;\n'
+        '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (_) {\n'
-        '  return null;\n'
+        '  return $defaultExpr;\n'
         '}';
   }
   return "final raw = (await _prefs.getString('$key'));\n"
-      'if (raw == null) return null;\n'
+      'if (raw == null) return $defaultExpr;\n'
       'try {\n'
       'return DateTime.parse(raw);\n'
       '} catch (_) {\n'
-      'return null;\n'
+      'return $defaultExpr;\n'
       '}';
 }
 
@@ -876,6 +878,15 @@ class _SharedPrefField {
   }
 
   String get defaultValue {
+    // DateTime has no const constructors; the non-null default comes from @PrefDateTime.
+    if (isDateTime) {
+      final millis = _prefDateTimeChecker
+          .firstAnnotationOfExact(field)
+          ?.getField('defaultMillis')
+          ?.toIntValue();
+      if (millis != null) return 'DateTime.fromMillisecondsSinceEpoch($millis)';
+      return 'null';
+    }
     final constantValue = field.computeConstantValue();
     if (constantValue == null || constantValue.isNull) return 'null';
 

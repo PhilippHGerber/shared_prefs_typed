@@ -14,26 +14,13 @@ A code generator that creates a type-safe API for `shared_preferences`, eliminat
 
 Run the following commands in your terminal to add the necessary packages:
 
-```bash
+```sh
 # Adds the annotations package to your dependencies
 flutter pub add shared_prefs_typed_annotations
 
 # Adds the builder and generator to your dev_dependencies
 flutter pub add --dev build_runner shared_prefs_typed
 ```
-
-After running the commands, your pubspec.yaml will be updated. It should look similar to this:
-
-```yaml
-dependencies:
-  shared_prefs_typed_annotations: ^0.6.0
-
-dev_dependencies:
-  build_runner: ^2.11.1
-  shared_prefs_typed: ^0.6.0
-```
-
-Then, run `flutter pub get`.
 
 ## 💡 Usage
 

@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 * **`async: bool` deprecated in favour of `mode: PrefsMode`** — replace `@TypedPrefs(async: true)` with `@TypedPrefs(mode: PrefsMode.async)`. The `async` parameter still works but will be removed in 1.0.0. `PrefsMode` is now exported from `shared_prefs_typed_annotations`.
 * **`isSetFoo()` renamed to `containsFoo()`** — aligns with idiomatic Dart (`Map.containsKey`, `Set.contains`). Rename all call sites.
 
+### New
+
+* **Non-nullable `DateTime` getters via `@PrefDateTime(encoding, defaultMillis: N)`** — pass `defaultMillis` to produce a non-nullable `DateTime` getter with the given epoch milliseconds as fallback. The field must still be declared `DateTime?` (no const DateTime constructors exist in Dart).
+
 ## 0.7.0
 
 > Re-run `flutter pub run build_runner build`.
