@@ -9,7 +9,7 @@ This project contains several key examples in the `lib/` directory:
 * **`main.dart`**: A complete example of a stateful counter and an editable user greeting, demonstrating the default synchronous getter (`@TypedPrefs()`).
 * **`theme_example.dart`**: Shows how to manage and persist app-wide state, like the theme (Light/Dark/System), using nullable preferences.
 * **`app_preferences.dart`**: The schema definition for the preferences used in the main examples.
-* **`async_prefs.dart`**: A schema definition that explicitly uses `@TypedPrefs(async: true)` to demonstrate the asynchronous getter mode.
+* **`async_prefs.dart`**: A schema definition that explicitly uses `@TypedPrefs(mode: PrefsMode.async)` to demonstrate the asynchronous getter mode.
 
 ## ✅ How Testing Works
 
