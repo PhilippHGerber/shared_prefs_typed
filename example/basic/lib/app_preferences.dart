@@ -59,4 +59,14 @@ abstract class AppPreferences {
   /// A counter that can be cleared, reverting to its default of 100.
   // ignore: unnecessary_nullable_for_final_variable_declarations
   static const int? nullableCounterWithDefault = 100;
+
+  // --- DateTime fields (nullable) ---
+
+  /// The date of the last background sync, stored as ISO 8601.
+  @PrefDateTime(DateTimeEncoding.iso8601)
+  static const DateTime? lastSyncDate = null;
+
+  /// The timestamp of the last login in milliseconds since epoch.
+  @PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)
+  static const DateTime? lastLoginDate = null;
 }

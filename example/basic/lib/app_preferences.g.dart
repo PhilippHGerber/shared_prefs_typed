@@ -9,6 +9,7 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,15 @@ class AppPreferencesImpl {
   static AppPreferencesImpl? _instance;
 
   static Future<AppPreferencesImpl>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -80,7 +90,12 @@ class AppPreferencesImpl {
   int get counter {
     try {
       return _prefs.getInt('counter') ?? 0;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('counter', e);
       return 0;
     }
   }
@@ -110,7 +125,12 @@ class AppPreferencesImpl {
   String? get displayGreeting {
     try {
       return _prefs.getString('displayGreeting');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "displayGreeting": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('displayGreeting', e);
       return null;
     }
   }
@@ -145,7 +165,12 @@ class AppPreferencesImpl {
   double get pi {
     try {
       return _prefs.getDouble('pi') ?? 3.14;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "pi": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('pi', e);
       return 3.14;
     }
   }
@@ -175,7 +200,12 @@ class AppPreferencesImpl {
   bool get isWelcomeScreenDone {
     try {
       return _prefs.getBool('isWelcomeScreenDone') ?? false;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "isWelcomeScreenDone": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('isWelcomeScreenDone', e);
       return false;
     }
   }
@@ -205,7 +235,12 @@ class AppPreferencesImpl {
   String get greeting {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "greeting": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('greeting', e);
       return 'Hello';
     }
   }
@@ -326,7 +361,12 @@ class AppPreferencesImpl {
   String? get sessionId {
     try {
       return _prefs.getString('sessionId');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "sessionId": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('sessionId', e);
       return null;
     }
   }
@@ -361,7 +401,12 @@ class AppPreferencesImpl {
   int? get lastLoginTimestamp {
     try {
       return _prefs.getInt('lastLoginTimestamp');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "lastLoginTimestamp": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('lastLoginTimestamp', e);
       return null;
     }
   }
@@ -396,7 +441,12 @@ class AppPreferencesImpl {
   int get nullableCounterWithDefault {
     try {
       return _prefs.getInt('nullableCounterWithDefault') ?? 100;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableCounterWithDefault": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('nullableCounterWithDefault', e);
       return 100;
     }
   }
@@ -425,6 +475,90 @@ class AppPreferencesImpl {
     return _prefs.remove('nullableCounterWithDefault');
   }
 
+  /// Gets the value for `lastSyncDate` from the cache.
+  ///
+  /// If the key does not exist, the default value `null` is returned.
+  DateTime? get lastSyncDate {
+    final raw = _prefs.getString('lastSyncDate');
+    if (raw == null) return null;
+    try {
+      return DateTime.parse(raw);
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "lastSyncDate": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('lastSyncDate', e);
+      return null;
+    }
+  }
+
+  /// Asynchronously sets the value for `lastSyncDate`.
+  ///
+  /// If the provided [value] is `null`, the preference is removed from storage.
+  Future<void> setLastSyncDate(DateTime? value) {
+    if (value == null) {
+      return _prefs.remove('lastSyncDate');
+    }
+    return _prefs.setString('lastSyncDate', value.toIso8601String());
+  }
+
+  /// Checks if a value has been explicitly set for `lastSyncDate`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool containsLastSyncDate() {
+    return _prefs.containsKey('lastSyncDate');
+  }
+
+  /// Removes the stored value for `lastSyncDate`.
+  ///
+  /// After calling this, the getter will return the default value (`null`).
+  Future<void> removeLastSyncDate() {
+    return _prefs.remove('lastSyncDate');
+  }
+
+  /// Gets the value for `lastLoginDate` from the cache.
+  ///
+  /// If the key does not exist, the default value `null` is returned.
+  DateTime? get lastLoginDate {
+    try {
+      final raw = _prefs.getInt('lastLoginDate');
+      if (raw == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(raw);
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "lastLoginDate": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('lastLoginDate', e);
+      return null;
+    }
+  }
+
+  /// Asynchronously sets the value for `lastLoginDate`.
+  ///
+  /// If the provided [value] is `null`, the preference is removed from storage.
+  Future<void> setLastLoginDate(DateTime? value) {
+    if (value == null) {
+      return _prefs.remove('lastLoginDate');
+    }
+    return _prefs.setInt('lastLoginDate', value.millisecondsSinceEpoch);
+  }
+
+  /// Checks if a value has been explicitly set for `lastLoginDate`.
+  ///
+  /// Returns `true` if the key exists in persistent storage, `false` otherwise.
+  bool containsLastLoginDate() {
+    return _prefs.containsKey('lastLoginDate');
+  }
+
+  /// Removes the stored value for `lastLoginDate`.
+  ///
+  /// After calling this, the getter will return the default value (`null`).
+  Future<void> removeLastLoginDate() {
+    return _prefs.remove('lastLoginDate');
+  }
+
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
@@ -441,6 +575,8 @@ class AppPreferencesImpl {
       _prefs.remove('sessionId'),
       _prefs.remove('lastLoginTimestamp'),
       _prefs.remove('nullableCounterWithDefault'),
+      _prefs.remove('lastSyncDate'),
+      _prefs.remove('lastLoginDate'),
     ]);
   }
 }

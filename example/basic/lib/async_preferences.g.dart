@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +31,15 @@ class AsyncPreferencesImpl {
   static AsyncPreferencesImpl? _instance;
 
   static Future<AsyncPreferencesImpl>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -72,7 +83,12 @@ class AsyncPreferencesImpl {
   Future<int> get pingCount async {
     try {
       return (await _prefs.getInt('pingCount')) ?? 0;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "pingCount": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('pingCount', e);
       return 0;
     }
   }
@@ -102,7 +118,12 @@ class AsyncPreferencesImpl {
   Future<String?> get serverId async {
     try {
       return (await _prefs.getString('serverId'));
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "serverId": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('serverId', e);
       return null;
     }
   }
@@ -137,7 +158,12 @@ class AsyncPreferencesImpl {
   Future<bool> get isCacheEnabled async {
     try {
       return (await _prefs.getBool('isCacheEnabled')) ?? true;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "isCacheEnabled": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('isCacheEnabled', e);
       return true;
     }
   }
