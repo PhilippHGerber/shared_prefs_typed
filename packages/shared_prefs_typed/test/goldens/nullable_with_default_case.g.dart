@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +31,15 @@ class NullableWithDefaultPrefs {
   static NullableWithDefaultPrefs? _instance;
 
   static Future<NullableWithDefaultPrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -78,7 +89,12 @@ class NullableWithDefaultPrefs {
   int get retryCount {
     try {
       return _prefs.getInt('retryCount') ?? 3;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "retryCount": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('retryCount', e);
       return 3;
     }
   }
@@ -113,7 +129,12 @@ class NullableWithDefaultPrefs {
   double get threshold {
     try {
       return _prefs.getDouble('threshold') ?? 0.5;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "threshold": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('threshold', e);
       return 0.5;
     }
   }
@@ -148,7 +169,12 @@ class NullableWithDefaultPrefs {
   bool get featureEnabled {
     try {
       return _prefs.getBool('featureEnabled') ?? true;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "featureEnabled": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('featureEnabled', e);
       return true;
     }
   }
@@ -183,7 +209,12 @@ class NullableWithDefaultPrefs {
   String get greeting {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "greeting": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('greeting', e);
       return 'Hello';
     }
   }

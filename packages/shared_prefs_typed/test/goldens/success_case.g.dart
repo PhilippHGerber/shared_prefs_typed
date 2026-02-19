@@ -9,6 +9,7 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,15 @@ class TestPrefs {
   static TestPrefs? _instance;
 
   static Future<TestPrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -80,7 +90,12 @@ class TestPrefs {
   int get testInt {
     try {
       return _prefs.getInt('testInt') ?? 10;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "testInt": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('testInt', e);
       return 10;
     }
   }
@@ -110,7 +125,12 @@ class TestPrefs {
   double get testDouble {
     try {
       return _prefs.getDouble('testDouble') ?? 3.14;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "testDouble": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('testDouble', e);
       return 3.14;
     }
   }
@@ -140,7 +160,12 @@ class TestPrefs {
   bool get testBool {
     try {
       return _prefs.getBool('testBool') ?? true;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "testBool": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('testBool', e);
       return true;
     }
   }
@@ -170,7 +195,12 @@ class TestPrefs {
   String get testString {
     try {
       return _prefs.getString('testString') ?? 'Hello';
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "testString": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('testString', e);
       return 'Hello';
     }
   }
@@ -227,7 +257,12 @@ class TestPrefs {
   String? get testNullableString {
     try {
       return _prefs.getString('testNullableString');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "testNullableString": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('testNullableString', e);
       return null;
     }
   }

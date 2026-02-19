@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,6 +46,15 @@ class InterfacePrefs implements InterfacePrefsBase {
   static InterfacePrefs? _instance;
 
   static Future<InterfacePrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -93,7 +104,12 @@ class InterfacePrefs implements InterfacePrefsBase {
   int get counter {
     try {
       return _prefs.getInt('counter') ?? 0;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('counter', e);
       return 0;
     }
   }
@@ -123,7 +139,12 @@ class InterfacePrefs implements InterfacePrefsBase {
   String? get name {
     try {
       return _prefs.getString('name');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('name', e);
       return null;
     }
   }

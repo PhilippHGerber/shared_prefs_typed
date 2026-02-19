@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,6 +46,15 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   static AsyncInterfacePrefs? _instance;
 
   static Future<AsyncInterfacePrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -87,7 +98,12 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   Future<String> get message async {
     try {
       return (await _prefs.getString('message')) ?? 'hello';
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "message": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('message', e);
       return 'hello';
     }
   }
@@ -117,7 +133,12 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   Future<int> get count async {
     try {
       return (await _prefs.getInt('count')) ?? 0;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "count": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('count', e);
       return 0;
     }
   }

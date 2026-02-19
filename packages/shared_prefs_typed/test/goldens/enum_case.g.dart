@@ -30,6 +30,15 @@ class EnumPrefs {
 
   static Future<EnumPrefs>? _initFuture;
 
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
+
   final SharedPreferencesWithCache _prefs;
 
   /// The singleton instance. Throws a [StateError] if [init] has not been called.

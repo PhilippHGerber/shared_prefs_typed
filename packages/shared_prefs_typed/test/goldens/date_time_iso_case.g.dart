@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +31,15 @@ class DateTimeIsoPrefs {
   static DateTimeIsoPrefs? _instance;
 
   static Future<DateTimeIsoPrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -80,7 +91,12 @@ class DateTimeIsoPrefs {
     if (raw == null) return null;
     try {
       return DateTime.parse(raw);
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "lastLogin": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('lastLogin', e);
       return null;
     }
   }
@@ -117,7 +133,12 @@ class DateTimeIsoPrefs {
     if (raw == null) return null;
     try {
       return DateTime.parse(raw);
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "updatedAt": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('updatedAt', e);
       return null;
     }
   }

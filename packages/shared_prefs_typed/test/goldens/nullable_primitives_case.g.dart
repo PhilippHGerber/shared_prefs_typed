@@ -9,6 +9,7 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,15 @@ class NullablePrefs {
   static NullablePrefs? _instance;
 
   static Future<NullablePrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -80,7 +90,12 @@ class NullablePrefs {
   int? get nullableInt {
     try {
       return _prefs.getInt('nullableInt');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableInt": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('nullableInt', e);
       return null;
     }
   }
@@ -115,7 +130,12 @@ class NullablePrefs {
   double? get nullableDouble {
     try {
       return _prefs.getDouble('nullableDouble');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableDouble": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('nullableDouble', e);
       return null;
     }
   }
@@ -150,7 +170,12 @@ class NullablePrefs {
   bool? get nullableBool {
     try {
       return _prefs.getBool('nullableBool');
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableBool": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('nullableBool', e);
       return null;
     }
   }

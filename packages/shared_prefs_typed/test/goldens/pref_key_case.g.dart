@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +31,15 @@ class PrefKeyPrefs {
   static PrefKeyPrefs? _instance;
 
   static Future<PrefKeyPrefs>? _initFuture;
+
+  /// Optional callback invoked when a stored value cannot be cast to its
+  /// expected type (e.g. after a field type change between app versions).
+  ///
+  /// Receives the preference key and the exception. Use this to forward
+  /// errors to a crash reporter (Crashlytics, Sentry, etc.).
+  ///
+  /// Set to `null` (the default) to disable.
+  static void Function(String key, Object error)? onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -78,7 +89,12 @@ class PrefKeyPrefs {
   int get counter {
     try {
       return _prefs.getInt('legacy_counter') ?? 0;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "legacy_counter": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('legacy_counter', e);
       return 0;
     }
   }
@@ -108,7 +124,12 @@ class PrefKeyPrefs {
   String get name {
     try {
       return _prefs.getString('name') ?? 'anon';
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('name', e);
       return 'anon';
     }
   }
@@ -138,7 +159,12 @@ class PrefKeyPrefs {
   bool get isDarkMode {
     try {
       return _prefs.getBool('usr_dark_mode') ?? false;
-    } catch (_) {
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "usr_dark_mode": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      onReadError?.call('usr_dark_mode', e);
       return false;
     }
   }
