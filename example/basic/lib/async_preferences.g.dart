@@ -23,7 +23,7 @@ class AsyncPreferencesImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AsyncPreferencesImpl(this._prefs);
+  AsyncPreferencesImpl(this._prefs);
 
   static AsyncPreferencesImpl? _instance;
 

@@ -23,7 +23,7 @@ class SettingsPrefsImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const SettingsPrefsImpl(this._prefs);
+  SettingsPrefsImpl(this._prefs);
 
   static SettingsPrefsImpl? _instance;
 

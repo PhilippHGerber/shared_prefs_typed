@@ -41,7 +41,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AppPreferencesImpl(this._prefs);
+  AppPreferencesImpl(this._prefs);
 
   static AppPreferencesImpl? _instance;
 
