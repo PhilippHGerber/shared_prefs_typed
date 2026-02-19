@@ -74,7 +74,11 @@ class SettingsPrefsImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   bool? get isLight {
-    return _prefs.getBool('isLight');
+    try {
+      return _prefs.getBool('isLight');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `isLight`.

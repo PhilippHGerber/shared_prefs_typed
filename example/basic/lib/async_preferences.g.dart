@@ -68,7 +68,11 @@ class AsyncPreferencesImpl {
   ///
   /// If the key does not exist, the default value `0` is returned.
   Future<int> get pingCount async {
-    return (await _prefs.getInt('pingCount')) ?? 0;
+    try {
+      return (await _prefs.getInt('pingCount')) ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `pingCount`.
@@ -94,7 +98,11 @@ class AsyncPreferencesImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   Future<String?> get serverId async {
-    return (await _prefs.getString('serverId'));
+    try {
+      return (await _prefs.getString('serverId'));
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `serverId`.
@@ -125,7 +133,11 @@ class AsyncPreferencesImpl {
   ///
   /// If the key does not exist, the default value `true` is returned.
   Future<bool> get isCacheEnabled async {
-    return (await _prefs.getBool('isCacheEnabled')) ?? true;
+    try {
+      return (await _prefs.getBool('isCacheEnabled')) ?? true;
+    } catch (_) {
+      return true;
+    }
   }
 
   /// Asynchronously sets the value for `isCacheEnabled`.

@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:collection';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_preferences.dart';
@@ -74,7 +76,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `0` is returned.
   int get counter {
-    return _prefs.getInt('counter') ?? 0;
+    try {
+      return _prefs.getInt('counter') ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `counter`.
@@ -100,7 +106,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get displayGreeting {
-    return _prefs.getString('displayGreeting');
+    try {
+      return _prefs.getString('displayGreeting');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `displayGreeting`.
@@ -131,7 +141,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `3.14` is returned.
   double get pi {
-    return _prefs.getDouble('pi') ?? 3.14;
+    try {
+      return _prefs.getDouble('pi') ?? 3.14;
+    } catch (_) {
+      return 3.14;
+    }
   }
 
   /// Asynchronously sets the value for `pi`.
@@ -157,7 +171,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `false` is returned.
   bool get isWelcomeScreenDone {
-    return _prefs.getBool('isWelcomeScreenDone') ?? false;
+    try {
+      return _prefs.getBool('isWelcomeScreenDone') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Asynchronously sets the value for `isWelcomeScreenDone`.
@@ -183,7 +201,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `'Hello'` is returned.
   String get greeting {
-    return _prefs.getString('greeting') ?? 'Hello';
+    try {
+      return _prefs.getString('greeting') ?? 'Hello';
+    } catch (_) {
+      return 'Hello';
+    }
   }
 
   /// Asynchronously sets the value for `greeting`.
@@ -209,7 +231,8 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `const <String>['default']` is returned.
   List<String> get tagList {
-    return _prefs.getStringList('tagList') ?? const <String>['default'];
+    final raw = _prefs.getStringList('tagList');
+    return raw == null ? const <String>['default'] : UnmodifiableListView(raw);
   }
 
   /// Asynchronously sets the value for `tagList`.
@@ -236,7 +259,9 @@ class AppPreferencesImpl {
   /// If the key does not exist, the default value `const <int>[]` is returned.
   List<int> get recentItemIds {
     final raw = _prefs.getStringList('recentItemIds');
-    return raw == null ? const <int>[] : raw.map(int.parse).toList();
+    return raw == null
+        ? const <int>[]
+        : UnmodifiableListView(raw.map(int.parse).toList());
   }
 
   /// Asynchronously sets the value for `recentItemIds`.
@@ -268,7 +293,7 @@ class AppPreferencesImpl {
     final raw = _prefs.getStringList('priceHistory');
     return raw == null
         ? const <double>[9.99, 14.99, 19.99]
-        : raw.map(double.parse).toList();
+        : UnmodifiableListView(raw.map(double.parse).toList());
   }
 
   /// Asynchronously sets the value for `priceHistory`.
@@ -297,7 +322,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get sessionId {
-    return _prefs.getString('sessionId');
+    try {
+      return _prefs.getString('sessionId');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `sessionId`.
@@ -328,7 +357,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   int? get lastLoginTimestamp {
-    return _prefs.getInt('lastLoginTimestamp');
+    try {
+      return _prefs.getInt('lastLoginTimestamp');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `lastLoginTimestamp`.
@@ -359,7 +392,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `100` is returned.
   int get nullableCounterWithDefault {
-    return _prefs.getInt('nullableCounterWithDefault') ?? 100;
+    try {
+      return _prefs.getInt('nullableCounterWithDefault') ?? 100;
+    } catch (_) {
+      return 100;
+    }
   }
 
   /// Asynchronously sets the value for `nullableCounterWithDefault`.

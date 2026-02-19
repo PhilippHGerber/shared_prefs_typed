@@ -114,16 +114,16 @@ void main() {
     });
   });
 
-  group('AppPreferences satisfies AppPreferencesImplBase — get_it type compatibility', () {
-    test('AppPreferences can be assigned to AppPreferencesImplBase', () async {
+  group('AppPreferences satisfies AppPreferencesBase — get_it type compatibility', () {
+    test('AppPreferences can be assigned to AppPreferencesBase', () async {
       await clearStore();
       final backend = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
       // This is exactly what service_locator.dart does:
-      //   getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend))
+      //   getIt.registerSingleton<AppPreferencesBase>(AppPreferencesImpl(backend))
       final prefs = AppPreferencesImpl(backend);
-      expect(prefs, isA<AppPreferencesImplBase>());
+      expect(prefs, isA<AppPreferencesBase>());
       await prefs.setCounter(99);
       expect(prefs.counter, 99);
       AppPreferencesImpl.resetInstance();

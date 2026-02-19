@@ -4,7 +4,7 @@ import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.da
 
 /// Defines the preferences schema for the advanced get_it example.
 ///
-/// `generateInterface: true` produces `AppPreferencesImplBase` — an abstract
+/// `generateInterface: true` produces `AppPreferencesBase` — an abstract
 /// class that can be registered in get_it and mocked in tests, so production
 /// code never depends directly on the concrete generated class.
 @TypedPrefs(generateInterface: true)

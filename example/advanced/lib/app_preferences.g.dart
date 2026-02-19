@@ -15,7 +15,7 @@ import 'app_preferences.dart';
 /// Abstract interface for [AppPreferencesImpl].
 ///
 /// Implement or mock this for dependency injection and testing.
-abstract class AppPreferencesImplBase {
+abstract class AppPreferencesBase {
   int get counter;
   Future<void> setCounter(int value);
   bool isSetCounter();
@@ -36,7 +36,7 @@ abstract class AppPreferencesImplBase {
 /// then access values via the singleton `AppPreferencesImpl.instance`.
 ///
 /// **DI & Testing**: inject a backend directly: `AppPreferencesImpl(backend)`.
-class AppPreferencesImpl implements AppPreferencesImplBase {
+class AppPreferencesImpl implements AppPreferencesBase {
   /// Creates an instance backed by the given [SharedPreferencesWithCache].
   ///
   /// Use this for dependency injection and testing.
@@ -92,7 +92,11 @@ class AppPreferencesImpl implements AppPreferencesImplBase {
   ///
   /// If the key does not exist, the default value `0` is returned.
   int get counter {
-    return _prefs.getInt('counter') ?? 0;
+    try {
+      return _prefs.getInt('counter') ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `counter`.
@@ -118,7 +122,11 @@ class AppPreferencesImpl implements AppPreferencesImplBase {
   ///
   /// If the key does not exist, the default value `false` is returned.
   bool get isDarkMode {
-    return _prefs.getBool('isDarkMode') ?? false;
+    try {
+      return _prefs.getBool('isDarkMode') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Asynchronously sets the value for `isDarkMode`.
@@ -144,7 +152,11 @@ class AppPreferencesImpl implements AppPreferencesImplBase {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get username {
-    return _prefs.getString('username');
+    try {
+      return _prefs.getString('username');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `username`.

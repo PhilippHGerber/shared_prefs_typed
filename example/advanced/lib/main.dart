@@ -3,7 +3,7 @@
 // =============================================================================
 //
 // This example registers AppPreferencesImpl(backend) with get_it so that widgets
-// resolve it via getIt<AppPreferencesImplBase>() — fully decoupled from the
+// resolve it via getIt<AppPreferencesBase>() — fully decoupled from the
 // concrete type and easy to swap for a mock in tests.
 //
 // For simpler apps that don't need a DI framework, use the singleton instead:
@@ -22,7 +22,7 @@ import 'service_locator.dart';
 /// The main entry point for the application.
 ///
 /// Sets up the service locator before handing control to [MyApp].
-/// [AppPreferencesImpl] is registered under [AppPreferencesImplBase] so widgets
+/// [AppPreferencesImpl] is registered under [AppPreferencesBase] so widgets
 /// depend only on the abstract interface — making them easy to test with mocks.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,7 @@ Future<void> main() async {
 /// Root widget.
 ///
 /// Holds theme state so [_MyHomePageState] can toggle it via a callback.
-/// Resolves [AppPreferencesImplBase] from get_it — no concrete type dependency.
+/// Resolves [AppPreferencesBase] from get_it — no concrete type dependency.
 class MyApp extends StatefulWidget {
   /// Creates the root application widget.
   const MyApp({super.key});
@@ -48,7 +48,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   // Resolved via get_it — only the abstract base type is needed here.
-  AppPreferencesImplBase get _prefs => getIt<AppPreferencesImplBase>();
+  AppPreferencesBase get _prefs => getIt<AppPreferencesBase>();
 
   late bool _isDarkMode;
 
@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> {
 
 /// The main page.
 ///
-/// Reads/writes preferences via get_it ([AppPreferencesImplBase]) and relays
+/// Reads/writes preferences via get_it ([AppPreferencesBase]) and relays
 /// theme-toggle requests up to [MyApp] via [onToggleTheme].
 class MyHomePage extends StatefulWidget {
   /// Creates the home page.
@@ -106,7 +106,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // Resolved from get_it — the widget only knows the abstract base type.
-  AppPreferencesImplBase get _prefs => getIt<AppPreferencesImplBase>();
+  AppPreferencesBase get _prefs => getIt<AppPreferencesBase>();
 
   late int _counter;
   late String _displayName;
