@@ -103,6 +103,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
         ..ignoreForFile.addAll(['unused_element', 'unused_field'])
         ..directives.addAll([
           if (hasListField) Directive.import('dart:collection'),
+          Directive.import('package:meta/meta.dart'),
           Directive.import('package:shared_preferences/shared_preferences.dart'),
           Directive.import(buildStep.inputId.pathSegments.last),
         ])
@@ -246,6 +247,7 @@ Class _buildSyncClass(
           (m) => m
             ..name = 'resetInstance'
             ..docs.add('/// Resets the singleton instance to `null`. Useful for test teardown.')
+            ..annotations.add(refer('visibleForTesting'))
             ..static = true
             ..returns = refer('void')
             ..body = const Code('_instance = null;\n_initFuture = null;'),
@@ -380,6 +382,7 @@ Class _buildAsyncClass(
           (m) => m
             ..name = 'resetInstance'
             ..docs.add('/// Resets the singleton instance to `null`. Useful for test teardown.')
+            ..annotations.add(refer('visibleForTesting'))
             ..static = true
             ..returns = refer('void')
             ..body = const Code('_instance = null;\n_initFuture = null;'),
