@@ -23,7 +23,7 @@ class DateTimeMillisPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const DateTimeMillisPrefs(this._prefs);
+  DateTimeMillisPrefs(this._prefs);
 
   static DateTimeMillisPrefs? _instance;
 

@@ -23,7 +23,7 @@ class AsyncPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AsyncPrefs(this._prefs);
+  AsyncPrefs(this._prefs);
 
   static AsyncPrefs? _instance;
 

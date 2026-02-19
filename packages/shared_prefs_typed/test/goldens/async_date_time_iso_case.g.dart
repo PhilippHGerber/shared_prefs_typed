@@ -23,7 +23,7 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AsyncDateTimeIsoPrefs(this._prefs);
+  AsyncDateTimeIsoPrefs(this._prefs);
 
   static AsyncDateTimeIsoPrefs? _instance;
 

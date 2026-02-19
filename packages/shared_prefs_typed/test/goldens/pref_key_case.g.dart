@@ -23,7 +23,7 @@ class PrefKeyPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const PrefKeyPrefs(this._prefs);
+  PrefKeyPrefs(this._prefs);
 
   static PrefKeyPrefs? _instance;
 

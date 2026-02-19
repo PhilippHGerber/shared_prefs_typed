@@ -37,7 +37,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AsyncInterfacePrefs(this._prefs);
+  AsyncInterfacePrefs(this._prefs);
 
   static AsyncInterfacePrefs? _instance;
 

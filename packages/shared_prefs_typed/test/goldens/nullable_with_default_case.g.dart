@@ -23,7 +23,7 @@ class NullableWithDefaultPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const NullableWithDefaultPrefs(this._prefs);
+  NullableWithDefaultPrefs(this._prefs);
 
   static NullableWithDefaultPrefs? _instance;
 

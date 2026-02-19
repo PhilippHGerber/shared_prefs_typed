@@ -37,7 +37,7 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const InterfacePrefs(this._prefs);
+  InterfacePrefs(this._prefs);
 
   static InterfacePrefs? _instance;
 

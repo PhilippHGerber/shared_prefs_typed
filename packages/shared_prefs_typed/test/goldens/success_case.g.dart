@@ -25,7 +25,7 @@ class TestPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const TestPrefs(this._prefs);
+  TestPrefs(this._prefs);
 
   static TestPrefs? _instance;
 

@@ -23,7 +23,7 @@ class EnumPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const EnumPrefs(this._prefs);
+  EnumPrefs(this._prefs);
 
   static EnumPrefs? _instance;
 

@@ -23,7 +23,7 @@ class MixedFieldsPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const MixedFieldsPrefs(this._prefs);
+  MixedFieldsPrefs(this._prefs);
 
   static MixedFieldsPrefs? _instance;
 

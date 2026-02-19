@@ -23,7 +23,7 @@ class DateTimeIsoPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const DateTimeIsoPrefs(this._prefs);
+  DateTimeIsoPrefs(this._prefs);
 
   static DateTimeIsoPrefs? _instance;
 

@@ -25,7 +25,7 @@ class NullablePrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const NullablePrefs(this._prefs);
+  NullablePrefs(this._prefs);
 
   static NullablePrefs? _instance;
 

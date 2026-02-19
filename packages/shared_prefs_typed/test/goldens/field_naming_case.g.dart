@@ -23,7 +23,7 @@ class FieldNamingPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const FieldNamingPrefs(this._prefs);
+  FieldNamingPrefs(this._prefs);
 
   static FieldNamingPrefs? _instance;
 

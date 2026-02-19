@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Breaking
 
 * **`XxxImplBase` renamed to `XxxBase`** — when `generateInterface: true` is used with a public class (`AppPreferences`), the generated interface is now `AppPreferencesBase` instead of `AppPreferencesImplBase`. Rename all usages in DI registration, type annotations, and mocks.
+* **`const` removed from generated constructor** — `ClassName(prefs)` is no longer `const`. The class holds mutable static fields (`_instance`, `_initFuture`), making `const` semantically incorrect and a source of silent equality bugs via Dart's constant canonicalization.
 
 ## 0.7.0
 

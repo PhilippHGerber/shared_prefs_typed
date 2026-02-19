@@ -25,7 +25,7 @@ class NumericListPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const NumericListPrefs(this._prefs);
+  NumericListPrefs(this._prefs);
 
   static NumericListPrefs? _instance;
 

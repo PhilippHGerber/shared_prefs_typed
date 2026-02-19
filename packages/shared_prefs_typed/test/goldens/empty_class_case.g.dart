@@ -23,7 +23,7 @@ class EmptyPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const EmptyPrefs(this._prefs);
+  EmptyPrefs(this._prefs);
 
   static EmptyPrefs? _instance;
 
