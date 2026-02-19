@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
@@ -102,7 +103,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     );
     // Fields that generate a try/catch guard need dart:developer for log().
     final hasMigrationGuard = fields.any(
-      (f) => !f.isStringList && f.numericListElementType == null,
+      (f) => !f.isStringList && !f.isBoolList,
     );
 
     final library = Library(
@@ -583,10 +584,14 @@ Method _generateSyncGetter(_SharedPrefField field) {
         '}',
       );
     }
+  } else if (field.isEnumList) {
+    body = Code(_buildEnumListSyncGetterBody(field));
   } else if (field.isDateTime) {
     body = Code(_buildDateTimeSyncGetterBody(field));
   } else if (field.isStringList) {
     body = Code(_buildStringListSyncGetterBody(field));
+  } else if (field.isBoolList) {
+    body = Code(_buildBoolListSyncGetterBody(field));
   } else if (field.numericListElementType != null) {
     body = Code(_buildNumericListSyncGetterBody(field));
   } else {
@@ -649,10 +654,14 @@ Method _generateAsyncGetter(_SharedPrefField field) {
         '}',
       );
     }
+  } else if (field.isEnumList) {
+    body = Code(_buildEnumListAsyncGetterBody(field));
   } else if (field.isDateTime) {
     body = Code(_buildDateTimeAsyncGetterBody(field));
   } else if (field.isStringList) {
     body = Code(_buildStringListAsyncGetterBody(field));
+  } else if (field.isBoolList) {
+    body = Code(_buildBoolListAsyncGetterBody(field));
   } else if (field.numericListElementType != null) {
     body = Code(_buildNumericListAsyncGetterBody(field));
   } else {
@@ -694,6 +703,24 @@ Method _generateSetter(_SharedPrefField field) {
             "return _prefs.setString('${field.keyName}', value.name);",
           )
         : Code("return _prefs.setString('${field.keyName}', value.name);");
+  } else if (field.isEnumList) {
+    body = field.isNullable
+        ? Code(
+            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.name).toList());",
+          )
+        : Code(
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.name).toList());",
+          );
+  } else if (field.isBoolList) {
+    body = field.isNullable
+        ? Code(
+            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
+          )
+        : Code(
+            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
+          );
   } else if (field.isDateTime) {
     body = _buildDateTimeSetterBody(field);
   } else if (field.numericListElementType != null) {
@@ -879,25 +906,95 @@ String _buildStringListAsyncGetterBody(_SharedPrefField field) {
 String _buildNumericListSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final elementType = field.numericListElementType!;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "_prefs.getStringList('$key')";
-  if (field.isNullable && !field.hasNonNullDefault) {
-    return 'final raw = $rawExpr;\n'
-        'return raw == null ? null : UnmodifiableListView(raw.map($elementType.parse).toList());';
-  }
-  return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw.map($elementType.parse).toList());';
+  final successExpr = 'UnmodifiableListView(raw.map($elementType.parse).toList())';
+  return 'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}';
 }
 
 String _buildNumericListAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final elementType = field.numericListElementType!;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "await _prefs.getStringList('$key')";
+  final successExpr = 'UnmodifiableListView(raw.map($elementType.parse).toList())';
+  return 'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}';
+}
+
+//--- Enum list helpers ---//
+
+String _buildEnumListSyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final typeName = field.enumListElementTypeName;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
+  final rawExpr = "_prefs.getStringList('$key')";
+  final successExpr = 'UnmodifiableListView(raw.map($typeName.values.byName).toList())';
+  return 'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}';
+}
+
+String _buildEnumListAsyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final typeName = field.enumListElementTypeName;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
+  final rawExpr = "await _prefs.getStringList('$key')";
+  final successExpr = 'UnmodifiableListView(raw.map($typeName.values.byName).toList())';
+  return 'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}';
+}
+
+//--- Bool list helpers ---//
+
+String _buildBoolListSyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
+  final rawExpr = "_prefs.getStringList('$key')";
+  final successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
-        'return raw == null ? null : UnmodifiableListView(raw.map($elementType.parse).toList());';
+        'return raw == null ? $defaultExpr : $successExpr;';
   }
   return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw.map($elementType.parse).toList());';
+      'return raw == null ? $defaultExpr : $successExpr;';
+}
+
+String _buildBoolListAsyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
+  final rawExpr = "await _prefs.getStringList('$key')";
+  final successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
+  if (field.isNullable && !field.hasNonNullDefault) {
+    return 'final raw = $rawExpr;\n'
+        'return raw == null ? $defaultExpr : $successExpr;';
+  }
+  return 'final raw = $rawExpr;\n'
+      'return raw == null ? $defaultExpr : $successExpr;';
 }
 
 //--- Helper class and extensions ---//
@@ -991,10 +1088,27 @@ class _SharedPrefField {
     'List<String>',
     'List<int>',
     'List<double>',
+    'List<bool>',
   };
 
   /// True when the non-nullable type is `List<String>` (not a numeric list).
   bool get isStringList => nonNullableTypeReference.symbol == 'List<String>';
+
+  /// True when the non-nullable type is `List<bool>`.
+  bool get isBoolList => nonNullableTypeReference.symbol == 'List<bool>';
+
+  /// True when the field is a `List` whose element type is an enum.
+  bool get isEnumList {
+    final type = field.type;
+    if (type is! InterfaceType) return false;
+    if (type.typeArguments.isEmpty) return false;
+    return type.typeArguments.first.element is EnumElement;
+  }
+
+  /// The enum element type name for `List<EnumType>` fields (e.g. `'ThemeMode'`).
+  String get enumListElementTypeName {
+    return (field.type as InterfaceType).typeArguments.first.element!.name!;
+  }
 
   /// Returns `'int'` or `'double'` for `List<int>`/`List<double>`, `null` otherwise.
   String? get numericListElementType {
@@ -1006,6 +1120,7 @@ class _SharedPrefField {
 
   String get prefTypeName {
     if (isEnum) return 'String';
+    if (isEnumList) return 'StringList';
     if (isDateTime) {
       final encoding = dateTimeEncoding;
       if (encoding == null) {
@@ -1021,11 +1136,12 @@ class _SharedPrefField {
     final typeString = nonNullableTypeReference.symbol!;
     if (typeString == 'List<String>') return 'StringList';
     if (typeString == 'List<int>' || typeString == 'List<double>') return 'StringList';
+    if (typeString == 'List<bool>') return 'StringList';
     if (!_supportedTypes.contains(typeString)) {
       throw InvalidGenerationSourceError(
         'The field `$name` has unsupported type `${field.type.getDisplayString()}`. '
         'Supported types are: ${_supportedTypes.join(', ')}, Enum types, '
-        'DateTime (and their nullable variants).',
+        'List<Enum>, DateTime (and their nullable variants).',
         element: field,
       );
     }
@@ -1062,6 +1178,14 @@ class _SharedPrefField {
     if (type.isDartCoreList) {
       final listValues = constantValue.toListValue()!;
       final typeStr = nonNullableTypeReference.symbol!;
+      if (isEnumList) {
+        final typeName = enumListElementTypeName;
+        final values = listValues.map((e) {
+          final enumName = e.getField('_name')?.toStringValue();
+          return '$typeName.$enumName';
+        }).join(', ');
+        return 'const <$typeName>[$values]';
+      }
       if (typeStr == 'List<int>') {
         final values = listValues.map((e) => e.toIntValue()!.toString()).join(', ');
         return 'const <int>[$values]';
@@ -1069,6 +1193,10 @@ class _SharedPrefField {
       if (typeStr == 'List<double>') {
         final values = listValues.map((e) => e.toDoubleValue()!.toString()).join(', ');
         return 'const <double>[$values]';
+      }
+      if (typeStr == 'List<bool>') {
+        final values = listValues.map((e) => e.toBoolValue()!.toString()).join(', ');
+        return 'const <bool>[$values]';
       }
       final stringValues = listValues
           .map((DartObject e) => "'${_escapeDartString(e.toStringValue()!)}'")

@@ -9,6 +9,7 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,10 +93,19 @@ class NumericListPrefs {
   ///
   /// If the key does not exist, the default value `const <int>[1, 2, 3]` is returned.
   List<int> get intList {
-    final raw = _prefs.getStringList('intList');
-    return raw == null
-        ? const <int>[1, 2, 3]
-        : UnmodifiableListView(raw.map(int.parse).toList());
+    try {
+      final raw = _prefs.getStringList('intList');
+      return raw == null
+          ? const <int>[1, 2, 3]
+          : UnmodifiableListView(raw.map(int.parse).toList());
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "intList": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('intList', e);
+      return const <int>[1, 2, 3];
+    }
   }
 
   /// Asynchronously sets the value for `intList`.
@@ -124,10 +134,19 @@ class NumericListPrefs {
   ///
   /// If the key does not exist, the default value `const <double>[1.5, 2.5]` is returned.
   List<double> get doubleList {
-    final raw = _prefs.getStringList('doubleList');
-    return raw == null
-        ? const <double>[1.5, 2.5]
-        : UnmodifiableListView(raw.map(double.parse).toList());
+    try {
+      final raw = _prefs.getStringList('doubleList');
+      return raw == null
+          ? const <double>[1.5, 2.5]
+          : UnmodifiableListView(raw.map(double.parse).toList());
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "doubleList": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('doubleList', e);
+      return const <double>[1.5, 2.5];
+    }
   }
 
   /// Asynchronously sets the value for `doubleList`.
@@ -156,10 +175,19 @@ class NumericListPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   List<int>? get nullableIntList {
-    final raw = _prefs.getStringList('nullableIntList');
-    return raw == null
-        ? null
-        : UnmodifiableListView(raw.map(int.parse).toList());
+    try {
+      final raw = _prefs.getStringList('nullableIntList');
+      return raw == null
+          ? null
+          : UnmodifiableListView(raw.map(int.parse).toList());
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableIntList": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('nullableIntList', e);
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `nullableIntList`.
@@ -193,10 +221,19 @@ class NumericListPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   List<double>? get nullableDoubleList {
-    final raw = _prefs.getStringList('nullableDoubleList');
-    return raw == null
-        ? null
-        : UnmodifiableListView(raw.map(double.parse).toList());
+    try {
+      final raw = _prefs.getStringList('nullableDoubleList');
+      return raw == null
+          ? null
+          : UnmodifiableListView(raw.map(double.parse).toList());
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "nullableDoubleList": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('nullableDoubleList', e);
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `nullableDoubleList`.

@@ -98,6 +98,52 @@ void main() async {
     );
 
     test(
+      'should generate correct code for List<Enum> types',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/enum_list_case.dart': await File(
+            'test/src/enum_list_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/enum_list_case.g.dart': await File(
+            'test/goldens/enum_list_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
+      'should generate correct code for List<bool> types',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/bool_list_case.dart': await File(
+            'test/src/bool_list_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/bool_list_case.g.dart': await File(
+            'test/goldens/bool_list_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
       'should generate correct code for nullable primitive types (int?, double?, bool?) '
       'and empty List<String> default',
       () async {
