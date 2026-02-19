@@ -294,50 +294,71 @@ void main() {
     });
 
     test('int field returns default when stored as String', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('counter', 'not-an-int', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'counter',
+        'not-an-int',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.counter, 0);
     });
 
     test('double field returns default when stored as String', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('pi', 'not-a-double', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'pi',
+        'not-a-double',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.pi, 3.14);
     });
 
     test('bool field returns default when stored as String', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('isWelcomeScreenDone', 'bad', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'isWelcomeScreenDone',
+        'bad',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.isWelcomeScreenDone, isFalse);
     });
 
     test('String field returns default when stored as int', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setInt('greeting', 42, const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setInt(
+        'greeting',
+        42,
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.greeting, 'Hello');
     });
 
     test('DateTime ISO 8601 field returns default on malformed string', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('lastSyncDate', 'not-a-date', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'lastSyncDate',
+        'not-a-date',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.lastSyncDate, isNull);
     });
 
     test('DateTime millis field returns default when stored as String', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('lastLoginDate', 'bad', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'lastLoginDate',
+        'bad',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
       expect(AppPreferencesImpl.instance.lastLoginDate, isNull);
     });
 
     test('onReadError callback is invoked on type mismatch', () async {
-      await SharedPreferencesAsyncPlatform.instance!
-          .setString('counter', 'bad', const SharedPreferencesOptions());
+      await SharedPreferencesAsyncPlatform.instance!.setString(
+        'counter',
+        'bad',
+        const SharedPreferencesOptions(),
+      );
       await AppPreferencesImpl.init();
 
       String? capturedKey;

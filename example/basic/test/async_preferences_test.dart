@@ -144,7 +144,11 @@ void main() {
 
         // ASSERT
         expect(await prefs.isCacheEnabled, isTrue, reason: 'Value should revert to default');
-        expect(await prefs.containsIsCacheEnabled(), isFalse, reason: 'Key should no longer be set');
+        expect(
+          await prefs.containsIsCacheEnabled(),
+          isFalse,
+          reason: 'Key should no longer be set',
+        );
       });
     });
   });
