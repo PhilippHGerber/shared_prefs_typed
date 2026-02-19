@@ -4,7 +4,7 @@ Type-safe SharedPreferences for Flutter via `build_runner` code generation.
 
 ## What It Does
 
-Annotate a **private abstract class** with `@TypedPrefs()` and declare `static const` fields. The generator produces a public class with a shared-instance accessor and typed getters, setters, `isSet` checks, and `remove` methods for each field.
+Annotate a **private abstract class** with `@TypedPrefs()` and declare `static const` fields. The generator produces a public class with a shared-instance accessor and typed getters, setters, `contains` checks, and `remove` methods for each field.
 
 ## Setup
 
@@ -66,7 +66,7 @@ The generator creates class `AppPreferences` (leading `_` stripped) with:
 - **Per field** (e.g. `counter`):
   - `int get counter` -- sync getter, returns default if unset
   - `Future<void> setCounter(int value)` -- async setter
-  - `bool isSetCounter()` -- checks if key exists
+  - `bool containsCounter()` -- checks if key exists
   - `Future<void> removeCounter()` -- removes key
 
 For **nullable** fields, the setter accepts `T?` and calls `remove()` when value is `null`.
@@ -82,7 +82,7 @@ void main() async {
   print(prefs.counter);            // 0 (default)
   await prefs.setCounter(42);
   print(prefs.counter);            // 42
-  print(prefs.isSetCounter());     // true
+  print(prefs.containsCounter());     // true
   await prefs.removeCounter();
   print(prefs.counter);            // 0 (back to default)
 }

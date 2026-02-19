@@ -18,7 +18,7 @@ abstract class AppPreferences {
 await AppPreferencesImpl.init();
 prefs.counter;               // int — sync, type-safe
 await prefs.setCounter(42);  // Future<void>
-prefs.isSetUsername();       // bool
+prefs.containsUsername();       // bool
 await prefs.removeUsername();
 ```
 
@@ -104,7 +104,7 @@ Future<void> main() async {
 // In your widget:
 prefs.counter;                     // int (sync)
 await prefs.setCounter(prefs.counter + 1);
-prefs.isSetSessionId();            // bool
+prefs.containsSessionId();            // bool
 await prefs.removeSessionId();
 ```
 
@@ -124,7 +124,7 @@ abstract class AppPreferences {
 
 // Generated:
 Future<int> get counter async { ... }
-Future<bool> isSetCounter() async { ... }
+Future<bool> containsCounter() async { ... }
 ```
 
 The `init()` call remains identical between modes.
@@ -190,7 +190,7 @@ For each field `foo` of type `T`, the generator creates four members:
 |---|---|---|
 | Getter | `T get foo` | `Future<T> get foo` |
 | Setter | `Future<void> setFoo(T value)` | `Future<void> setFoo(T value)` |
-| Existence check | `bool isSetFoo()` | `Future<bool> isSetFoo()` |
+| Existence check | `bool containsFoo()` | `Future<bool> containsFoo()` |
 | Remover | `Future<void> removeFoo()` | `Future<void> removeFoo()` |
 
 For nullable fields, calling the setter with `null` removes the key (equivalent to `removeFoo()`).

@@ -442,7 +442,7 @@ Class _buildInterface(
             ),
             Method(
               (m) => m
-                ..name = 'isSet${field.publicName}'
+                ..name = 'contains${field.publicName}'
                 ..returns = refer(isAsync ? 'Future<bool>' : 'bool'),
             ),
             Method(
@@ -615,7 +615,7 @@ Method _generateSetter(_SharedPrefField field) {
 
 Method _generateIsSet(_SharedPrefField field, {required bool isAsync}) => Method(
   (b) => b
-    ..name = 'isSet${field.publicName}'
+    ..name = 'contains${field.publicName}'
     ..docs.add('/// Checks if a value has been explicitly set for `${field.keyName}`.')
     ..docs.add('///')
     ..docs.add('/// Returns `true` if the key exists in persistent storage, `false` otherwise.')
