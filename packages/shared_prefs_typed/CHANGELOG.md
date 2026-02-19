@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Breaking
+
+* **`XxxImplBase` renamed to `XxxBase`** — when `generateInterface: true` is used with a public class (`AppPreferences`), the generated interface is now `AppPreferencesBase` instead of `AppPreferencesImplBase`. Rename all usages in DI registration, type annotations, and mocks.
+
 ## 0.7.0
 
 > Re-run `flutter pub run build_runner build`.

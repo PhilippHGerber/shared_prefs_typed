@@ -141,22 +141,22 @@ abstract class AppPreferences {
 }
 ```
 
-Generated output includes both `AppPreferencesImplBase` (abstract interface) and `AppPreferencesImpl` (implements it).
+Generated output includes both `AppPreferencesBase` (abstract interface) and `AppPreferencesImpl` (implements it).
 
 **Usage with `get_it`:**
 
 ```dart
 // setup
-getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend));
+getIt.registerSingleton<AppPreferencesBase>(AppPreferencesImpl(backend));
 
 // usage
-getIt<AppPreferencesImplBase>().counter;
+getIt<AppPreferencesBase>().counter;
 ```
 
 **Usage with Mockito/Mocktail:**
 
 ```dart
-class MockPrefs extends Mock implements AppPreferencesImplBase {}
+class MockPrefs extends Mock implements AppPreferencesBase {}
 
 final prefs = MockPrefs();
 when(() => prefs.counter).thenReturn(42);

@@ -78,7 +78,14 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     final bodyItems = <Spec>[];
 
     if (generateInterface) {
-      bodyItems.add(_buildInterface(publicClassName, fields, isAsync: isAsyncMode));
+      bodyItems.add(
+        _buildInterface(
+          publicClassName,
+          classElement.generatedInterfaceName,
+          fields,
+          isAsync: isAsyncMode,
+        ),
+      );
     }
 
     bodyItems.add(
@@ -133,7 +140,7 @@ Class _buildSyncClass(
       ..docs.add('/// then access values via the singleton `$publicClassName.instance`.')
       ..docs.add('///')
       ..docs.add('/// **DI & Testing**: inject a backend directly: `$publicClassName(backend)`.')
-      ..implements.addAll(generateInterface ? [refer('${publicClassName}Base')] : [])
+      ..implements.addAll(generateInterface ? [refer(classElement.generatedInterfaceName)] : [])
       ..fields.add(
         Field(
           (f) => f
@@ -275,7 +282,7 @@ Class _buildAsyncClass(
       ..docs.add('/// then access values via the singleton `$publicClassName.instance`.')
       ..docs.add('///')
       ..docs.add('/// **DI & Testing**: inject a backend directly: `$publicClassName(backend)`.')
-      ..implements.addAll(generateInterface ? [refer('${publicClassName}Base')] : [])
+      ..implements.addAll(generateInterface ? [refer(classElement.generatedInterfaceName)] : [])
       ..fields.add(
         Field(
           (f) => f
@@ -394,17 +401,16 @@ Class _buildAsyncClass(
 }
 
 Class _buildInterface(
-  String publicClassName,
+  String implName,
+  String interfaceName,
   List<_SharedPrefField> fields, {
   required bool isAsync,
 }) {
-  final interfaceName = '${publicClassName}Base';
-
   return Class(
     (b) => b
       ..name = interfaceName
       ..abstract = true
-      ..docs.add('/// Abstract interface for [$publicClassName].')
+      ..docs.add('/// Abstract interface for [$implName].')
       ..docs.add('///')
       ..docs.add('/// Implement or mock this for dependency injection and testing.')
       ..methods.addAll(
@@ -924,5 +930,14 @@ extension on ClassElement {
   String get generatedClassName {
     final n = name!;
     return n.startsWith('_') ? n.substring(1) : '${n}Impl';
+  }
+
+  /// Returns the interface name for the generated class.
+  /// Always uses the original class name (without `_` or `Impl`) + `Base`.
+  /// - `_AppPrefs` → `AppPrefsBase`
+  /// - `AppPrefs`  → `AppPrefsBase`
+  String get generatedInterfaceName {
+    final n = name!;
+    return '${n.startsWith('_') ? n.substring(1) : n}Base';
   }
 }

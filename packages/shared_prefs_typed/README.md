@@ -206,7 +206,7 @@ final backend = await SharedPreferencesWithCache.create(
 getIt.registerSingleton<AppPreferencesImpl>(AppPreferencesImpl(backend));
 ```
 
-**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesImplBase`. Production code depends only on the abstract base and is trivially mockable with Mocktail:
+**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesBase`. Production code depends only on the abstract base and is trivially mockable with Mocktail:
 
 ```dart
 // Schema
@@ -214,13 +214,13 @@ getIt.registerSingleton<AppPreferencesImpl>(AppPreferencesImpl(backend));
 abstract class AppPreferences { ... }
 
 // Startup
-getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend));
+getIt.registerSingleton<AppPreferencesBase>(AppPreferencesImpl(backend));
 
 // Everywhere else
-getIt<AppPreferencesImplBase>().counter
+getIt<AppPreferencesBase>().counter
 
 // Mocktail mock in tests
-class MockAppPreferences extends Mock implements AppPreferencesImplBase {}
+class MockAppPreferences extends Mock implements AppPreferencesBase {}
 ```
 
 **Riverpod:**
@@ -231,7 +231,7 @@ final appPrefsProvider = Provider<AppPreferencesImpl>((ref) {
 });
 ```
 
-For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesImplBase`).
+For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesBase`).
 
 ---
 

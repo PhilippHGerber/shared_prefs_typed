@@ -10,7 +10,4 @@ builders:
     auto_apply: dependents
     # Write the generated files next to the source files.
     build_to: source
-    # This restricts the builder to only run on files inside the
-    # `lib` directory of dependent packages.
-    # generate_for:
-    #  - "lib/**.dart"
+
