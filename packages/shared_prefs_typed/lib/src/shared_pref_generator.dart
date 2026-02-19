@@ -63,7 +63,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       }
 
       // Validate against reserved generated-class member names.
-      const reservedNames = {'init', 'instance', 'resetInstance'};
+      const reservedNames = {'init', 'instance', 'resetInstance', 'clearAll', 'onReadError'};
       if (reservedNames.contains(field.paramName)) {
         throw InvalidGenerationSourceError(
           'Field `${field.name}` produces a generated API name `${field.paramName}` '
@@ -100,11 +100,16 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     final hasListField = fields.any(
       (f) => f.nonNullableTypeReference.symbol!.startsWith('List<'),
     );
+    // Fields that generate a try/catch guard need dart:developer for log().
+    final hasMigrationGuard = fields.any(
+      (f) => !f.isEnum && !f.isStringList && f.numericListElementType == null,
+    );
 
     final library = Library(
       (b) => b
         ..ignoreForFile.addAll(['unused_element', 'unused_field'])
         ..directives.addAll([
+          if (hasMigrationGuard) Directive.import('dart:developer'),
           if (hasListField) Directive.import('dart:collection'),
           Directive.import('package:meta/meta.dart'),
           Directive.import('package:shared_preferences/shared_preferences.dart'),
@@ -159,6 +164,23 @@ Class _buildSyncClass(
             ..name = '_initFuture'
             ..static = true
             ..type = refer('Future<$publicClassName>?'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = 'onReadError'
+            ..static = true
+            ..docs.addAll([
+              '/// Optional callback invoked when a stored value cannot be cast to its',
+              '/// expected type (e.g. after a field type change between app versions).',
+              '///',
+              '/// Receives the preference key and the exception. Use this to forward',
+              '/// errors to a crash reporter (Crashlytics, Sentry, etc.).',
+              '///',
+              '/// Set to `null` (the default) to disable.',
+            ])
+            ..type = refer('void Function(String key, Object error)?'),
         ),
       )
       ..fields.add(
@@ -302,6 +324,23 @@ Class _buildAsyncClass(
             ..name = '_initFuture'
             ..static = true
             ..type = refer('Future<$publicClassName>?'),
+        ),
+      )
+      ..fields.add(
+        Field(
+          (f) => f
+            ..name = 'onReadError'
+            ..static = true
+            ..docs.addAll([
+              '/// Optional callback invoked when a stored value cannot be cast to its',
+              '/// expected type (e.g. after a field type change between app versions).',
+              '///',
+              '/// Receives the preference key and the exception. Use this to forward',
+              '/// errors to a crash reporter (Crashlytics, Sentry, etc.).',
+              '///',
+              '/// Set to `null` (the default) to disable.',
+            ])
+            ..type = refer('void Function(String key, Object error)?'),
         ),
       )
       ..fields.add(
@@ -491,12 +530,15 @@ Method _generateSyncGetter(_SharedPrefField field) {
   } else if (field.numericListElementType != null) {
     body = Code(_buildNumericListSyncGetterBody(field));
   } else {
-    final getExpr = "_prefs.get${field.prefTypeName}('${field.keyName}')";
+    final key = field.keyName;
     final defaultExpr = field.defaultValue;
+    final getExpr = "_prefs.get${field.prefTypeName}('$key')";
     body = Code(
       'try {\n'
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
-      '} catch (_) {\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
     );
@@ -540,12 +582,15 @@ Method _generateAsyncGetter(_SharedPrefField field) {
   } else if (field.numericListElementType != null) {
     body = Code(_buildNumericListAsyncGetterBody(field));
   } else {
-    final getExpr = "(await _prefs.get${field.prefTypeName}('${field.keyName}'))";
+    final key = field.keyName;
     final defaultExpr = field.defaultValue;
+    final getExpr = "(await _prefs.get${field.prefTypeName}('$key'))";
     body = Code(
       'try {\n'
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
-      '} catch (_) {\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
     );
@@ -678,7 +723,9 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
         "  final raw = _prefs.getInt('$key');\n"
         '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
-        '} catch (_) {\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
   }
@@ -686,7 +733,9 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
       'if (raw == null) return $defaultExpr;\n'
       'try {\n'
       'return DateTime.parse(raw);\n'
-      '} catch (_) {\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
 }
@@ -700,7 +749,9 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
         "  final raw = (await _prefs.getInt('$key'));\n"
         '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
-        '} catch (_) {\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
   }
@@ -708,7 +759,9 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
       'if (raw == null) return $defaultExpr;\n'
       'try {\n'
       'return DateTime.parse(raw);\n'
-      '} catch (_) {\n'
+      '} catch (e) {\n'
+      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+      "  onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
 }

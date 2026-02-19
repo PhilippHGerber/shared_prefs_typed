@@ -119,6 +119,27 @@ For every field `foo` of type `T`, the generator produces:
 
 > `resetInstance()` is annotated `@visibleForTesting` — it exists for test teardown only and should not be called from production code.
 
+### Type migration & error observability
+
+When a stored value cannot be cast to its expected type (e.g. after a field type change between app versions), the generated getter silently falls back to the field's default. Two hooks let you observe these events:
+
+**`dart:developer` log** — the catch block emits a log under the `'shared_prefs_typed'` name with the key and exception type. This is a no-op in release builds and visible in Flutter DevTools / Observatory during development.
+
+**`onReadError` static callback** — set this once at startup to forward errors to a crash reporter:
+
+```dart
+AppPreferencesImpl.onReadError = (key, error) {
+  FirebaseCrashlytics.instance.recordError(error, null, reason: 'prefs read "$key"');
+};
+```
+
+To verify the guard in tests, set `onReadError` and assert it is called:
+
+```dart
+AppPreferencesImpl.onReadError = (key, error) { capturedKey = key; };
+addTearDown(() => AppPreferencesImpl.onReadError = null);
+```
+
 ### Async mode
 
 Use `@TypedPrefs(mode: PrefsMode.async)` when preferences can be modified from another isolate or native code and you always need the freshest value from disk. Getters return `Future`s instead of plain values.

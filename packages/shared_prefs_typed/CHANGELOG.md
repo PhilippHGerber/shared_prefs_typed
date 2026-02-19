@@ -16,6 +16,9 @@ All notable changes to this project will be documented in this file.
 
 * **Non-nullable `DateTime` getters via `@PrefDateTime(encoding, defaultMillis: N)`** — pass `defaultMillis` to produce a non-nullable `DateTime` getter with the given epoch milliseconds as fallback. The field must still be declared `DateTime?` (no const DateTime constructors exist in Dart).
 * **`clearAll()`** — generated on every class (and on the interface when `generateInterface: true`). Removes all keys owned by the class via `Future.wait`, scoped to known keys rather than wiping the entire store.
+* **`onReadError` static hook** — every generated class exposes `static void Function(String key, Object error)? onReadError`. Set it to forward type-migration errors to a crash reporter. Defaults to `null` (no-op).
+* **`dart:developer` log on read failure** — when a stored value cannot be cast to its expected type, the catch block calls `log(...)` under the `'shared_prefs_typed'` logger name (no-op in release builds). Message includes the key and exception type.
+* **Reserved names expanded** — `clearAll` and `onReadError` are now rejected as field names (they conflict with generated members).
 
 ## 0.7.0
 
