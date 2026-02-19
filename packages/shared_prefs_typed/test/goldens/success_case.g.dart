@@ -10,6 +10,7 @@
 
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'success_case.dart';
@@ -67,6 +68,7 @@ class TestPrefs {
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
+  @visibleForTesting
   static void resetInstance() {
     _instance = null;
     _initFuture = null;

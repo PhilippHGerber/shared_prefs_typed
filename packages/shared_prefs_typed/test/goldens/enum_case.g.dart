@@ -8,6 +8,7 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'enum_case.dart';
@@ -65,6 +66,7 @@ class EnumPrefs {
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
+  @visibleForTesting
   static void resetInstance() {
     _instance = null;
     _initFuture = null;
