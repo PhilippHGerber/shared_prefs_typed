@@ -10,20 +10,20 @@ final GetIt getIt = GetIt.instance;
 ///
 /// Call once at app startup before `runApp`.
 ///
-/// The public `AppPreferences(backend)` constructor is used here to receive
+/// The public `AppPreferencesImpl(backend)` constructor is used here to receive
 /// the storage backend directly. This keeps lifecycle management explicit and
-/// the rest of the app decoupled from the concrete type via [AppPreferencesBase].
+/// the rest of the app decoupled from the concrete type via [AppPreferencesImplBase].
 ///
 /// **Alternative — singleton** (for apps that don't use a DI framework):
 /// ```dart
-/// await AppPreferences.init();
-/// // Then access via AppPreferences.instance anywhere.
+/// await AppPreferencesImpl.init();
+/// // Then access via AppPreferencesImpl.instance anywhere.
 /// ```
 Future<void> setupLocator() async {
   final backend = await SharedPreferencesWithCache.create(
     cacheOptions: const SharedPreferencesWithCacheOptions(),
   );
   // Register AppPreferences under its abstract base type.
-  // Any widget that calls getIt<AppPreferencesBase>() receives this instance.
-  getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
+  // Any widget that calls getIt<AppPreferencesImplBase>() receives this instance.
+  getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend));
 }

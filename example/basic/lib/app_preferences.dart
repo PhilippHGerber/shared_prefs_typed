@@ -1,18 +1,16 @@
-// ignore_for_file: unused_element // This file is used for code generation and may contain unused elements.
-// ignore_for_file: unused_field // This file is used for code generation and may contain unused fields.
-
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
 /// Defines the data contract for the application's preferences.
 ///
-/// This private, abstract class serves as a schema for the code generator.
-/// The generator reads the `static const` fields defined here and creates a
-/// public singleton class `AppPreferences` with type-safe getters and setters.
+/// This abstract class serves as a schema for the code generator.
+/// The generator reads the `static const` fields defined here and creates
+/// `AppPreferencesImpl` (in `app_preferences.g.dart`) with type-safe
+/// getters and setters.
 ///
 /// Best Practice: Keep this definition in its own file to cleanly separate
 /// the data layer from the UI layer.
 @TypedPrefs()
-abstract class _AppPreferences {
+abstract class AppPreferences {
   /// The current count for the counter feature.
   /// Defaults to 0 if no value is stored.
   static const int counter = 0;
@@ -55,10 +53,10 @@ abstract class _AppPreferences {
   static const int? lastLoginTimestamp = null;
 
   // --- Edge Case: Nullable type with a non-null default ---
-  // The getter will return `100` if the key is not set, but you can still
-  // set the value to `null` to explicitly clear it.
+  // The getter returns `int` (non-nullable) because the default is 100.
+  // The setter accepts `int?` — pass `null` to reset to the default.
 
   /// A counter that can be cleared, reverting to its default of 100.
-  // ignore: unnecessary_nullable_for_final_variable_declarations for test purposes
+  // ignore: unnecessary_nullable_for_final_variable_declarations
   static const int? nullableCounterWithDefault = 100;
 }

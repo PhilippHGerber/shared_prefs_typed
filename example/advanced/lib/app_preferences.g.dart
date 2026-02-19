@@ -12,10 +12,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_preferences.dart';
 
-/// Abstract interface for [AppPreferences].
+/// Abstract interface for [AppPreferencesImpl].
 ///
 /// Implement or mock this for dependency injection and testing.
-abstract class AppPreferencesBase {
+abstract class AppPreferencesImplBase {
   int get counter;
   Future<void> setCounter(int value);
   bool isSetCounter();
@@ -32,30 +32,30 @@ abstract class AppPreferencesBase {
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// **Simple apps**: call `await AppPreferences.init()` on startup,
-/// then access values via the singleton `AppPreferences.instance`.
+/// **Simple apps**: call `await AppPreferencesImpl.init()` on startup,
+/// then access values via the singleton `AppPreferencesImpl.instance`.
 ///
-/// **DI & Testing**: inject a backend directly: `AppPreferences(backend)`.
-class AppPreferences implements AppPreferencesBase {
+/// **DI & Testing**: inject a backend directly: `AppPreferencesImpl(backend)`.
+class AppPreferencesImpl implements AppPreferencesImplBase {
   /// Creates an instance backed by the given [SharedPreferencesWithCache].
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AppPreferences(this._prefs);
+  const AppPreferencesImpl(this._prefs);
 
-  static AppPreferences? _instance;
+  static AppPreferencesImpl? _instance;
 
-  static Future<AppPreferences>? _initFuture;
+  static Future<AppPreferencesImpl>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
   /// The singleton instance. Throws a [StateError] if [init] has not been called.
-  static AppPreferences get instance {
+  static AppPreferencesImpl get instance {
     final i = _instance;
     if (i == null) {
       throw StateError(
-        'AppPreferences has not been initialized. '
-        'Call `await AppPreferences.init()` before accessing `instance`.',
+        'AppPreferencesImpl has not been initialized. '
+        'Call `await AppPreferencesImpl.init()` before accessing `instance`.',
       );
     }
     return i;
@@ -65,17 +65,17 @@ class AppPreferences implements AppPreferencesBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AppPreferences> init() {
+  static Future<AppPreferencesImpl> init() {
     if (_instance != null) return Future.value(_instance!);
     return _initFuture ??= _doInit();
   }
 
-  static Future<AppPreferences> _doInit() async {
+  static Future<AppPreferencesImpl> _doInit() async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = AppPreferences(prefs);
+      return _instance = AppPreferencesImpl(prefs);
     } catch (e) {
       _initFuture = null;
       rethrow;

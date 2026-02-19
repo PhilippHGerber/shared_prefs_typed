@@ -1,6 +1,6 @@
 /// Integration tests for the advanced get_it example.
 ///
-/// These tests exercise the generated [AppPreferences] class using **constructor
+/// These tests exercise the generated [AppPreferencesImpl] class using **constructor
 /// injection** — no get_it setup is needed. This demonstrates the key benefit of
 /// the public constructor: clean, isolated test instances without global state.
 library;
@@ -28,7 +28,7 @@ void main() {
   }
 
   group('AppPreferences — constructor injection (no get_it required)', () {
-    late AppPreferences prefs;
+    late AppPreferencesImpl prefs;
 
     setUp(() async {
       await clearStore();
@@ -37,10 +37,10 @@ void main() {
       );
       // Public constructor: pass the backend directly.
       // No global init() call, no singleton touched.
-      prefs = AppPreferences(backend);
+      prefs = AppPreferencesImpl(backend);
     });
 
-    tearDown(AppPreferences.resetInstance);
+    tearDown(AppPreferencesImpl.resetInstance);
 
     group('counter (int, default 0)', () {
       test('returns default initially', () {
@@ -103,30 +103,30 @@ void main() {
     });
 
     test('each test has an independent instance — no shared state', () {
-      // Constructing AppPreferences(backend) never touches _instance,
+      // Constructing AppPreferencesImpl(backend) never touches _instance,
       // so the singleton and this instance are fully independent.
       expect(prefs.counter, 0);
     });
 
     test('instance getter throws StateError before init()', () {
-      AppPreferences.resetInstance();
-      expect(() => AppPreferences.instance, throwsStateError);
+      AppPreferencesImpl.resetInstance();
+      expect(() => AppPreferencesImpl.instance, throwsStateError);
     });
   });
 
-  group('AppPreferences satisfies AppPreferencesBase — get_it type compatibility', () {
-    test('AppPreferences can be assigned to AppPreferencesBase', () async {
+  group('AppPreferences satisfies AppPreferencesImplBase — get_it type compatibility', () {
+    test('AppPreferences can be assigned to AppPreferencesImplBase', () async {
       await clearStore();
       final backend = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
       // This is exactly what service_locator.dart does:
-      //   getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend))
-      final prefs = AppPreferences(backend);
-      expect(prefs, isA<AppPreferencesBase>());
+      //   getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend))
+      final prefs = AppPreferencesImpl(backend);
+      expect(prefs, isA<AppPreferencesImplBase>());
       await prefs.setCounter(99);
       expect(prefs.counter, 99);
-      AppPreferences.resetInstance();
+      AppPreferencesImpl.resetInstance();
     });
   });
 }

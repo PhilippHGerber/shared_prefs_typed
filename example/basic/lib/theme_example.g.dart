@@ -14,30 +14,30 @@ import 'theme_example.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// **Simple apps**: call `await SettingsPrefs.init()` on startup,
-/// then access values via the singleton `SettingsPrefs.instance`.
+/// **Simple apps**: call `await SettingsPrefsImpl.init()` on startup,
+/// then access values via the singleton `SettingsPrefsImpl.instance`.
 ///
-/// **DI & Testing**: inject a backend directly: `SettingsPrefs(backend)`.
-class SettingsPrefs {
+/// **DI & Testing**: inject a backend directly: `SettingsPrefsImpl(backend)`.
+class SettingsPrefsImpl {
   /// Creates an instance backed by the given [SharedPreferencesWithCache].
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const SettingsPrefs(this._prefs);
+  const SettingsPrefsImpl(this._prefs);
 
-  static SettingsPrefs? _instance;
+  static SettingsPrefsImpl? _instance;
 
-  static Future<SettingsPrefs>? _initFuture;
+  static Future<SettingsPrefsImpl>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
   /// The singleton instance. Throws a [StateError] if [init] has not been called.
-  static SettingsPrefs get instance {
+  static SettingsPrefsImpl get instance {
     final i = _instance;
     if (i == null) {
       throw StateError(
-        'SettingsPrefs has not been initialized. '
-        'Call `await SettingsPrefs.init()` before accessing `instance`.',
+        'SettingsPrefsImpl has not been initialized. '
+        'Call `await SettingsPrefsImpl.init()` before accessing `instance`.',
       );
     }
     return i;
@@ -47,17 +47,17 @@ class SettingsPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<SettingsPrefs> init() {
+  static Future<SettingsPrefsImpl> init() {
     if (_instance != null) return Future.value(_instance!);
     return _initFuture ??= _doInit();
   }
 
-  static Future<SettingsPrefs> _doInit() async {
+  static Future<SettingsPrefsImpl> _doInit() async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = SettingsPrefs(prefs);
+      return _instance = SettingsPrefsImpl(prefs);
     } catch (e) {
       _initFuture = null;
       rethrow;

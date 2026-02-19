@@ -32,7 +32,7 @@ void main() {
   group('AsyncPrefs Generated Code Tests', () {
     // A late-initialized variable to hold the singleton instance of our
     // generated asynchronous preferences service.
-    late AsyncPreferences prefs;
+    late AsyncPreferencesImpl prefs;
 
     /// This `setUp` block runs before each individual test within this group.
     /// This ensures that each test begins from a clean, isolated state,
@@ -49,8 +49,8 @@ void main() {
 
       // 3. Initialize our generated `AsyncPrefs` service. It will automatically
       //    use the `InMemorySharedPreferencesAsync` instance configured above.
-      await AsyncPreferences.init();
-      prefs = AsyncPreferences.instance;
+      await AsyncPreferencesImpl.init();
+      prefs = AsyncPreferencesImpl.instance;
     });
 
     group('for async int (pingCount)', () {

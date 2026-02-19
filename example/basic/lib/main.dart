@@ -3,8 +3,8 @@
 // =============================================================================
 //
 // ① SINGLETON (this file)
-//   Call `await AppPreferences.init()` once, then access via
-//   `AppPreferences.instance` anywhere in the widget tree.
+//   Call `await AppPreferencesImpl.init()` once, then access via
+//   `AppPreferencesImpl.instance` anywhere in the widget tree.
 //
 // ② CONSTRUCTOR INJECTION (see app_preferences_test.dart)
 //   Create a backend and pass it directly to the constructor:
@@ -12,7 +12,7 @@
 //     final backend = await SharedPreferencesWithCache.create(
 //       cacheOptions: const SharedPreferencesWithCacheOptions(),
 //     );
-//     final prefs = AppPreferences(backend);
+//     final prefs = AppPreferencesImpl(backend);
 //     runApp(MyApp(prefs: prefs));
 //
 //   No global state is touched; ideal for tests and DI frameworks.
@@ -24,16 +24,19 @@ import 'app_preferences.g.dart';
 
 /// The main entry point for the application.
 ///
-/// Initializes [AppPreferences] once via the singleton [AppPreferences.init]
-/// before handing control to [MyApp]. After the `await`, every widget can
-/// read `AppPreferences.instance` synchronously without an async gap.
+/// The main entry point for the application.
+///
+/// Initializes [AppPreferencesImpl] once via the singleton
+/// [AppPreferencesImpl.init] before handing control to [MyApp]. After the
+/// `await`, every widget can read `AppPreferencesImpl.instance` synchronously
+/// without an async gap.
 Future<void> main() async {
   // Required for plugin initialization before runApp().
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize the preferences singleton. Safe to call multiple times —
   // concurrent callers share the same Future and do not trigger extra I/O.
-  await AppPreferences.init();
+  await AppPreferencesImpl.init();
 
   runApp(const MyApp());
 }
@@ -68,7 +71,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // Access the singleton — safe because init() completed in main() before runApp().
-  AppPreferences get _prefs => AppPreferences.instance;
+  AppPreferencesImpl get _prefs => AppPreferencesImpl.instance;
 
   // Local state variables to hold the current values for the UI.
   // They are initialized from SharedPreferences in `initState`.

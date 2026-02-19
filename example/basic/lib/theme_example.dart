@@ -1,5 +1,3 @@
-// ignore_for_file: unused_element, unused_field // This file is used for code generation and may contain unused elements or fields.
-
 import 'package:flutter/material.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
@@ -7,7 +5,7 @@ import 'theme_example.g.dart';
 
 /// Defines the data contract for the application's settings preferences.
 @TypedPrefs()
-abstract class _SettingsPrefs {
+abstract class SettingsPrefs {
   /// This preference is stored as a nullable boolean with the following mapping:
   /// - `true`:  ThemeMode.light
   /// - `false`: ThemeMode.dark
@@ -21,13 +19,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize our preferences service. This must be done once on startup.
-  // After this `await`, `SettingsPrefs.instance` is available for use.
-  await SettingsPrefs.init();
+  // After this `await`, `SettingsPrefsImpl.instance` is available for use.
+  await SettingsPrefsImpl.init();
 
   runApp(const MyApp());
 }
 
-// --- 3. Root Widget and State Management ---
+// --- Root Widget and State Management ---
 
 /// The root widget of the application.
 ///
@@ -52,7 +50,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // On startup, read the saved preference and set the initial theme.
     // We can safely access the singleton instance because `init()` was called in `main`.
-    final isLight = SettingsPrefs.instance.isLight;
+    final isLight = SettingsPrefsImpl.instance.isLight;
     _themeMode = _getThemeModeFromPreference(isLight);
   }
 
@@ -74,7 +72,7 @@ class _MyAppState extends State<MyApp> {
   /// to trigger a state change in this root widget.
   Future<void> _changeTheme(bool? newIsLightPreference) async {
     // 1. Persist the new choice to SharedPreferences using the generated setter.
-    await SettingsPrefs.instance.setIsLight(newIsLightPreference);
+    await SettingsPrefsImpl.instance.setIsLight(newIsLightPreference);
 
     // 2. Update the local state to trigger a UI rebuild with the new theme.
     setState(() {
@@ -85,7 +83,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     // We get the current preference value here to pass it down to the UI.
-    final currentPreference = SettingsPrefs.instance.isLight;
+    final currentPreference = SettingsPrefsImpl.instance.isLight;
 
     return MaterialApp(
       title: 'Simple Theme Demo',
@@ -103,13 +101,13 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// --- 4. UI Screen Widget ---
+// --- UI Screen Widget ---
 
 /// The home page of the application, responsible for displaying the UI.
 ///
 /// This is a [StatelessWidget] because it does not manage its own state.
 /// It receives its data (`currentPreference`) and behavior (`onThemeChanged`)
-/// from its parent widget. This separation makes the UI component clean and reusable.
+/// from its parent widget.
 class MyHomePage extends StatelessWidget {
   /// Creates the home page widget.
   const MyHomePage({
@@ -142,26 +140,22 @@ class MyHomePage extends StatelessWidget {
             SegmentedButton<bool?>(
               segments: const [
                 ButtonSegment(
-                  value: null, // System
+                  value: null,
                   label: Text('System'),
                   icon: Icon(Icons.brightness_auto),
                 ),
                 ButtonSegment(
-                  value: true, // Light
+                  value: true,
                   label: Text('Light'),
                   icon: Icon(Icons.wb_sunny),
                 ),
                 ButtonSegment(
-                  value: false, // Dark
+                  value: false,
                   label: Text('Dark'),
                   icon: Icon(Icons.nightlight_round),
                 ),
               ],
-              // The `selected` property expects a Set of the selected values.
               selected: {currentPreference},
-              // When the user makes a new selection, the new value is
-              // provided in a Set. We extract the first (and only) value
-              // and call the `onThemeChanged` callback to notify the parent.
               onSelectionChanged: (newSelection) {
                 onThemeChanged(newSelection.first);
               },

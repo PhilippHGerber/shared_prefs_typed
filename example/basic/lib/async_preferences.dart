@@ -1,11 +1,9 @@
-// ignore_for_file: unused_element, unused_field // This file is used for code generation and may contain unused elements or fields.
-
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
-/// Defines the data contract for preferences that will be accessed asynchronously.
-/// The key difference: *enabling async mode*
+/// Defines the data contract for preferences accessed asynchronously.
+/// The key difference: *enabling async mode* via `@TypedPrefs(async: true)`.
 @TypedPrefs(async: true)
-abstract class _AsyncPreferences {
+abstract class AsyncPreferences {
   /// A non-nullable async counter.
   static const int pingCount = 0;
 

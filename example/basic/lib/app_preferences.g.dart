@@ -14,30 +14,30 @@ import 'app_preferences.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
-/// **Simple apps**: call `await AppPreferences.init()` on startup,
-/// then access values via the singleton `AppPreferences.instance`.
+/// **Simple apps**: call `await AppPreferencesImpl.init()` on startup,
+/// then access values via the singleton `AppPreferencesImpl.instance`.
 ///
-/// **DI & Testing**: inject a backend directly: `AppPreferences(backend)`.
-class AppPreferences {
+/// **DI & Testing**: inject a backend directly: `AppPreferencesImpl(backend)`.
+class AppPreferencesImpl {
   /// Creates an instance backed by the given [SharedPreferencesWithCache].
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  const AppPreferences(this._prefs);
+  const AppPreferencesImpl(this._prefs);
 
-  static AppPreferences? _instance;
+  static AppPreferencesImpl? _instance;
 
-  static Future<AppPreferences>? _initFuture;
+  static Future<AppPreferencesImpl>? _initFuture;
 
   final SharedPreferencesWithCache _prefs;
 
   /// The singleton instance. Throws a [StateError] if [init] has not been called.
-  static AppPreferences get instance {
+  static AppPreferencesImpl get instance {
     final i = _instance;
     if (i == null) {
       throw StateError(
-        'AppPreferences has not been initialized. '
-        'Call `await AppPreferences.init()` before accessing `instance`.',
+        'AppPreferencesImpl has not been initialized. '
+        'Call `await AppPreferencesImpl.init()` before accessing `instance`.',
       );
     }
     return i;
@@ -47,17 +47,17 @@ class AppPreferences {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AppPreferences> init() {
+  static Future<AppPreferencesImpl> init() {
     if (_instance != null) return Future.value(_instance!);
     return _initFuture ??= _doInit();
   }
 
-  static Future<AppPreferences> _doInit() async {
+  static Future<AppPreferencesImpl> _doInit() async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = AppPreferences(prefs);
+      return _instance = AppPreferencesImpl(prefs);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -358,7 +358,7 @@ class AppPreferences {
   /// Gets the value for `nullableCounterWithDefault` from the cache.
   ///
   /// If the key does not exist, the default value `100` is returned.
-  int? get nullableCounterWithDefault {
+  int get nullableCounterWithDefault {
     return _prefs.getInt('nullableCounterWithDefault') ?? 100;
   }
 

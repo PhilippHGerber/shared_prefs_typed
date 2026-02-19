@@ -1,17 +1,32 @@
-# advanced
+# shared_prefs_typed — Advanced Example (get_it)
 
-A new Flutter project.
+This Flutter app demonstrates how to use `shared_prefs_typed` with a dependency
+injection framework (`get_it`), showing the recommended pattern for large,
+testable applications.
 
-## Getting Started
+## What it demonstrates
 
-This project is a starting point for a Flutter application.
+- **Public schema class** — `AppPreferences` (no leading `_`) generates `AppPreferencesImpl`
+  and `AppPreferencesImplBase` (the abstract interface)
+- **Interface generation** — `@TypedPrefs(generateInterface: true)` produces an abstract
+  base that can be registered in `get_it` and mocked in tests
+- **Constructor injection** — `AppPreferencesImpl(backend)` accepts the storage backend
+  directly; no singleton init required in tests
+- **Service locator setup** — `setupLocator()` wires everything together at startup
 
-A few resources to get you started if this is your first Flutter project:
+## Key files
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+| File | Purpose |
+| --- | --- |
+| `lib/app_preferences.dart` | Schema — annotated with `@TypedPrefs(generateInterface: true)` |
+| `lib/app_preferences.g.dart` | Generated — `AppPreferencesImpl` + `AppPreferencesImplBase` |
+| `lib/service_locator.dart` | Registers `AppPreferencesImpl` under `AppPreferencesImplBase` in `get_it` |
+| `lib/main.dart` | Calls `setupLocator()` before `runApp`, reads prefs via `getIt<AppPreferencesImplBase>()` |
+| `test/app_preferences_test.dart` | Integration tests using constructor injection — no `get_it` setup needed |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Running
+
+```bash
+flutter run
+flutter test
+```

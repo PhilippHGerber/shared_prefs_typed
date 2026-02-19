@@ -38,7 +38,7 @@ void main() {
 
 ### Why This is Powerful
 
-1. **No "Real" Data:** All calls to `AppPreferences.init()` and subsequent preference operations (`get`, `set`, `remove`) are automatically routed to our in-memory mock instead of the device's file system.
+1. **No "Real" Data:** All calls to `AppPreferencesImpl.init()` and subsequent preference operations (`get`, `set`, `remove`) are automatically routed to our in-memory mock instead of the device's file system.
 2. **Clean State for Every Test:** In a `setUp` block before each test, we can instantly clear the mock store, ensuring that every test runs in a clean, predictable environment without any state leaking from previous tests.
 
     ```dart
@@ -47,7 +47,7 @@ void main() {
       await SharedPreferencesAsyncPlatform.instance?.clear();
 
       // Now, initialize our service. It will use the clean, empty mock store.
-      await AppPreferences.init();
+      await AppPreferencesImpl.init();
     });
     ```
 

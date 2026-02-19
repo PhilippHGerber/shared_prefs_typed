@@ -34,7 +34,7 @@ void main() {
 
     // Initialize your generated preferences service, just like in the real app.
     // It will now operate on the in-memory store.
-    await SettingsPrefs.init();
+    await SettingsPrefsImpl.init();
   });
 
   testWidgets('Theme selection should be persisted correctly', (WidgetTester tester) async {
@@ -42,7 +42,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     // Ensure the initial state is 'System' (null).
-    expect(SettingsPrefs.instance.isLight, isNull);
+    expect(SettingsPrefsImpl.instance.isLight, isNull);
 
     // ACT: Find the "Dark" theme button by its icon and tap it.
     await tester.tap(find.byIcon(Icons.nightlight_round));
@@ -52,7 +52,7 @@ void main() {
 
     // ASSERT: Verify that the value was correctly saved to our in-memory store.
     // We query the generated instance directly.
-    expect(SettingsPrefs.instance.isLight, isFalse);
+    expect(SettingsPrefsImpl.instance.isLight, isFalse);
 
     // Optional: Verify that the UI has updated to reflect the new state.
     final segmentedButton = tester.widget<SegmentedButton<bool?>>(
@@ -63,7 +63,7 @@ void main() {
 
   testWidgets('Initial theme should be loaded from preferences', (WidgetTester tester) async {
     // ARRANGE: Set an initial value in the in-memory store *before* building the app.
-    await SettingsPrefs.instance.setIsLight(true); // Start with Light theme.
+    await SettingsPrefsImpl.instance.setIsLight(true); // Start with Light theme.
 
     // ACT: Build the app. The `initState` in MyApp should now read this value.
     await tester.pumpWidget(const MyApp());

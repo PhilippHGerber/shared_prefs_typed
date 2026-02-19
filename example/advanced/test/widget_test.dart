@@ -19,7 +19,7 @@ void main() {
   setUp(() async => setupLocator());
 
   tearDown(() async {
-    AppPreferences.resetInstance();
+    AppPreferencesImpl.resetInstance();
     await getIt.reset();
   });
 
