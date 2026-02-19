@@ -256,6 +256,28 @@ void main() {
         expect(prefs.containsNullableCounterWithDefault(), isFalse);
       });
     });
+
+    group('clearAll()', () {
+      test('reverts all fields to their defaults', () async {
+        await prefs.setCounter(42);
+        await prefs.setPi(2.718);
+        await prefs.setIsWelcomeScreenDone(true);
+        await prefs.setGreeting('Hi');
+        await prefs.setTagList(['a', 'b']);
+        await prefs.setSessionId('session-1');
+
+        await prefs.clearAll();
+
+        expect(prefs.counter, 0);
+        expect(prefs.pi, 3.14);
+        expect(prefs.isWelcomeScreenDone, isFalse);
+        expect(prefs.greeting, 'Hello');
+        expect(prefs.tagList, ['default']);
+        expect(prefs.sessionId, isNull);
+        expect(prefs.containsCounter(), isFalse);
+        expect(prefs.containsGreeting(), isFalse);
+      });
+    });
   });
 
   // Demonstrates constructor injection: no singleton management required.

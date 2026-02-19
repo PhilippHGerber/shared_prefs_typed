@@ -424,4 +424,23 @@ class AppPreferencesImpl {
   Future<void> removeNullableCounterWithDefault() {
     return _prefs.remove('nullableCounterWithDefault');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('counter'),
+      _prefs.remove('displayGreeting'),
+      _prefs.remove('pi'),
+      _prefs.remove('isWelcomeScreenDone'),
+      _prefs.remove('greeting'),
+      _prefs.remove('tagList'),
+      _prefs.remove('recentItemIds'),
+      _prefs.remove('priceHistory'),
+      _prefs.remove('sessionId'),
+      _prefs.remove('lastLoginTimestamp'),
+      _prefs.remove('nullableCounterWithDefault'),
+    ]);
+  }
 }
