@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:collection';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'success_case.dart';
@@ -178,7 +180,8 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `const <String>['a', 'b']` is returned.
   List<String> get testStringList {
-    return _prefs.getStringList('testStringList') ?? const <String>['a', 'b'];
+    final raw = _prefs.getStringList('testStringList');
+    return raw == null ? const <String>['a', 'b'] : UnmodifiableListView(raw);
   }
 
   /// Asynchronously sets the value for `testStringList`.

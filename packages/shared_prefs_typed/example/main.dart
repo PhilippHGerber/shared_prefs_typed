@@ -9,10 +9,11 @@ import 'main.g.dart';
 
 /// Defines the preference schema for this app.
 ///
-/// The generator reads the `static const` fields and produces [SettingsPrefs]
-/// in `main.g.dart`.
+/// The generator reads the `static const` fields and produces [SettingsPrefsImpl]
+/// in `main.g.dart`. No leading `_` is required — a public class name is fine;
+/// the generator appends `Impl` to form the generated class name.
 @TypedPrefs()
-abstract class _SettingsPrefs {
+abstract class SettingsPrefs {
   /// Theme override.
   ///
   /// - `true`  → [ThemeMode.light]
@@ -32,12 +33,12 @@ abstract class _SettingsPrefs {
 // =============================================================================
 //
 // ① SINGLETON (simple apps)
-//   Call `await SettingsPrefs.init()` once at startup.
-//   The instance is then available via `SettingsPrefs.instance` everywhere.
+//   Call `await SettingsPrefsImpl.init()` once at startup.
+//   The instance is then available via `SettingsPrefsImpl.instance` everywhere.
 //
-//     await SettingsPrefs.init();
-//     SettingsPrefs.instance.isLight;           // sync read
-//     await SettingsPrefs.instance.setIsLight(true); // async write
+//     await SettingsPrefsImpl.init();
+//     SettingsPrefsImpl.instance.isLight;           // sync read
+//     await SettingsPrefsImpl.instance.setIsLight(true); // async write
 //
 // ② CONSTRUCTOR (dependency injection / testing)
 //   Pass the storage backend directly — no global state touched.
@@ -45,7 +46,7 @@ abstract class _SettingsPrefs {
 //     final backend = await SharedPreferencesWithCache.create(
 //       cacheOptions: const SharedPreferencesWithCacheOptions(),
 //     );
-//     final prefs = SettingsPrefs(backend);
+//     final prefs = SettingsPrefsImpl(backend);
 //     runApp(MyApp(prefs: prefs));
 //
 // =============================================================================
@@ -59,14 +60,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize once. Concurrent callers share the same Future — no race
-  // conditions. After the await, `SettingsPrefs.instance` is available.
-  await SettingsPrefs.init();
+  // conditions. After the await, `SettingsPrefsImpl.instance` is available.
+  await SettingsPrefsImpl.init();
 
   runApp(const MyApp());
 }
 
 // =============================================================================
-// Singleton approach — MyApp reads SettingsPrefs.instance directly.
+// Singleton approach — MyApp reads SettingsPrefsImpl.instance directly.
 // =============================================================================
 
 /// Root widget for the **singleton** example.
@@ -80,7 +81,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   // Access the singleton — safe because init() completed before runApp().
-  SettingsPrefs get _prefs => SettingsPrefs.instance;
+  SettingsPrefsImpl get _prefs => SettingsPrefsImpl.instance;
 
   late ThemeMode _themeMode;
 
@@ -117,7 +118,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 // =============================================================================
-// Constructor-injection approach — SettingsPrefs is passed from main().
+// Constructor-injection approach — SettingsPrefsImpl is passed from main().
 // =============================================================================
 
 /// Entry point demonstrating the **constructor-injection** approach.
@@ -134,7 +135,7 @@ Future<void> mainDI() async {
 
   // Inject the backend via the public const constructor.
   // No global singleton is touched.
-  final prefs = SettingsPrefs(backend);
+  final prefs = SettingsPrefsImpl(backend);
 
   runApp(MyAppDI(prefs: prefs));
 }
@@ -145,14 +146,14 @@ class MyAppDI extends StatefulWidget {
   const MyAppDI({required this.prefs, super.key});
 
   /// The preferences service, injected by the caller.
-  final SettingsPrefs prefs;
+  final SettingsPrefsImpl prefs;
 
   @override
   State<MyAppDI> createState() => _MyAppDIState();
 }
 
 class _MyAppDIState extends State<MyAppDI> {
-  SettingsPrefs get _prefs => widget.prefs;
+  SettingsPrefsImpl get _prefs => widget.prefs;
 
   late ThemeMode _themeMode;
 

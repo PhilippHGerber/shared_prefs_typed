@@ -24,13 +24,6 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       );
     }
 
-    if (element.name?.startsWith('_') == false) {
-      throw InvalidGenerationSourceError(
-        'The annotated class name must start with an underscore (`_`) to indicate it is private.',
-        element: element,
-      );
-    }
-
     final classElement = element;
     final isAsyncMode = annotation.read('async').boolValue;
     final generateInterface = annotation.read('generateInterface').boolValue;
@@ -70,7 +63,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       field.prefTypeName;
     }
 
-    final publicClassName = classElement.name!.substring(1);
+    final publicClassName = classElement.generatedClassName;
     final bodyItems = <Spec>[];
 
     if (generateInterface) {
@@ -83,10 +76,15 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
           : _buildSyncClass(classElement, fields, generateInterface: generateInterface),
     );
 
+    final hasListField = fields.any(
+      (f) => f.nonNullableTypeReference.symbol!.startsWith('List<'),
+    );
+
     final library = Library(
       (b) => b
         ..ignoreForFile.addAll(['unused_element', 'unused_field'])
         ..directives.addAll([
+          if (hasListField) Directive.import('dart:collection'),
           Directive.import('package:shared_preferences/shared_preferences.dart'),
           Directive.import(buildStep.inputId.pathSegments.last),
         ])
@@ -111,7 +109,7 @@ Class _buildSyncClass(
   List<_SharedPrefField> fields, {
   bool generateInterface = false,
 }) {
-  final publicClassName = classElement.name!.substring(1);
+  final publicClassName = classElement.generatedClassName;
   const prefsClassName = 'SharedPreferencesWithCache';
   const prefsOptionsName = 'SharedPreferencesWithCacheOptions';
 
@@ -254,7 +252,7 @@ Class _buildAsyncClass(
   List<_SharedPrefField> fields, {
   bool generateInterface = false,
 }) {
-  final publicClassName = classElement.name!.substring(1);
+  final publicClassName = classElement.generatedClassName;
   const prefsClassName = 'SharedPreferencesAsync';
 
   return Class(
@@ -406,8 +404,8 @@ Class _buildInterface(
                 ..name = field.paramName
                 ..type = MethodType.getter
                 ..returns = isAsync
-                    ? refer('Future<${field.typeReference.symbol}>')
-                    : field.typeReference,
+                    ? refer('Future<${field.getterTypeReference.symbol}>')
+                    : field.getterTypeReference,
             ),
             Method(
               (m) => m
@@ -440,27 +438,35 @@ Class _buildInterface(
 //--- Method Generators (No changes needed here as they depend on _SharedPrefField) ---//
 
 Method _generateSyncGetter(_SharedPrefField field) {
-  String body;
+  final Code body;
   if (field.isEnum) {
     final rawExpr = "_prefs.getString('${field.keyName}')";
-    if (field.isNullable) {
-      body = 'final raw = $rawExpr;\n'
-          'if (raw == null) return null;\n'
-          'return ${field.enumTypeName}.values.byName(raw);';
+    if (field.isNullable && !field.hasNonNullDefault) {
+      body = Code(
+        'final raw = $rawExpr;\n'
+        'if (raw == null) return null;\n'
+        'return ${field.enumTypeName}.values.byName(raw);',
+      );
     } else {
-      body = 'final raw = $rawExpr;\n'
-          'if (raw == null) return ${field.defaultValue};\n'
-          'return ${field.enumTypeName}.values.byName(raw);';
+      body = Code(
+        'final raw = $rawExpr;\n'
+        'if (raw == null) return ${field.defaultValue};\n'
+        'return ${field.enumTypeName}.values.byName(raw);',
+      );
     }
   } else if (field.isDateTime) {
-    body = _buildDateTimeSyncGetterBody(field);
+    body = Code(_buildDateTimeSyncGetterBody(field));
+  } else if (field.isStringList) {
+    body = Code(_buildStringListSyncGetterBody(field));
   } else if (field.numericListElementType != null) {
-    body = _buildNumericListSyncGetterBody(field);
+    body = Code(_buildNumericListSyncGetterBody(field));
   } else {
-    final getExpr = "_prefs.get${field.prefTypeName}('${field.keyName}')";
+    final getCall = refer('_prefs')
+        .property('get${field.prefTypeName}')
+        .call([literalString(field.keyName)]);
     body = field.defaultValue == 'null'
-        ? 'return $getExpr;'
-        : 'return $getExpr ?? ${field.defaultValue};';
+        ? getCall.returned.statement
+        : getCall.ifNullThen(CodeExpression(Code(field.defaultValue))).returned.statement;
   }
 
   return Method(
@@ -472,33 +478,39 @@ Method _generateSyncGetter(_SharedPrefField field) {
         '/// If the key does not exist, the default value `${field.defaultValue}` is returned.',
       )
       ..type = MethodType.getter
-      ..returns = field.typeReference
-      ..body = Code(body),
+      ..returns = field.getterTypeReference
+      ..body = body,
   );
 }
 
 Method _generateAsyncGetter(_SharedPrefField field) {
-  String body;
+  final Code body;
   if (field.isEnum) {
     final rawExpr = "(await _prefs.getString('${field.keyName}'))";
-    if (field.isNullable) {
-      body = 'final raw = $rawExpr;\n'
-          'if (raw == null) return null;\n'
-          'return ${field.enumTypeName}.values.byName(raw);';
+    if (field.isNullable && !field.hasNonNullDefault) {
+      body = Code(
+        'final raw = $rawExpr;\n'
+        'if (raw == null) return null;\n'
+        'return ${field.enumTypeName}.values.byName(raw);',
+      );
     } else {
-      body = 'final raw = $rawExpr;\n'
-          'if (raw == null) return ${field.defaultValue};\n'
-          'return ${field.enumTypeName}.values.byName(raw);';
+      body = Code(
+        'final raw = $rawExpr;\n'
+        'if (raw == null) return ${field.defaultValue};\n'
+        'return ${field.enumTypeName}.values.byName(raw);',
+      );
     }
   } else if (field.isDateTime) {
-    body = _buildDateTimeAsyncGetterBody(field);
+    body = Code(_buildDateTimeAsyncGetterBody(field));
+  } else if (field.isStringList) {
+    body = Code(_buildStringListAsyncGetterBody(field));
   } else if (field.numericListElementType != null) {
-    body = _buildNumericListAsyncGetterBody(field);
+    body = Code(_buildNumericListAsyncGetterBody(field));
   } else {
     final getExpr = "(await _prefs.get${field.prefTypeName}('${field.keyName}'))";
     body = field.defaultValue == 'null'
-        ? 'return $getExpr;'
-        : 'return $getExpr ?? ${field.defaultValue};';
+        ? Code('return $getExpr;')
+        : Code('return $getExpr ?? ${field.defaultValue};');
   }
 
   return Method(
@@ -510,9 +522,9 @@ Method _generateAsyncGetter(_SharedPrefField field) {
         '/// If the key does not exist, the default value `${field.defaultValue}` is returned.',
       )
       ..type = MethodType.getter
-      ..returns = refer('Future<${field.typeReference.symbol}>')
+      ..returns = refer('Future<${field.getterTypeReference.symbol}>')
       ..modifier = MethodModifier.async
-      ..body = Code(body),
+      ..body = body,
   );
 }
 
@@ -579,7 +591,11 @@ Method _generateIsSet(_SharedPrefField field, {required bool isAsync}) => Method
     ..docs.add('///')
     ..docs.add('/// Returns `true` if the key exists in persistent storage, `false` otherwise.')
     ..returns = refer(isAsync ? 'Future<bool>' : 'bool')
-    ..body = Code("return _prefs.containsKey('${field.keyName}');"),
+    ..body = refer('_prefs')
+        .property('containsKey')
+        .call([literalString(field.keyName)])
+        .returned
+        .statement,
 );
 
 Method _generateRemover(_SharedPrefField field) => Method(
@@ -591,7 +607,11 @@ Method _generateRemover(_SharedPrefField field) => Method(
       '/// After calling this, the getter will return the default value (`${field.defaultValue}`).',
     )
     ..returns = refer('Future<void>')
-    ..body = Code("return _prefs.remove('${field.keyName}');"),
+    ..body = refer('_prefs')
+        .property('remove')
+        .call([literalString(field.keyName)])
+        .returned
+        .statement,
 );
 
 //--- DateTime helpers ---//
@@ -640,30 +660,54 @@ Code _buildDateTimeSetterBody(_SharedPrefField field) {
   return Code("if (value == null) { return _prefs.remove('$key'); } $setExpr");
 }
 
+//--- String list helpers ---//
+
+String _buildStringListSyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final rawExpr = "_prefs.getStringList('$key')";
+  if (field.isNullable && !field.hasNonNullDefault) {
+    return 'final raw = $rawExpr;\n'
+        'return raw == null ? null : UnmodifiableListView(raw);';
+  }
+  return 'final raw = $rawExpr;\n'
+      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw);';
+}
+
+String _buildStringListAsyncGetterBody(_SharedPrefField field) {
+  final key = field.keyName;
+  final rawExpr = "await _prefs.getStringList('$key')";
+  if (field.isNullable && !field.hasNonNullDefault) {
+    return 'final raw = $rawExpr;\n'
+        'return raw == null ? null : UnmodifiableListView(raw);';
+  }
+  return 'final raw = $rawExpr;\n'
+      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw);';
+}
+
 //--- Numeric list helpers ---//
 
 String _buildNumericListSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final elementType = field.numericListElementType!;
   final rawExpr = "_prefs.getStringList('$key')";
-  if (field.isNullable) {
+  if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
-        'return raw?.map($elementType.parse).toList();';
+        'return raw == null ? null : UnmodifiableListView(raw.map($elementType.parse).toList());';
   }
   return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : raw.map($elementType.parse).toList();';
+      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw.map($elementType.parse).toList());';
 }
 
 String _buildNumericListAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final elementType = field.numericListElementType!;
   final rawExpr = "await _prefs.getStringList('$key')";
-  if (field.isNullable) {
+  if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
-        'return raw?.map($elementType.parse).toList();';
+        'return raw == null ? null : UnmodifiableListView(raw.map($elementType.parse).toList());';
   }
   return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : raw.map($elementType.parse).toList();';
+      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw.map($elementType.parse).toList());';
 }
 
 //--- Helper class and extensions ---//
@@ -718,6 +762,14 @@ class _SharedPrefField {
     return refer(nonNullableString);
   }
 
+  /// True when the field is nullable but its default is not null.
+  /// In this case the getter can safely return the non-nullable type.
+  bool get hasNonNullDefault => isNullable && defaultValue != 'null';
+
+  /// Return type for getters: narrows to non-nullable when [hasNonNullDefault].
+  Reference get getterTypeReference =>
+      hasNonNullDefault ? nonNullableTypeReference : typeReference;
+
   bool get isEnum {
     final element = field.type.element;
     return element is EnumElement;
@@ -745,6 +797,9 @@ class _SharedPrefField {
   static const _supportedTypes = {
     'int', 'double', 'bool', 'String', 'List<String>', 'List<int>', 'List<double>'
   };
+
+  /// True when the non-nullable type is `List<String>` (not a numeric list).
+  bool get isStringList => nonNullableTypeReference.symbol == 'List<String>';
 
   /// Returns `'int'` or `'double'` for `List<int>`/`List<double>`, `null` otherwise.
   String? get numericListElementType {
@@ -832,4 +887,14 @@ String _escapeDartString(String value) => value
 extension on String {
   String toPascalCase() => isEmpty ? '' : this[0].toUpperCase() + substring(1);
   String toCamelCase() => isEmpty ? '' : this[0].toLowerCase() + substring(1);
+}
+
+extension on ClassElement {
+  /// Returns the public name for the generated class.
+  /// - If the annotated class starts with `_` (private), strips it: `_AppPrefs` → `AppPrefs`.
+  /// - Otherwise appends `Impl`: `AppPrefs` → `AppPrefsImpl`.
+  String get generatedClassName {
+    final n = name!;
+    return n.startsWith('_') ? n.substring(1) : '${n}Impl';
+  }
 }

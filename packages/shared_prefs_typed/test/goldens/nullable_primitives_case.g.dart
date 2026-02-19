@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:collection';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'nullable_primitives_case.dart';
@@ -167,7 +169,8 @@ class NullablePrefs {
   ///
   /// If the key does not exist, the default value `const <String>[]` is returned.
   List<String> get emptyStringList {
-    return _prefs.getStringList('emptyStringList') ?? const <String>[];
+    final raw = _prefs.getStringList('emptyStringList');
+    return raw == null ? const <String>[] : UnmodifiableListView(raw);
   }
 
   /// Asynchronously sets the value for `emptyStringList`.

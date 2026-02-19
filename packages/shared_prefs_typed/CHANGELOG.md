@@ -4,9 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-**Breaking change** — re-run `flutter pub run build_runner build` after upgrading. `create()` and `fromBackend()` are removed; use `init()` or the public constructor instead.
-
 ### New
+
+* **Non-nullable getter for nullable fields with a non-null default** — when a field is declared `Type?` but has a compile-time non-null default (e.g. `static const int? retryCount = 3`), the generated getter now returns the non-nullable `Type` while the setter remains `Type?` (pass `null` to reset to the default). This eliminates unnecessary `!` null-assertion operators in call sites.
+* **Public (non-`_`) schema classes** — the annotated class no longer needs to start with `_`. If the class name starts with `_`, the leading underscore is stripped as before (`_AppPrefs` → `AppPrefs`). If it does not, `Impl` is appended (`AppPrefs` → `AppPrefsImpl`). The previous build-time error for non-`_` class names is removed.
+* **Immutable list getters** — all generated `List<T>` getters now return `UnmodifiableListView`, preventing silent mutation of the cached list. Callers must use the setter to persist changes. The generated file imports `dart:collection` only when list fields are present.
+
+### Improved
+
+* **`_generateIsSet` and `_generateRemover` use `code_builder` structured APIs** — replaced raw `Code('...')` string interpolation with `refer().property().call()` expression chains for the `isSet*()` and `remove*()` methods, and for simple primitive sync getters. This eliminates a class of string-escaping and quoting bugs in these methods.
+
+### Docs
+
+* **"Renaming Fields & Data Migration" section** added to both the package and root README with a concrete `@PrefKey` before/after example.
+* **"Out of Scope" section** added to both READMEs documenting scenarios the package intentionally does not cover (encryption, complex serialization, streams, multi-isolate sync, cloud backends).
+
+---
+
+**Previous unreleased** — **Breaking change** — re-run `flutter pub run build_runner build` after upgrading. `create()` and `fromBackend()` are removed; use `init()` or the public constructor instead.
+
+### New (previous)
 
 * **`List<int>` and `List<double>` support** — numeric lists are transparently serialized to `List<String>` storage (via `.toString()`) and deserialized back (`int.parse` / `double.parse`). Nullable variants (`List<int>?`, `List<double>?`) are supported. Default values are rendered as typed literals (`const <int>[1, 2, 3]`).
 * **`@PrefKey('storage_key')` annotation** — override the SharedPreferences storage key per field while keeping the field-derived Dart API name. Generator rejects empty keys and duplicate resolved keys.

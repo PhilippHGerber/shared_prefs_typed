@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:collection';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'numeric_list_case.dart';
@@ -75,7 +77,9 @@ class NumericListPrefs {
   /// If the key does not exist, the default value `const <int>[1, 2, 3]` is returned.
   List<int> get intList {
     final raw = _prefs.getStringList('intList');
-    return raw == null ? const <int>[1, 2, 3] : raw.map(int.parse).toList();
+    return raw == null
+        ? const <int>[1, 2, 3]
+        : UnmodifiableListView(raw.map(int.parse).toList());
   }
 
   /// Asynchronously sets the value for `intList`.
@@ -107,7 +111,7 @@ class NumericListPrefs {
     final raw = _prefs.getStringList('doubleList');
     return raw == null
         ? const <double>[1.5, 2.5]
-        : raw.map(double.parse).toList();
+        : UnmodifiableListView(raw.map(double.parse).toList());
   }
 
   /// Asynchronously sets the value for `doubleList`.
@@ -137,7 +141,9 @@ class NumericListPrefs {
   /// If the key does not exist, the default value `null` is returned.
   List<int>? get nullableIntList {
     final raw = _prefs.getStringList('nullableIntList');
-    return raw?.map(int.parse).toList();
+    return raw == null
+        ? null
+        : UnmodifiableListView(raw.map(int.parse).toList());
   }
 
   /// Asynchronously sets the value for `nullableIntList`.
@@ -172,7 +178,9 @@ class NumericListPrefs {
   /// If the key does not exist, the default value `null` is returned.
   List<double>? get nullableDoubleList {
     final raw = _prefs.getStringList('nullableDoubleList');
-    return raw?.map(double.parse).toList();
+    return raw == null
+        ? null
+        : UnmodifiableListView(raw.map(double.parse).toList());
   }
 
   /// Asynchronously sets the value for `nullableDoubleList`.

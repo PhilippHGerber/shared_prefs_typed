@@ -119,6 +119,30 @@ void main() async {
     );
 
     test(
+      'should generate non-nullable getters and nullable setters for nullable fields '
+      'with non-null defaults',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/nullable_with_default_case.dart': await File(
+            'test/src/nullable_with_default_case.dart',
+          ).readAsString(),
+        };
+        final expectedOutputs = {
+          'my_package|lib/nullable_with_default_case.g.dart': await File(
+            'test/goldens/nullable_with_default_case.g.dart',
+          ).readAsString(),
+        };
+        await testBuilder(
+          builder,
+          sourceAssets,
+          outputs: expectedOutputs,
+          rootPackage: 'my_package',
+        );
+      },
+    );
+
+    test(
       'should correctly escape special characters in string default values',
       () async {
         final sourceAssets = {
@@ -344,24 +368,24 @@ void main() async {
     );
 
     test(
-      'should report error when class name does not start with underscore',
+      'should generate a class with Impl suffix for public (non-underscore) class names',
       () async {
         final sourceAssets = {
           ...commonAssets,
-          'my_package|lib/error_no_underscore.dart': await File(
-            'test/src/error_no_underscore.dart',
+          'my_package|lib/public_class_case.dart': await File(
+            'test/src/public_class_case.dart',
           ).readAsString(),
         };
-        final logs = <LogRecord>[];
+        final expectedOutputs = {
+          'my_package|lib/public_class_case.g.dart': await File(
+            'test/goldens/public_class_case.g.dart',
+          ).readAsString(),
+        };
         await testBuilder(
           builder,
           sourceAssets,
+          outputs: expectedOutputs,
           rootPackage: 'my_package',
-          onLog: logs.add,
-        );
-        expect(
-          logs.map((l) => l.message),
-          contains(contains('must start with an underscore')),
         );
       },
     );

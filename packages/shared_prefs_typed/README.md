@@ -39,7 +39,7 @@ Then, run `flutter pub get`.
 
 ### 1. Define Your Preferences Schema
 
-Create a Dart file (e.g., `lib/app_preferences.dart`) and define your preferences using a private abstract class annotated with `@TypedPrefs()`.
+Create a Dart file (e.g., `lib/app_preferences.dart`) and define your preferences using an abstract class annotated with `@TypedPrefs()`.
 
 The supported field types are: `int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `DateTime` (via `@PrefDateTime`), and any `Enum` type — plus nullable variants of each.
 
@@ -48,7 +48,7 @@ The supported field types are: `int`, `double`, `bool`, `String`, `List<String>`
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
 @TypedPrefs()
-abstract class _AppPreferences {
+abstract class AppPreferences {
   // Primitives with defaults
   static const int counter = 0;
   static const bool isDarkMode = false;
@@ -61,8 +61,15 @@ abstract class _AppPreferences {
 
   // Nullable — returns null when the key is absent
   static const String? username = null;
+
+  // Nullable with non-null default — getter returns non-nullable int
+  static const int? retryCount = 3;
 }
 ```
+
+> **Naming:** A public class `Foo` generates `FooImpl`; a private class `_Foo` generates `Foo`. Fields must be `static const`.
+>
+> **Nullable with non-null default:** When a field is `T?` but has a non-null default (e.g. `int? retryCount = 3`), the getter returns `T` (non-nullable). The setter still accepts `T?` so passing `null` removes the key and reverts to the default.
 
 ### 2. Run the Code Generator
 
@@ -70,7 +77,7 @@ abstract class _AppPreferences {
 flutter pub run build_runner build
 ```
 
-This generates `app_preferences.g.dart` containing your public `AppPreferences` service class.
+This generates `app_preferences.g.dart` containing your `AppPreferencesImpl` service class.
 
 ---
 
@@ -78,7 +85,7 @@ This generates `app_preferences.g.dart` containing your public `AppPreferences` 
 
 **Best for:** Small/medium apps with a single entrypoint.
 
-Call `await AppPreferences.init()` once at startup; then read values synchronously from anywhere via `AppPreferences.instance`.
+Call `await AppPreferencesImpl.init()` once at startup; then read values synchronously from anywhere via `AppPreferencesImpl.instance`.
 
 ```dart
 // lib/main.dart
@@ -87,7 +94,7 @@ import 'app_preferences.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppPreferences.init();
+  await AppPreferencesImpl.init();
   runApp(const MyApp());
 }
 
@@ -97,7 +104,7 @@ class MyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prefs = AppPreferences.instance;
+    final prefs = AppPreferencesImpl.instance;
 
     return FloatingActionButton(
       // Getters are synchronous
@@ -117,7 +124,7 @@ Use `@TypedPrefs(async: true)` when preferences can be modified from another iso
 
 ```dart
 @TypedPrefs(async: true)
-abstract class _AsyncPrefs {
+abstract class AsyncPrefs {
   static const int pingCount = 0;
 }
 
@@ -140,7 +147,7 @@ final backend = await SharedPreferencesWithCache.create(
 );
 
 // No init() call needed — no global singleton touched.
-final prefs = AppPreferences(backend);
+final prefs = AppPreferencesImpl(backend);
 ```
 
 ### Testing
@@ -161,7 +168,7 @@ void main() {
     SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
   });
 
-  late AppPreferences prefs;
+  late AppPreferencesImpl prefs;
 
   setUp(() async {
     // Clear the in-memory store between tests.
@@ -172,11 +179,11 @@ void main() {
     final backend = await SharedPreferencesWithCache.create(
       cacheOptions: const SharedPreferencesWithCacheOptions(),
     );
-    // Construct directly — AppPreferences(backend) is the preferred mock injection point.
-    prefs = AppPreferences(backend);
+    // Construct directly — no global state touched.
+    prefs = AppPreferencesImpl(backend);
   });
 
-  tearDown(AppPreferences.resetInstance);
+  tearDown(AppPreferencesImpl.resetInstance);
 
   test('counter returns default and can be set', () async {
     expect(prefs.counter, 0);
@@ -196,35 +203,66 @@ The constructor integrates naturally with any DI framework.
 final backend = await SharedPreferencesWithCache.create(
   cacheOptions: const SharedPreferencesWithCacheOptions(),
 );
-getIt.registerSingleton<AppPreferences>(AppPreferences(backend));
+getIt.registerSingleton<AppPreferencesImpl>(AppPreferencesImpl(backend));
 ```
 
-**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesBase`. Production code depends only on the abstract base and is trivially mockable with Mocktail:
+**GetIt with interface (recommended for testability)** — add `generateInterface: true` to generate `AppPreferencesImplBase`. Production code depends only on the abstract base and is trivially mockable with Mocktail:
 
 ```dart
 // Schema
 @TypedPrefs(generateInterface: true)
-abstract class _AppPreferences { ... }
+abstract class AppPreferences { ... }
 
 // Startup
-getIt.registerSingleton<AppPreferencesBase>(AppPreferences(backend));
+getIt.registerSingleton<AppPreferencesImplBase>(AppPreferencesImpl(backend));
 
 // Everywhere else
-getIt<AppPreferencesBase>().counter
+getIt<AppPreferencesImplBase>().counter
 
 // Mocktail mock in tests
-class MockAppPreferences extends Mock implements AppPreferencesBase {}
+class MockAppPreferences extends Mock implements AppPreferencesImplBase {}
 ```
 
 **Riverpod:**
 
 ```dart
-final appPrefsProvider = Provider<AppPreferences>((ref) {
-  return AppPreferences(ref.read(sharedPrefsBackendProvider));
+final appPrefsProvider = Provider<AppPreferencesImpl>((ref) {
+  return AppPreferencesImpl(ref.read(sharedPrefsBackendProvider));
 });
 ```
 
-For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesBase`).
+For a full working example see [`example/advanced`](../../example/advanced) in the repository (counter + dark-mode toggle + username, registered via `AppPreferencesImplBase`).
+
+---
+
+## Renaming Fields & Data Migration
+
+Storage keys are derived from field names by default. **Renaming a field silently changes its storage key**, causing previously saved data to become inaccessible — the getter returns the default value as if the key was never set. No error is thrown.
+
+Use `@PrefKey` to pin the storage key when renaming a field:
+
+```dart
+// Before rename:
+static const int loginCount = 0;  // key: 'loginCount'
+
+// After rename — @PrefKey preserves the original key:
+@PrefKey('loginCount')
+static const int signInCount = 0;  // key: still 'loginCount'
+```
+
+`build_runner` cannot detect key renames — it is the developer's responsibility to add `@PrefKey` before renaming.
+
+---
+
+## Out of Scope
+
+This package intentionally does **not** cover the following scenarios:
+
+* **Encryption / secure storage** — use [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage) for sensitive data.
+* **Complex/nested object serialization** — only primitives, enums, `DateTime`, and `List<T>` of primitives are supported. For structured data models, consider [`hive`](https://pub.dev/packages/hive) or [`isar`](https://pub.dev/packages/isar).
+* **Reactive/stream-based change notifications** — getters return point-in-time values; no `Stream` or `ValueNotifier` is emitted.
+* **Multi-isolate write synchronization** — two instances with separate caches on different isolates will diverge. Only the singleton pattern (single isolate) is safe.
+* **Cloud or remote backend adapters** — this package wraps local `SharedPreferences` only.
 
 ---
 
