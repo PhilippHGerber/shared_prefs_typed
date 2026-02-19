@@ -368,6 +368,29 @@ void main() async {
     );
 
     test(
+      'should report error when a field name conflicts with a built-in generated member',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_reserved_name.dart': await File(
+            'test/src/error_reserved_name.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(contains('produces a generated API name')),
+        );
+      },
+    );
+
+    test(
       'should generate a class with Impl suffix for public (non-underscore) class names',
       () async {
         final sourceAssets = {

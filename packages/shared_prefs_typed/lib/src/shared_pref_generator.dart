@@ -59,6 +59,17 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
         );
       }
 
+      // Validate against reserved generated-class member names.
+      const reservedNames = {'init', 'instance', 'resetInstance'};
+      if (reservedNames.contains(field.paramName)) {
+        throw InvalidGenerationSourceError(
+          'Field `${field.name}` produces a generated API name `${field.paramName}` '
+          'that conflicts with a built-in member of the generated class. '
+          'Rename the field or use @PrefKey to assign a different storage key.',
+          element: field.field,
+        );
+      }
+
       // Validate type is supported (triggers error for unknown types).
       field.prefTypeName;
     }
