@@ -3,7 +3,7 @@
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
-@TypedPrefs(async: true)
+@TypedPrefs(mode: PrefsMode.async)
 abstract class _AsyncDateTimeIsoPrefs {
   @PrefDateTime(DateTimeEncoding.iso8601)
   static const DateTime? lastLogin = null;

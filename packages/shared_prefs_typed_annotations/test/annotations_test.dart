@@ -2,32 +2,41 @@ import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.da
 import 'package:test/test.dart';
 
 void main() {
-  group('TypedPrefs Annotation', () {
-    test('can be instantiated with default (sync) mode', () {
-      // ARRANGE & ACT: Instantiate the annotation.
+  group('TypedPrefs — mode parameter', () {
+    test('defaults to null when neither mode nor async is set', () {
       const annotation = TypedPrefs();
+      expect(annotation.mode, isNull);
+    });
 
-      // ASSERT: Verify the default value of the 'async' property.
-      // This confirms the constructor works as expected.
-      expect(annotation, isA<TypedPrefs>());
+    test('accepts mode: PrefsMode.cached', () {
+      const annotation = TypedPrefs(mode: PrefsMode.cached);
+      expect(annotation.mode, PrefsMode.cached);
+    });
+
+    test('accepts mode: PrefsMode.async', () {
+      const annotation = TypedPrefs(mode: PrefsMode.async);
+      expect(annotation.mode, PrefsMode.async);
+    });
+  });
+
+  group('TypedPrefs — deprecated async parameter (backwards compatibility)', () {
+    test('async defaults to false', () {
+      const annotation = TypedPrefs();
+      // ignore: deprecated_member_use_from_same_package
       expect(annotation.async, isFalse);
     });
 
-    test('can be instantiated with async mode enabled', () {
-      // ARRANGE & ACT: Instantiate the annotation with async set to true.
+    test('async: true is still accepted', () {
+      // ignore: deprecated_member_use_from_same_package
       const annotation = TypedPrefs(async: true);
-
-      // ASSERT: Verify the value of the 'async' property is correctly set.
-      expect(annotation, isA<TypedPrefs>());
+      // ignore: deprecated_member_use_from_same_package
       expect(annotation.async, isTrue);
     });
 
-    test('can be instantiated with async mode explicitly disabled', () {
-      // ARRANGE & ACT: Instantiate the annotation with async explicitly false.
-      // ignore: avoid_redundant_argument_values
+    test('async: false is still accepted', () {
+      // ignore: deprecated_member_use_from_same_package, avoid_redundant_argument_values
       const annotation = TypedPrefs(async: false);
-
-      // ASSERT: Verify the value of the 'async' property is correctly set.
+      // ignore: deprecated_member_use_from_same_package
       expect(annotation.async, isFalse);
     });
   });
@@ -48,6 +57,20 @@ void main() {
   group('DateTimeEncoding', () {
     test('has exactly two values', () {
       expect(DateTimeEncoding.values, hasLength(2));
+    });
+  });
+
+  group('PrefsMode', () {
+    test('has exactly two values', () {
+      expect(PrefsMode.values, hasLength(2));
+    });
+
+    test('cached is the first value (index 0)', () {
+      expect(PrefsMode.cached.index, 0);
+    });
+
+    test('async is the second value (index 1)', () {
+      expect(PrefsMode.async.index, 1);
     });
   });
 

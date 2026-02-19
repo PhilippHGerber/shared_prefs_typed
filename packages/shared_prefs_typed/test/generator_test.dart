@@ -20,6 +20,9 @@ void main() async {
     'shared_prefs_typed_annotations|lib/src/pref_date_time.dart': await File(
       '../shared_prefs_typed_annotations/lib/src/pref_date_time.dart',
     ).readAsString(),
+    'shared_prefs_typed_annotations|lib/src/prefs_mode.dart': await File(
+      '../shared_prefs_typed_annotations/lib/src/prefs_mode.dart',
+    ).readAsString(),
     'meta|lib/meta.dart': await File('$metaDir/lib/meta.dart').readAsString(),
     'meta|lib/meta_meta.dart': await File('$metaDir/lib/meta_meta.dart').readAsString(),
   };
