@@ -96,7 +96,7 @@ class NullableWithDefaultPrefs {
   /// Checks if a value has been explicitly set for `retryCount`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetRetryCount() {
+  bool containsRetryCount() {
     return _prefs.containsKey('retryCount');
   }
 
@@ -131,7 +131,7 @@ class NullableWithDefaultPrefs {
   /// Checks if a value has been explicitly set for `threshold`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetThreshold() {
+  bool containsThreshold() {
     return _prefs.containsKey('threshold');
   }
 
@@ -166,7 +166,7 @@ class NullableWithDefaultPrefs {
   /// Checks if a value has been explicitly set for `featureEnabled`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetFeatureEnabled() {
+  bool containsFeatureEnabled() {
     return _prefs.containsKey('featureEnabled');
   }
 
@@ -201,7 +201,7 @@ class NullableWithDefaultPrefs {
   /// Checks if a value has been explicitly set for `greeting`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetGreeting() {
+  bool containsGreeting() {
     return _prefs.containsKey('greeting');
   }
 

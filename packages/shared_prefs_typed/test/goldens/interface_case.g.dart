@@ -19,11 +19,11 @@ import 'interface_case.dart';
 abstract class InterfacePrefsBase {
   int get counter;
   Future<void> setCounter(int value);
-  bool isSetCounter();
+  bool containsCounter();
   Future<void> removeCounter();
   String? get name;
   Future<void> setName(String? value);
-  bool isSetName();
+  bool containsName();
   Future<void> removeName();
 }
 
@@ -105,7 +105,7 @@ class InterfacePrefs implements InterfacePrefsBase {
   /// Checks if a value has been explicitly set for `counter`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCounter() {
+  bool containsCounter() {
     return _prefs.containsKey('counter');
   }
 
@@ -140,7 +140,7 @@ class InterfacePrefs implements InterfacePrefsBase {
   /// Checks if a value has been explicitly set for `name`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetName() {
+  bool containsName() {
     return _prefs.containsKey('name');
   }
 

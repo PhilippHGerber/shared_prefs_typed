@@ -91,7 +91,7 @@ class FieldNamingPrefs {
   /// Checks if a value has been explicitly set for `underscoreField`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetUnderscoreField() {
+  bool containsUnderscoreField() {
     return _prefs.containsKey('underscoreField');
   }
 
@@ -121,7 +121,7 @@ class FieldNamingPrefs {
   /// Checks if a value has been explicitly set for `a`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetA() {
+  bool containsA() {
     return _prefs.containsKey('a');
   }
 

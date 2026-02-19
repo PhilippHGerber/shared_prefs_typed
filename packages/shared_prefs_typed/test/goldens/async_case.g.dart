@@ -83,7 +83,7 @@ class AsyncPrefs {
   /// Checks if a value has been explicitly set for `testInt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetTestInt() {
+  Future<bool> containsTestInt() {
     return _prefs.containsKey('testInt');
   }
 
@@ -118,7 +118,7 @@ class AsyncPrefs {
   /// Checks if a value has been explicitly set for `testNullableString`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetTestNullableString() {
+  Future<bool> containsTestNullableString() {
     return _prefs.containsKey('testNullableString');
   }
 
@@ -148,7 +148,7 @@ class AsyncPrefs {
   /// Checks if a value has been explicitly set for `testBool`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetTestBool() {
+  Future<bool> containsTestBool() {
     return _prefs.containsKey('testBool');
   }
 

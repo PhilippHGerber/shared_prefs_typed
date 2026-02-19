@@ -91,7 +91,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `counter`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCounter() {
+  bool containsCounter() {
     return _prefs.containsKey('counter');
   }
 

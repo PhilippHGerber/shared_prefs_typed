@@ -98,7 +98,7 @@ class NullablePrefs {
   /// Checks if a value has been explicitly set for `nullableInt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableInt() {
+  bool containsNullableInt() {
     return _prefs.containsKey('nullableInt');
   }
 
@@ -133,7 +133,7 @@ class NullablePrefs {
   /// Checks if a value has been explicitly set for `nullableDouble`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableDouble() {
+  bool containsNullableDouble() {
     return _prefs.containsKey('nullableDouble');
   }
 
@@ -168,7 +168,7 @@ class NullablePrefs {
   /// Checks if a value has been explicitly set for `nullableBool`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableBool() {
+  bool containsNullableBool() {
     return _prefs.containsKey('nullableBool');
   }
 
@@ -195,7 +195,7 @@ class NullablePrefs {
   /// Checks if a value has been explicitly set for `emptyStringList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetEmptyStringList() {
+  bool containsEmptyStringList() {
     return _prefs.containsKey('emptyStringList');
   }
 

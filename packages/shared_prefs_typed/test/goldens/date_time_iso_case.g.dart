@@ -98,7 +98,7 @@ class DateTimeIsoPrefs {
   /// Checks if a value has been explicitly set for `lastLogin`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetLastLogin() {
+  bool containsLastLogin() {
     return _prefs.containsKey('lastLogin');
   }
 
@@ -135,7 +135,7 @@ class DateTimeIsoPrefs {
   /// Checks if a value has been explicitly set for `updatedAt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetUpdatedAt() {
+  bool containsUpdatedAt() {
     return _prefs.containsKey('updatedAt');
   }
 

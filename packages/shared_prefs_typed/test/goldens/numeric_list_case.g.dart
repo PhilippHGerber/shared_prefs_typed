@@ -95,7 +95,7 @@ class NumericListPrefs {
   /// Checks if a value has been explicitly set for `intList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetIntList() {
+  bool containsIntList() {
     return _prefs.containsKey('intList');
   }
 
@@ -127,7 +127,7 @@ class NumericListPrefs {
   /// Checks if a value has been explicitly set for `doubleList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetDoubleList() {
+  bool containsDoubleList() {
     return _prefs.containsKey('doubleList');
   }
 
@@ -164,7 +164,7 @@ class NumericListPrefs {
   /// Checks if a value has been explicitly set for `nullableIntList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableIntList() {
+  bool containsNullableIntList() {
     return _prefs.containsKey('nullableIntList');
   }
 
@@ -201,7 +201,7 @@ class NumericListPrefs {
   /// Checks if a value has been explicitly set for `nullableDoubleList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableDoubleList() {
+  bool containsNullableDoubleList() {
     return _prefs.containsKey('nullableDoubleList');
   }
 

@@ -91,7 +91,7 @@ class MixedFieldsPrefs {
   /// Checks if a value has been explicitly set for `constField`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetConstField() {
+  bool containsConstField() {
     return _prefs.containsKey('constField');
   }
 

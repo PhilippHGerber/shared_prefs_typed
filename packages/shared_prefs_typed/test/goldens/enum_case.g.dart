@@ -89,7 +89,7 @@ class EnumPrefs {
   /// Checks if a value has been explicitly set for `theme`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTheme() {
+  bool containsTheme() {
     return _prefs.containsKey('theme');
   }
 
@@ -122,7 +122,7 @@ class EnumPrefs {
   /// Checks if a value has been explicitly set for `optionalTheme`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetOptionalTheme() {
+  bool containsOptionalTheme() {
     return _prefs.containsKey('optionalTheme');
   }
 
@@ -150,7 +150,7 @@ class EnumPrefs {
   /// Checks if a value has been explicitly set for `fontSize`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetFontSize() {
+  bool containsFontSize() {
     return _prefs.containsKey('fontSize');
   }
 

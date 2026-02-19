@@ -91,7 +91,7 @@ class PrefKeyPrefs {
   /// Checks if a value has been explicitly set for `legacy_counter`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCounter() {
+  bool containsCounter() {
     return _prefs.containsKey('legacy_counter');
   }
 
@@ -121,7 +121,7 @@ class PrefKeyPrefs {
   /// Checks if a value has been explicitly set for `name`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetName() {
+  bool containsName() {
     return _prefs.containsKey('name');
   }
 
@@ -151,7 +151,7 @@ class PrefKeyPrefs {
   /// Checks if a value has been explicitly set for `usr_dark_mode`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetIsDarkMode() {
+  bool containsIsDarkMode() {
     return _prefs.containsKey('usr_dark_mode');
   }
 

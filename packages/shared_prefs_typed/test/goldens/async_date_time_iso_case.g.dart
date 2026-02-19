@@ -92,7 +92,7 @@ class AsyncDateTimeIsoPrefs {
   /// Checks if a value has been explicitly set for `lastLogin`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetLastLogin() {
+  Future<bool> containsLastLogin() {
     return _prefs.containsKey('lastLogin');
   }
 
@@ -129,7 +129,7 @@ class AsyncDateTimeIsoPrefs {
   /// Checks if a value has been explicitly set for `updatedAt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetUpdatedAt() {
+  Future<bool> containsUpdatedAt() {
     return _prefs.containsKey('updatedAt');
   }
 

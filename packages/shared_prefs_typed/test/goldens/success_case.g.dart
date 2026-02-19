@@ -93,7 +93,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testInt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestInt() {
+  bool containsTestInt() {
     return _prefs.containsKey('testInt');
   }
 
@@ -123,7 +123,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testDouble`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestDouble() {
+  bool containsTestDouble() {
     return _prefs.containsKey('testDouble');
   }
 
@@ -153,7 +153,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testBool`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestBool() {
+  bool containsTestBool() {
     return _prefs.containsKey('testBool');
   }
 
@@ -183,7 +183,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testString`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestString() {
+  bool containsTestString() {
     return _prefs.containsKey('testString');
   }
 
@@ -210,7 +210,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testStringList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestStringList() {
+  bool containsTestStringList() {
     return _prefs.containsKey('testStringList');
   }
 
@@ -245,7 +245,7 @@ class TestPrefs {
   /// Checks if a value has been explicitly set for `testNullableString`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTestNullableString() {
+  bool containsTestNullableString() {
     return _prefs.containsKey('testNullableString');
   }
 

@@ -98,7 +98,7 @@ class DateTimeMillisPrefs {
   /// Checks if a value has been explicitly set for `lastLogin`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetLastLogin() {
+  bool containsLastLogin() {
     return _prefs.containsKey('lastLogin');
   }
 
@@ -135,7 +135,7 @@ class DateTimeMillisPrefs {
   /// Checks if a value has been explicitly set for `createdAt`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCreatedAt() {
+  bool containsCreatedAt() {
     return _prefs.containsKey('createdAt');
   }
 

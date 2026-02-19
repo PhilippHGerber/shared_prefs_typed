@@ -19,11 +19,11 @@ import 'async_interface_case.dart';
 abstract class AsyncInterfacePrefsBase {
   Future<String> get message;
   Future<void> setMessage(String value);
-  Future<bool> isSetMessage();
+  Future<bool> containsMessage();
   Future<void> removeMessage();
   Future<int> get count;
   Future<void> setCount(int value);
-  Future<bool> isSetCount();
+  Future<bool> containsCount();
   Future<void> removeCount();
 }
 
@@ -99,7 +99,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   /// Checks if a value has been explicitly set for `message`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetMessage() {
+  Future<bool> containsMessage() {
     return _prefs.containsKey('message');
   }
 
@@ -129,7 +129,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   /// Checks if a value has been explicitly set for `count`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetCount() {
+  Future<bool> containsCount() {
     return _prefs.containsKey('count');
   }
 
