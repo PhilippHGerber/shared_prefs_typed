@@ -96,7 +96,7 @@ class SettingsPrefsImpl {
   /// Checks if a value has been explicitly set for `isLight`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetIsLight() {
+  bool containsIsLight() {
     return _prefs.containsKey('isLight');
   }
 

@@ -93,7 +93,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `counter`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCounter() {
+  bool containsCounter() {
     return _prefs.containsKey('counter');
   }
 
@@ -128,7 +128,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `displayGreeting`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetDisplayGreeting() {
+  bool containsDisplayGreeting() {
     return _prefs.containsKey('displayGreeting');
   }
 
@@ -158,7 +158,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `pi`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetPi() {
+  bool containsPi() {
     return _prefs.containsKey('pi');
   }
 
@@ -188,7 +188,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `isWelcomeScreenDone`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetIsWelcomeScreenDone() {
+  bool containsIsWelcomeScreenDone() {
     return _prefs.containsKey('isWelcomeScreenDone');
   }
 
@@ -218,7 +218,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `greeting`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetGreeting() {
+  bool containsGreeting() {
     return _prefs.containsKey('greeting');
   }
 
@@ -245,7 +245,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `tagList`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetTagList() {
+  bool containsTagList() {
     return _prefs.containsKey('tagList');
   }
 
@@ -277,7 +277,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `recentItemIds`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetRecentItemIds() {
+  bool containsRecentItemIds() {
     return _prefs.containsKey('recentItemIds');
   }
 
@@ -309,7 +309,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `priceHistory`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetPriceHistory() {
+  bool containsPriceHistory() {
     return _prefs.containsKey('priceHistory');
   }
 
@@ -344,7 +344,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `sessionId`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetSessionId() {
+  bool containsSessionId() {
     return _prefs.containsKey('sessionId');
   }
 
@@ -379,7 +379,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `lastLoginTimestamp`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetLastLoginTimestamp() {
+  bool containsLastLoginTimestamp() {
     return _prefs.containsKey('lastLoginTimestamp');
   }
 
@@ -414,7 +414,7 @@ class AppPreferencesImpl {
   /// Checks if a value has been explicitly set for `nullableCounterWithDefault`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetNullableCounterWithDefault() {
+  bool containsNullableCounterWithDefault() {
     return _prefs.containsKey('nullableCounterWithDefault');
   }
 

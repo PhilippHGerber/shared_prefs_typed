@@ -57,8 +57,8 @@ void main() {
       test('returns default value initially', () async {
         // ACT & ASSERT: Getters now return a Future and must be awaited.
         expect(await prefs.pingCount, 0);
-        // The `isSet` helper also returns a Future.
-        expect(await prefs.isSetPingCount(), isFalse);
+        // The `contains` helper also returns a Future.
+        expect(await prefs.containsPingCount(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
@@ -67,7 +67,7 @@ void main() {
 
         // ACT & ASSERT
         expect(await prefs.pingCount, 123);
-        expect(await prefs.isSetPingCount(), isTrue);
+        expect(await prefs.containsPingCount(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
@@ -80,7 +80,7 @@ void main() {
 
         // ASSERT
         expect(await prefs.pingCount, 0, reason: 'Value should revert to default');
-        expect(await prefs.isSetPingCount(), isFalse, reason: 'Key should no longer be set');
+        expect(await prefs.containsPingCount(), isFalse, reason: 'Key should no longer be set');
       });
     });
 
@@ -88,7 +88,7 @@ void main() {
       test('returns default value (null) initially', () async {
         // ACT & ASSERT
         expect(await prefs.serverId, isNull);
-        expect(await prefs.isSetServerId(), isFalse);
+        expect(await prefs.containsServerId(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
@@ -97,14 +97,14 @@ void main() {
 
         // ACT & ASSERT
         expect(await prefs.serverId, 'server-alpha-x1');
-        expect(await prefs.isSetServerId(), isTrue);
+        expect(await prefs.containsServerId(), isTrue);
       });
 
       test('setting to null removes the value, reverting to default', () async {
         // ARRANGE
         await prefs.setServerId('server-alpha-x1');
         expect(
-          await prefs.isSetServerId(),
+          await prefs.containsServerId(),
           isTrue,
           reason: 'Value should be set before setting to null',
         );
@@ -114,7 +114,7 @@ void main() {
 
         // ASSERT
         expect(await prefs.serverId, isNull);
-        expect(await prefs.isSetServerId(), isFalse);
+        expect(await prefs.containsServerId(), isFalse);
       });
     });
 
@@ -122,7 +122,7 @@ void main() {
       test('returns default value initially', () async {
         // ACT & ASSERT
         expect(await prefs.isCacheEnabled, isTrue);
-        expect(await prefs.isSetIsCacheEnabled(), isFalse);
+        expect(await prefs.containsIsCacheEnabled(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
@@ -131,7 +131,7 @@ void main() {
 
         // ACT & ASSERT
         expect(await prefs.isCacheEnabled, isFalse);
-        expect(await prefs.isSetIsCacheEnabled(), isTrue);
+        expect(await prefs.containsIsCacheEnabled(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
@@ -144,7 +144,7 @@ void main() {
 
         // ASSERT
         expect(await prefs.isCacheEnabled, isTrue, reason: 'Value should revert to default');
-        expect(await prefs.isSetIsCacheEnabled(), isFalse, reason: 'Key should no longer be set');
+        expect(await prefs.containsIsCacheEnabled(), isFalse, reason: 'Key should no longer be set');
       });
     });
   });

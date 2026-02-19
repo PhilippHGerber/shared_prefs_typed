@@ -62,13 +62,13 @@ void main() {
     group('for int (counter)', () {
       test('returns default value initially', () {
         expect(prefs.counter, 0);
-        expect(prefs.isSetCounter(), isFalse);
+        expect(prefs.containsCounter(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setCounter(42);
         expect(prefs.counter, 42);
-        expect(prefs.isSetCounter(), isTrue);
+        expect(prefs.containsCounter(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
@@ -77,107 +77,107 @@ void main() {
 
         await prefs.removeCounter();
         expect(prefs.counter, 0); // Should be back to default.
-        expect(prefs.isSetCounter(), isFalse);
+        expect(prefs.containsCounter(), isFalse);
       });
     });
 
     group('for double (pi)', () {
       test('returns default value initially', () {
         expect(prefs.pi, 3.14);
-        expect(prefs.isSetPi(), isFalse);
+        expect(prefs.containsPi(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setPi(2.718);
         expect(prefs.pi, 2.718);
-        expect(prefs.isSetPi(), isTrue);
+        expect(prefs.containsPi(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setPi(2.718);
         await prefs.removePi();
         expect(prefs.pi, 3.14);
-        expect(prefs.isSetPi(), isFalse);
+        expect(prefs.containsPi(), isFalse);
       });
     });
 
     group('for bool (isWelcomeScreenDone)', () {
       test('returns default value initially', () {
         expect(prefs.isWelcomeScreenDone, isFalse);
-        expect(prefs.isSetIsWelcomeScreenDone(), isFalse);
+        expect(prefs.containsIsWelcomeScreenDone(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setIsWelcomeScreenDone(true);
         expect(prefs.isWelcomeScreenDone, isTrue);
-        expect(prefs.isSetIsWelcomeScreenDone(), isTrue);
+        expect(prefs.containsIsWelcomeScreenDone(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setIsWelcomeScreenDone(true);
         await prefs.removeIsWelcomeScreenDone();
         expect(prefs.isWelcomeScreenDone, isFalse);
-        expect(prefs.isSetIsWelcomeScreenDone(), isFalse);
+        expect(prefs.containsIsWelcomeScreenDone(), isFalse);
       });
     });
 
     group('for String (greeting)', () {
       test('returns default value initially', () {
         expect(prefs.greeting, 'Hello');
-        expect(prefs.isSetGreeting(), isFalse);
+        expect(prefs.containsGreeting(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setGreeting('World');
         expect(prefs.greeting, 'World');
-        expect(prefs.isSetGreeting(), isTrue);
+        expect(prefs.containsGreeting(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setGreeting('World');
         await prefs.removeGreeting();
         expect(prefs.greeting, 'Hello');
-        expect(prefs.isSetGreeting(), isFalse);
+        expect(prefs.containsGreeting(), isFalse);
       });
     });
 
     group('for List<String> (tagList)', () {
       test('returns default value initially', () {
         expect(prefs.tagList, ['default']);
-        expect(prefs.isSetTagList(), isFalse);
+        expect(prefs.containsTagList(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setTagList(['flutter', 'dart']);
         expect(prefs.tagList, ['flutter', 'dart']);
-        expect(prefs.isSetTagList(), isTrue);
+        expect(prefs.containsTagList(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setTagList(['flutter', 'dart']);
         await prefs.removeTagList();
         expect(prefs.tagList, ['default']);
-        expect(prefs.isSetTagList(), isFalse);
+        expect(prefs.containsTagList(), isFalse);
       });
     });
 
     group('for List<int> (recentItemIds)', () {
       test('returns default value (empty list) initially', () {
         expect(prefs.recentItemIds, isEmpty);
-        expect(prefs.isSetRecentItemIds(), isFalse);
+        expect(prefs.containsRecentItemIds(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setRecentItemIds([1, 2, 3]);
         expect(prefs.recentItemIds, [1, 2, 3]);
-        expect(prefs.isSetRecentItemIds(), isTrue);
+        expect(prefs.containsRecentItemIds(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setRecentItemIds([10, 20]);
         await prefs.removeRecentItemIds();
         expect(prefs.recentItemIds, isEmpty);
-        expect(prefs.isSetRecentItemIds(), isFalse);
+        expect(prefs.containsRecentItemIds(), isFalse);
       });
 
       test('round-trips negative values correctly', () async {
@@ -189,71 +189,71 @@ void main() {
     group('for List<double> (priceHistory)', () {
       test('returns default value initially', () {
         expect(prefs.priceHistory, [9.99, 14.99, 19.99]);
-        expect(prefs.isSetPriceHistory(), isFalse);
+        expect(prefs.containsPriceHistory(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setPriceHistory([1.5, 2.5, 3.5]);
         expect(prefs.priceHistory, [1.5, 2.5, 3.5]);
-        expect(prefs.isSetPriceHistory(), isTrue);
+        expect(prefs.containsPriceHistory(), isTrue);
       });
 
       test('removes a value, reverting to default', () async {
         await prefs.setPriceHistory([0.99]);
         await prefs.removePriceHistory();
         expect(prefs.priceHistory, [9.99, 14.99, 19.99]);
-        expect(prefs.isSetPriceHistory(), isFalse);
+        expect(prefs.containsPriceHistory(), isFalse);
       });
     });
 
     group('for nullable String (sessionId)', () {
       test('returns default value (null) initially', () {
         expect(prefs.sessionId, isNull);
-        expect(prefs.isSetSessionId(), isFalse);
+        expect(prefs.containsSessionId(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setSessionId('abc-123');
         expect(prefs.sessionId, 'abc-123');
-        expect(prefs.isSetSessionId(), isTrue);
+        expect(prefs.containsSessionId(), isTrue);
       });
 
       test('setting to null removes the value', () async {
         await prefs.setSessionId('abc-123');
-        expect(prefs.isSetSessionId(), isTrue); // Verify it was set.
+        expect(prefs.containsSessionId(), isTrue); // Verify it was set.
 
         await prefs.setSessionId(null); // Set to null.
         expect(prefs.sessionId, isNull); // Should be back to default (null).
-        expect(prefs.isSetSessionId(), isFalse);
+        expect(prefs.containsSessionId(), isFalse);
       });
     });
 
     group('for nullable int with non-null default (nullableCounterWithDefault)', () {
       test('returns default value (100) initially', () {
         expect(prefs.nullableCounterWithDefault, 100);
-        expect(prefs.isSetNullableCounterWithDefault(), isFalse);
+        expect(prefs.containsNullableCounterWithDefault(), isFalse);
       });
 
       test('sets and gets a value correctly', () async {
         await prefs.setNullableCounterWithDefault(999);
         expect(prefs.nullableCounterWithDefault, 999);
-        expect(prefs.isSetNullableCounterWithDefault(), isTrue);
+        expect(prefs.containsNullableCounterWithDefault(), isTrue);
       });
 
       test('setting to null removes the value, reverting to default', () async {
         await prefs.setNullableCounterWithDefault(999);
-        expect(prefs.isSetNullableCounterWithDefault(), isTrue);
+        expect(prefs.containsNullableCounterWithDefault(), isTrue);
 
         await prefs.setNullableCounterWithDefault(null);
         expect(prefs.nullableCounterWithDefault, 100); // Should be back to default.
-        expect(prefs.isSetNullableCounterWithDefault(), isFalse);
+        expect(prefs.containsNullableCounterWithDefault(), isFalse);
       });
 
       test('explicit remove reverts to default', () async {
         await prefs.setNullableCounterWithDefault(999);
         await prefs.removeNullableCounterWithDefault();
         expect(prefs.nullableCounterWithDefault, 100);
-        expect(prefs.isSetNullableCounterWithDefault(), isFalse);
+        expect(prefs.containsNullableCounterWithDefault(), isFalse);
       });
     });
   });
@@ -279,13 +279,13 @@ void main() {
 
     test('returns default value for counter initially', () {
       expect(prefs.counter, 0);
-      expect(prefs.isSetCounter(), isFalse);
+      expect(prefs.containsCounter(), isFalse);
     });
 
     test('sets and gets a value correctly', () async {
       await prefs.setCounter(7);
       expect(prefs.counter, 7);
-      expect(prefs.isSetCounter(), isTrue);
+      expect(prefs.containsCounter(), isTrue);
     });
 
     test('each test constructs its own independent instance', () {

@@ -85,7 +85,7 @@ class AsyncPreferencesImpl {
   /// Checks if a value has been explicitly set for `pingCount`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetPingCount() {
+  Future<bool> containsPingCount() {
     return _prefs.containsKey('pingCount');
   }
 
@@ -120,7 +120,7 @@ class AsyncPreferencesImpl {
   /// Checks if a value has been explicitly set for `serverId`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetServerId() {
+  Future<bool> containsServerId() {
     return _prefs.containsKey('serverId');
   }
 
@@ -150,7 +150,7 @@ class AsyncPreferencesImpl {
   /// Checks if a value has been explicitly set for `isCacheEnabled`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  Future<bool> isSetIsCacheEnabled() {
+  Future<bool> containsIsCacheEnabled() {
     return _prefs.containsKey('isCacheEnabled');
   }
 

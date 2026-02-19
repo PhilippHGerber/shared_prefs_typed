@@ -45,60 +45,60 @@ void main() {
     group('counter (int, default 0)', () {
       test('returns default initially', () {
         expect(prefs.counter, 0);
-        expect(prefs.isSetCounter(), isFalse);
+        expect(prefs.containsCounter(), isFalse);
       });
 
       test('sets and retrieves a value', () async {
         await prefs.setCounter(5);
         expect(prefs.counter, 5);
-        expect(prefs.isSetCounter(), isTrue);
+        expect(prefs.containsCounter(), isTrue);
       });
 
       test('remove reverts to default', () async {
         await prefs.setCounter(5);
         await prefs.removeCounter();
         expect(prefs.counter, 0);
-        expect(prefs.isSetCounter(), isFalse);
+        expect(prefs.containsCounter(), isFalse);
       });
     });
 
     group('isDarkMode (bool, default false)', () {
       test('returns default initially', () {
         expect(prefs.isDarkMode, isFalse);
-        expect(prefs.isSetIsDarkMode(), isFalse);
+        expect(prefs.containsIsDarkMode(), isFalse);
       });
 
       test('sets and retrieves a value', () async {
         await prefs.setIsDarkMode(true);
         expect(prefs.isDarkMode, isTrue);
-        expect(prefs.isSetIsDarkMode(), isTrue);
+        expect(prefs.containsIsDarkMode(), isTrue);
       });
 
       test('remove reverts to default', () async {
         await prefs.setIsDarkMode(true);
         await prefs.removeIsDarkMode();
         expect(prefs.isDarkMode, isFalse);
-        expect(prefs.isSetIsDarkMode(), isFalse);
+        expect(prefs.containsIsDarkMode(), isFalse);
       });
     });
 
     group('username (String?, default null)', () {
       test('returns null initially', () {
         expect(prefs.username, isNull);
-        expect(prefs.isSetUsername(), isFalse);
+        expect(prefs.containsUsername(), isFalse);
       });
 
       test('sets and retrieves a value', () async {
         await prefs.setUsername('Alice');
         expect(prefs.username, 'Alice');
-        expect(prefs.isSetUsername(), isTrue);
+        expect(prefs.containsUsername(), isTrue);
       });
 
       test('setting to null removes the key', () async {
         await prefs.setUsername('Alice');
         await prefs.setUsername(null);
         expect(prefs.username, isNull);
-        expect(prefs.isSetUsername(), isFalse);
+        expect(prefs.containsUsername(), isFalse);
       });
     });
 

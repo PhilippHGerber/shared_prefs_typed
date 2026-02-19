@@ -19,15 +19,15 @@ import 'app_preferences.dart';
 abstract class AppPreferencesBase {
   int get counter;
   Future<void> setCounter(int value);
-  bool isSetCounter();
+  bool containsCounter();
   Future<void> removeCounter();
   bool get isDarkMode;
   Future<void> setIsDarkMode(bool value);
-  bool isSetIsDarkMode();
+  bool containsIsDarkMode();
   Future<void> removeIsDarkMode();
   String? get username;
   Future<void> setUsername(String? value);
-  bool isSetUsername();
+  bool containsUsername();
   Future<void> removeUsername();
 }
 
@@ -109,7 +109,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
   /// Checks if a value has been explicitly set for `counter`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetCounter() {
+  bool containsCounter() {
     return _prefs.containsKey('counter');
   }
 
@@ -139,7 +139,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
   /// Checks if a value has been explicitly set for `isDarkMode`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetIsDarkMode() {
+  bool containsIsDarkMode() {
     return _prefs.containsKey('isDarkMode');
   }
 
@@ -174,7 +174,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
   /// Checks if a value has been explicitly set for `username`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool isSetUsername() {
+  bool containsUsername() {
     return _prefs.containsKey('username');
   }
 
