@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### New
 
 * **Non-nullable `DateTime` getters via `@PrefDateTime(encoding, defaultMillis: N)`** — pass `defaultMillis` to produce a non-nullable `DateTime` getter with the given epoch milliseconds as fallback. The field must still be declared `DateTime?` (no const DateTime constructors exist in Dart).
+* **`clearAll()`** — generated on every class (and on the interface when `generateInterface: true`). Removes all keys owned by the class via `Future.wait`, scoped to known keys rather than wiping the entire store.
 
 ## 0.7.0
 

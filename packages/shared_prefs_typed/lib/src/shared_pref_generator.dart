@@ -265,7 +265,8 @@ Class _buildSyncClass(
             _generateRemover(field),
           ],
         ),
-      ),
+      )
+      ..methods.add(_generateClearAll(fields)),
   );
 }
 
@@ -400,7 +401,8 @@ Class _buildAsyncClass(
             _generateRemover(field),
           ],
         ),
-      ),
+      )
+      ..methods.add(_generateClearAll(fields)),
   );
 }
 
@@ -451,6 +453,13 @@ Class _buildInterface(
                 ..returns = refer('Future<void>'),
             ),
           ],
+        ),
+      )
+      ..methods.add(
+        Method(
+          (m) => m
+            ..name = 'clearAll'
+            ..returns = refer('Future<void>'),
         ),
       ),
   );
@@ -638,6 +647,25 @@ Method _generateRemover(_SharedPrefField field) => Method(
       '_prefs',
     ).property('remove').call([literalString(field.keyName)]).returned.statement,
 );
+
+Method _generateClearAll(List<_SharedPrefField> fields) {
+  final String body;
+  if (fields.isEmpty) {
+    body = 'return Future.value();';
+  } else {
+    final removes = fields.map((f) => "_prefs.remove('${f.keyName}')").join(',\n    ');
+    body = 'return Future.wait([\n    $removes,\n  ]);';
+  }
+  return Method(
+    (b) => b
+      ..name = 'clearAll'
+      ..docs.add('/// Removes all preferences managed by this class from storage.')
+      ..docs.add('///')
+      ..docs.add('/// After calling this, all getters return their default values.')
+      ..returns = refer('Future<void>')
+      ..body = Code(body),
+  );
+}
 
 //--- DateTime helpers ---//
 

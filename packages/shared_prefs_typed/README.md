@@ -105,6 +105,20 @@ class MyWidget extends StatelessWidget {
 
 `init()` is safe to call multiple times — concurrent callers share the same `Future` and no double-initialization occurs.
 
+### Generated API
+
+For every field `foo` of type `T`, the generator produces:
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `foo` (getter) | `T` | Reads the cached value; returns the default if unset. |
+| `setFoo(T value)` | `Future<void>` | Persists a new value. Pass `null` to remove (nullable fields only). |
+| `containsFoo()` | `bool` | Returns `true` if the key exists in persistent storage. |
+| `removeFoo()` | `Future<void>` | Removes the key; subsequent reads return the default. |
+| `clearAll()` | `Future<void>` | Removes **all** keys owned by this class. Use instead of wiping the entire store. |
+
+> `resetInstance()` is annotated `@visibleForTesting` — it exists for test teardown only and should not be called from production code.
+
 ### Async mode
 
 Use `@TypedPrefs(mode: PrefsMode.async)` when preferences can be modified from another isolate or native code and you always need the freshest value from disk. Getters return `Future`s instead of plain values.
@@ -238,6 +252,17 @@ static const int signInCount = 0;  // key: still 'loginCount'
 ```
 
 `build_runner` cannot detect key renames — it is the developer's responsibility to add `@PrefKey` before renaming.
+
+---
+
+## Performance Considerations
+
+`List<int>` and `List<double>` fields are serialized as `List<String>` under the hood — each element is converted via `toString()` on write and `int.parse` / `double.parse` on read. This is transparent but has two implications:
+
+* **Keep lists small.** `SharedPreferences` (and its underlying platform storage) is designed for small scalar values. Storing hundreds or thousands of elements in a single key will cause noticeable I/O and parse overhead. For large collections, use a proper database (`sqflite`, `isar`, etc.) instead.
+* **No partial updates.** Every `setFoo(list)` call rewrites the entire serialized string. Frequent mutations of a large list are expensive.
+
+`List<String>` does not pay a serialization cost (it is stored natively), but the same size guidance applies.
 
 ---
 
