@@ -808,6 +808,13 @@ Method _generateClearAll(List<_SharedPrefField> fields) {
       ..docs.add('/// Removes all preferences managed by this class from storage.')
       ..docs.add('///')
       ..docs.add('/// After calling this, all getters return their default values.')
+      ..docs.add('///')
+      ..docs.add(
+        '/// **Note:** This operation is not atomic. Concurrent writes during this',
+      )
+      ..docs.add(
+        '/// operation may result in keys remaining in storage.',
+      )
       ..returns = refer('Future<void>')
       ..body = Code(body),
   );

@@ -175,6 +175,9 @@ class DateTimeMillisPrefs {
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
+  ///
+  /// **Note:** This operation is not atomic. Concurrent writes during this
+  /// operation may result in keys remaining in storage.
   Future<void> clearAll() {
     return Future.wait([
       _prefs.remove('lastLogin'),
