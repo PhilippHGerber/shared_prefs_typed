@@ -102,7 +102,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     );
     // Fields that generate a try/catch guard need dart:developer for log().
     final hasMigrationGuard = fields.any(
-      (f) => !f.isEnum && !f.isStringList && f.numericListElementType == null,
+      (f) => !f.isStringList && f.numericListElementType == null,
     );
 
     final library = Library(
@@ -555,18 +555,32 @@ Class _buildInterface(
 Method _generateSyncGetter(_SharedPrefField field) {
   final Code body;
   if (field.isEnum) {
-    final rawExpr = "_prefs.getString('${field.keyName}')";
+    final key = field.keyName;
+    final defaultExpr = field.defaultValue;
+    final rawExpr = "_prefs.getString('$key')";
     if (field.isNullable && !field.hasNonNullDefault) {
       body = Code(
-        'final raw = $rawExpr;\n'
-        'if (raw == null) return null;\n'
-        'return ${field.enumTypeName}.values.byName(raw);',
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return null;\n'
+        '  return ${field.enumTypeName}.values.byName(raw);\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  _onReadError?.call('$key', e);\n"
+        '  return null;\n'
+        '}',
       );
     } else {
       body = Code(
-        'final raw = $rawExpr;\n'
-        'if (raw == null) return ${field.defaultValue};\n'
-        'return ${field.enumTypeName}.values.byName(raw);',
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return $defaultExpr;\n'
+        '  return ${field.enumTypeName}.values.byName(raw);\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  _onReadError?.call('$key', e);\n"
+        '  return $defaultExpr;\n'
+        '}',
       );
     }
   } else if (field.isDateTime) {
@@ -607,18 +621,32 @@ Method _generateSyncGetter(_SharedPrefField field) {
 Method _generateAsyncGetter(_SharedPrefField field) {
   final Code body;
   if (field.isEnum) {
-    final rawExpr = "(await _prefs.getString('${field.keyName}'))";
+    final key = field.keyName;
+    final defaultExpr = field.defaultValue;
+    final rawExpr = "(await _prefs.getString('$key'))";
     if (field.isNullable && !field.hasNonNullDefault) {
       body = Code(
-        'final raw = $rawExpr;\n'
-        'if (raw == null) return null;\n'
-        'return ${field.enumTypeName}.values.byName(raw);',
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return null;\n'
+        '  return ${field.enumTypeName}.values.byName(raw);\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  _onReadError?.call('$key', e);\n"
+        '  return null;\n'
+        '}',
       );
     } else {
       body = Code(
-        'final raw = $rawExpr;\n'
-        'if (raw == null) return ${field.defaultValue};\n'
-        'return ${field.enumTypeName}.values.byName(raw);',
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return $defaultExpr;\n'
+        '  return ${field.enumTypeName}.values.byName(raw);\n'
+        '} catch (e) {\n'
+        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
+        "  _onReadError?.call('$key', e);\n"
+        '  return $defaultExpr;\n'
+        '}',
       );
     }
   } else if (field.isDateTime) {

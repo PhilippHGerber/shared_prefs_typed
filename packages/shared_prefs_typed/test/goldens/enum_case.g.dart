@@ -8,6 +8,8 @@
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer';
+
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,9 +90,18 @@ class EnumPrefs {
   ///
   /// If the key does not exist, the default value `ThemeMode.dark` is returned.
   ThemeMode get theme {
-    final raw = _prefs.getString('theme');
-    if (raw == null) return ThemeMode.dark;
-    return ThemeMode.values.byName(raw);
+    try {
+      final raw = _prefs.getString('theme');
+      if (raw == null) return ThemeMode.dark;
+      return ThemeMode.values.byName(raw);
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "theme": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('theme', e);
+      return ThemeMode.dark;
+    }
   }
 
   /// Asynchronously sets the value for `theme`.
@@ -116,9 +127,18 @@ class EnumPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   ThemeMode? get optionalTheme {
-    final raw = _prefs.getString('optionalTheme');
-    if (raw == null) return null;
-    return ThemeMode.values.byName(raw);
+    try {
+      final raw = _prefs.getString('optionalTheme');
+      if (raw == null) return null;
+      return ThemeMode.values.byName(raw);
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "optionalTheme": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('optionalTheme', e);
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `optionalTheme`.
@@ -149,9 +169,18 @@ class EnumPrefs {
   ///
   /// If the key does not exist, the default value `FontSize.medium` is returned.
   FontSize get fontSize {
-    final raw = _prefs.getString('fontSize');
-    if (raw == null) return FontSize.medium;
-    return FontSize.values.byName(raw);
+    try {
+      final raw = _prefs.getString('fontSize');
+      if (raw == null) return FontSize.medium;
+      return FontSize.values.byName(raw);
+    } catch (e) {
+      log(
+        '[shared_prefs_typed] Failed to read "fontSize": ${e.runtimeType}. Default will be used.',
+        name: 'shared_prefs_typed',
+      );
+      _onReadError?.call('fontSize', e);
+      return FontSize.medium;
+    }
   }
 
   /// Asynchronously sets the value for `fontSize`.
