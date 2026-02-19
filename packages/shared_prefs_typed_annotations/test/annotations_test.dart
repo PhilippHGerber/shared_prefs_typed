@@ -19,28 +19,6 @@ void main() {
     });
   });
 
-  group('TypedPrefs — deprecated async parameter (backwards compatibility)', () {
-    test('async defaults to false', () {
-      const annotation = TypedPrefs();
-      // ignore: deprecated_member_use_from_same_package --- IGNORE ---
-      expect(annotation.async, isFalse);
-    });
-
-    test('async: true is still accepted', () {
-      // ignore: deprecated_member_use_from_same_package --- IGNORE ---
-      const annotation = TypedPrefs(async: true);
-      // ignore: deprecated_member_use_from_same_package --- IGNORE ---
-      expect(annotation.async, isTrue);
-    });
-
-    test('async: false is still accepted', () {
-      // ignore: deprecated_member_use_from_same_package, avoid_redundant_argument_values --- IGNORE ---
-      const annotation = TypedPrefs(async: false);
-      // ignore: deprecated_member_use_from_same_package --- IGNORE ---
-      expect(annotation.async, isFalse);
-    });
-  });
-
   group('PrefDateTime Annotation', () {
     test('can be instantiated with millisecondsSinceEpoch encoding', () {
       const annotation = PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch);

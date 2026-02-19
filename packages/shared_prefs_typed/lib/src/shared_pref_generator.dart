@@ -27,9 +27,8 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
 
     final classElement = element;
     final modeReader = annotation.read('mode');
-    final isAsyncMode = modeReader.isNull
-        ? annotation.read('async').boolValue
-        : modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
+    final isAsyncMode = !modeReader.isNull &&
+        modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
     final generateInterface = annotation.read('generateInterface').boolValue;
 
     final fields = classElement.fields
@@ -214,7 +213,7 @@ Class _buildSyncClass(
                   ..type = refer('void Function(String key, Object error)?'),
               ),
             )
-            ..initializers.add(Code('_onReadError = onReadError')),
+            ..initializers.add(const Code('_onReadError = onReadError')),
         ),
       )
       ..methods.add(
@@ -259,7 +258,7 @@ Class _buildSyncClass(
                   ..type = refer('void Function(String key, Object error)?'),
               ),
             )
-            ..body = Code(
+            ..body = const Code(
               'if (_instance != null) return Future.value(_instance!);\n'
               'return _initFuture ??= _doInit(onReadError: onReadError);',
             ),
@@ -397,7 +396,7 @@ Class _buildAsyncClass(
                   ..type = refer('void Function(String key, Object error)?'),
               ),
             )
-            ..initializers.add(Code('_onReadError = onReadError')),
+            ..initializers.add(const Code('_onReadError = onReadError')),
         ),
       )
       ..methods.add(
@@ -442,7 +441,7 @@ Class _buildAsyncClass(
                   ..type = refer('void Function(String key, Object error)?'),
               ),
             )
-            ..body = Code(
+            ..body = const Code(
               'if (_instance != null) return Future.value(_instance!);\n'
               'return _initFuture ??= _doInit(onReadError: onReadError);',
             ),
@@ -982,7 +981,7 @@ String _buildBoolListSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "_prefs.getStringList('$key')";
-  final successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
+  const successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
         'return raw == null ? $defaultExpr : $successExpr;';
@@ -995,7 +994,7 @@ String _buildBoolListAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "await _prefs.getStringList('$key')";
-  final successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
+  const successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
         'return raw == null ? $defaultExpr : $successExpr;';
@@ -1187,10 +1186,12 @@ class _SharedPrefField {
       final typeStr = nonNullableTypeReference.symbol!;
       if (isEnumList) {
         final typeName = enumListElementTypeName;
-        final values = listValues.map((e) {
-          final enumName = e.getField('_name')?.toStringValue();
-          return '$typeName.$enumName';
-        }).join(', ');
+        final values = listValues
+            .map((e) {
+              final enumName = e.getField('_name')?.toStringValue();
+              return '$typeName.$enumName';
+            })
+            .join(', ');
         return 'const <$typeName>[$values]';
       }
       if (typeStr == 'List<int>') {
