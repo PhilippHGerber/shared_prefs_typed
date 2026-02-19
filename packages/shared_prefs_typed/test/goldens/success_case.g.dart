@@ -27,7 +27,8 @@ class TestPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  TestPrefs(this._prefs);
+  TestPrefs(this._prefs, {void Function(String key, Object error)? onReadError})
+    : _onReadError = onReadError;
 
   static TestPrefs? _instance;
 
@@ -38,9 +39,7 @@ class TestPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -60,17 +59,21 @@ class TestPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<TestPrefs> init() {
+  static Future<TestPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<TestPrefs> _doInit() async {
+  static Future<TestPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = TestPrefs(prefs);
+      return _instance = TestPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -95,7 +98,7 @@ class TestPrefs {
         '[shared_prefs_typed] Failed to read "testInt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testInt', e);
+      _onReadError?.call('testInt', e);
       return 10;
     }
   }
@@ -130,7 +133,7 @@ class TestPrefs {
         '[shared_prefs_typed] Failed to read "testDouble": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testDouble', e);
+      _onReadError?.call('testDouble', e);
       return 3.14;
     }
   }
@@ -165,7 +168,7 @@ class TestPrefs {
         '[shared_prefs_typed] Failed to read "testBool": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testBool', e);
+      _onReadError?.call('testBool', e);
       return true;
     }
   }
@@ -200,7 +203,7 @@ class TestPrefs {
         '[shared_prefs_typed] Failed to read "testString": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testString', e);
+      _onReadError?.call('testString', e);
       return 'Hello';
     }
   }
@@ -262,7 +265,7 @@ class TestPrefs {
         '[shared_prefs_typed] Failed to read "testNullableString": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testNullableString', e);
+      _onReadError?.call('testNullableString', e);
       return null;
     }
   }

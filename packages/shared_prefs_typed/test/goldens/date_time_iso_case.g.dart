@@ -26,7 +26,10 @@ class DateTimeIsoPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  DateTimeIsoPrefs(this._prefs);
+  DateTimeIsoPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static DateTimeIsoPrefs? _instance;
 
@@ -37,9 +40,7 @@ class DateTimeIsoPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class DateTimeIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<DateTimeIsoPrefs> init() {
+  static Future<DateTimeIsoPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<DateTimeIsoPrefs> _doInit() async {
+  static Future<DateTimeIsoPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = DateTimeIsoPrefs(prefs);
+      return _instance = DateTimeIsoPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -96,7 +101,7 @@ class DateTimeIsoPrefs {
         '[shared_prefs_typed] Failed to read "lastLogin": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('lastLogin', e);
+      _onReadError?.call('lastLogin', e);
       return null;
     }
   }
@@ -138,7 +143,7 @@ class DateTimeIsoPrefs {
         '[shared_prefs_typed] Failed to read "updatedAt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('updatedAt', e);
+      _onReadError?.call('updatedAt', e);
       return null;
     }
   }

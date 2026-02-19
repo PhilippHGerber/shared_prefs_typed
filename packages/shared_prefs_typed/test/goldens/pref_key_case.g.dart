@@ -26,7 +26,10 @@ class PrefKeyPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  PrefKeyPrefs(this._prefs);
+  PrefKeyPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static PrefKeyPrefs? _instance;
 
@@ -37,9 +40,7 @@ class PrefKeyPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class PrefKeyPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<PrefKeyPrefs> init() {
+  static Future<PrefKeyPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<PrefKeyPrefs> _doInit() async {
+  static Future<PrefKeyPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = PrefKeyPrefs(prefs);
+      return _instance = PrefKeyPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -94,7 +99,7 @@ class PrefKeyPrefs {
         '[shared_prefs_typed] Failed to read "legacy_counter": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('legacy_counter', e);
+      _onReadError?.call('legacy_counter', e);
       return 0;
     }
   }
@@ -129,7 +134,7 @@ class PrefKeyPrefs {
         '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('name', e);
+      _onReadError?.call('name', e);
       return 'anon';
     }
   }
@@ -164,7 +169,7 @@ class PrefKeyPrefs {
         '[shared_prefs_typed] Failed to read "usr_dark_mode": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('usr_dark_mode', e);
+      _onReadError?.call('usr_dark_mode', e);
       return false;
     }
   }

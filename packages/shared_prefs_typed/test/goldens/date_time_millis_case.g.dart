@@ -26,7 +26,10 @@ class DateTimeMillisPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  DateTimeMillisPrefs(this._prefs);
+  DateTimeMillisPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static DateTimeMillisPrefs? _instance;
 
@@ -37,9 +40,7 @@ class DateTimeMillisPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class DateTimeMillisPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<DateTimeMillisPrefs> init() {
+  static Future<DateTimeMillisPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<DateTimeMillisPrefs> _doInit() async {
+  static Future<DateTimeMillisPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = DateTimeMillisPrefs(prefs);
+      return _instance = DateTimeMillisPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -96,7 +101,7 @@ class DateTimeMillisPrefs {
         '[shared_prefs_typed] Failed to read "lastLogin": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('lastLogin', e);
+      _onReadError?.call('lastLogin', e);
       return null;
     }
   }
@@ -138,7 +143,7 @@ class DateTimeMillisPrefs {
         '[shared_prefs_typed] Failed to read "createdAt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('createdAt', e);
+      _onReadError?.call('createdAt', e);
       return null;
     }
   }

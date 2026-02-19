@@ -26,7 +26,10 @@ class AppPreferencesImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AppPreferencesImpl(this._prefs);
+  AppPreferencesImpl(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AppPreferencesImpl? _instance;
 
@@ -37,9 +40,7 @@ class AppPreferencesImpl {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class AppPreferencesImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AppPreferencesImpl> init() {
+  static Future<AppPreferencesImpl> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AppPreferencesImpl> _doInit() async {
+  static Future<AppPreferencesImpl> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = AppPreferencesImpl(prefs);
+      return _instance = AppPreferencesImpl(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -94,7 +99,7 @@ class AppPreferencesImpl {
         '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('counter', e);
+      _onReadError?.call('counter', e);
       return 0;
     }
   }

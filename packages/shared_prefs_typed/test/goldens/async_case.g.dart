@@ -26,7 +26,10 @@ class AsyncPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AsyncPrefs(this._prefs);
+  AsyncPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AsyncPrefs? _instance;
 
@@ -37,9 +40,7 @@ class AsyncPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -59,13 +60,22 @@ class AsyncPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AsyncPrefs> init() {
+  static Future<AsyncPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AsyncPrefs> _doInit() {
-    return Future.value(_instance = AsyncPrefs(SharedPreferencesAsync()));
+  static Future<AsyncPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) {
+    return Future.value(
+      _instance = AsyncPrefs(
+        SharedPreferencesAsync(),
+        onReadError: onReadError,
+      ),
+    );
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
@@ -86,7 +96,7 @@ class AsyncPrefs {
         '[shared_prefs_typed] Failed to read "testInt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testInt', e);
+      _onReadError?.call('testInt', e);
       return 10;
     }
   }
@@ -121,7 +131,7 @@ class AsyncPrefs {
         '[shared_prefs_typed] Failed to read "testNullableString": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testNullableString', e);
+      _onReadError?.call('testNullableString', e);
       return null;
     }
   }
@@ -161,7 +171,7 @@ class AsyncPrefs {
         '[shared_prefs_typed] Failed to read "testBool": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('testBool', e);
+      _onReadError?.call('testBool', e);
       return true;
     }
   }

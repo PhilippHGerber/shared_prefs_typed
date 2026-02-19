@@ -27,7 +27,10 @@ class NullablePrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  NullablePrefs(this._prefs);
+  NullablePrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static NullablePrefs? _instance;
 
@@ -38,9 +41,7 @@ class NullablePrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -60,17 +61,21 @@ class NullablePrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<NullablePrefs> init() {
+  static Future<NullablePrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<NullablePrefs> _doInit() async {
+  static Future<NullablePrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = NullablePrefs(prefs);
+      return _instance = NullablePrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -95,7 +100,7 @@ class NullablePrefs {
         '[shared_prefs_typed] Failed to read "nullableInt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('nullableInt', e);
+      _onReadError?.call('nullableInt', e);
       return null;
     }
   }
@@ -135,7 +140,7 @@ class NullablePrefs {
         '[shared_prefs_typed] Failed to read "nullableDouble": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('nullableDouble', e);
+      _onReadError?.call('nullableDouble', e);
       return null;
     }
   }
@@ -175,7 +180,7 @@ class NullablePrefs {
         '[shared_prefs_typed] Failed to read "nullableBool": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('nullableBool', e);
+      _onReadError?.call('nullableBool', e);
       return null;
     }
   }

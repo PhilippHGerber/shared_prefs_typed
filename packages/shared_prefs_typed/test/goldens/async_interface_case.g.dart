@@ -41,7 +41,10 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AsyncInterfacePrefs(this._prefs);
+  AsyncInterfacePrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AsyncInterfacePrefs? _instance;
 
@@ -52,9 +55,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -74,14 +75,21 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AsyncInterfacePrefs> init() {
+  static Future<AsyncInterfacePrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AsyncInterfacePrefs> _doInit() {
+  static Future<AsyncInterfacePrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) {
     return Future.value(
-      _instance = AsyncInterfacePrefs(SharedPreferencesAsync()),
+      _instance = AsyncInterfacePrefs(
+        SharedPreferencesAsync(),
+        onReadError: onReadError,
+      ),
     );
   }
 
@@ -103,7 +111,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
         '[shared_prefs_typed] Failed to read "message": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('message', e);
+      _onReadError?.call('message', e);
       return 'hello';
     }
   }
@@ -138,7 +146,7 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
         '[shared_prefs_typed] Failed to read "count": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('count', e);
+      _onReadError?.call('count', e);
       return 0;
     }
   }

@@ -26,7 +26,10 @@ class StringEscapingPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  StringEscapingPrefs(this._prefs);
+  StringEscapingPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static StringEscapingPrefs? _instance;
 
@@ -37,9 +40,7 @@ class StringEscapingPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class StringEscapingPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<StringEscapingPrefs> init() {
+  static Future<StringEscapingPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<StringEscapingPrefs> _doInit() async {
+  static Future<StringEscapingPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = StringEscapingPrefs(prefs);
+      return _instance = StringEscapingPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -94,7 +99,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withBackslash": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withBackslash', e);
+      _onReadError?.call('withBackslash', e);
       return 'path\\to\\file';
     }
   }
@@ -129,7 +134,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withDollarSign": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withDollarSign', e);
+      _onReadError?.call('withDollarSign', e);
       return 'cost is \$10';
     }
   }
@@ -164,7 +169,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withNewline": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withNewline', e);
+      _onReadError?.call('withNewline', e);
       return 'line1\nline2';
     }
   }
@@ -199,7 +204,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withTab": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withTab', e);
+      _onReadError?.call('withTab', e);
       return 'col1\tcol2';
     }
   }
@@ -234,7 +239,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withSingleQuote": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withSingleQuote', e);
+      _onReadError?.call('withSingleQuote', e);
       return 'it\'s here';
     }
   }
@@ -270,7 +275,7 @@ class StringEscapingPrefs {
         '[shared_prefs_typed] Failed to read "withInterpolation": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('withInterpolation', e);
+      _onReadError?.call('withInterpolation', e);
       return 'Hello \${world} with \'quotes\'';
     }
   }

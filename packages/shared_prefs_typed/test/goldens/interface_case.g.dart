@@ -41,7 +41,10 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  InterfacePrefs(this._prefs);
+  InterfacePrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static InterfacePrefs? _instance;
 
@@ -52,9 +55,7 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -74,17 +75,21 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<InterfacePrefs> init() {
+  static Future<InterfacePrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<InterfacePrefs> _doInit() async {
+  static Future<InterfacePrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = InterfacePrefs(prefs);
+      return _instance = InterfacePrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -109,7 +114,7 @@ class InterfacePrefs implements InterfacePrefsBase {
         '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('counter', e);
+      _onReadError?.call('counter', e);
       return 0;
     }
   }
@@ -144,7 +149,7 @@ class InterfacePrefs implements InterfacePrefsBase {
         '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('name', e);
+      _onReadError?.call('name', e);
       return null;
     }
   }

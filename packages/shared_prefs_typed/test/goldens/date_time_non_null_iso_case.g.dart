@@ -26,7 +26,10 @@ class DateTimeNonNullIsoPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  DateTimeNonNullIsoPrefs(this._prefs);
+  DateTimeNonNullIsoPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static DateTimeNonNullIsoPrefs? _instance;
 
@@ -37,9 +40,7 @@ class DateTimeNonNullIsoPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,24 @@ class DateTimeNonNullIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<DateTimeNonNullIsoPrefs> init() {
+  static Future<DateTimeNonNullIsoPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<DateTimeNonNullIsoPrefs> _doInit() async {
+  static Future<DateTimeNonNullIsoPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = DateTimeNonNullIsoPrefs(prefs);
+      return _instance = DateTimeNonNullIsoPrefs(
+        prefs,
+        onReadError: onReadError,
+      );
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -96,7 +104,7 @@ class DateTimeNonNullIsoPrefs {
         '[shared_prefs_typed] Failed to read "installDate": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('installDate', e);
+      _onReadError?.call('installDate', e);
       return DateTime.fromMillisecondsSinceEpoch(0);
     }
   }

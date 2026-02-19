@@ -63,7 +63,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       }
 
       // Validate against reserved generated-class member names.
-      const reservedNames = {'init', 'instance', 'resetInstance', 'clearAll', 'onReadError'};
+      const reservedNames = {'init', 'instance', 'resetInstance', 'clearAll'};
       if (reservedNames.contains(field.paramName)) {
         throw InvalidGenerationSourceError(
           'Field `${field.name}` produces a generated API name `${field.paramName}` '
@@ -169,16 +169,14 @@ Class _buildSyncClass(
       ..fields.add(
         Field(
           (f) => f
-            ..name = 'onReadError'
-            ..static = true
+            ..name = '_onReadError'
+            ..modifier = FieldModifier.final$
             ..docs.addAll([
               '/// Optional callback invoked when a stored value cannot be cast to its',
               '/// expected type (e.g. after a field type change between app versions).',
               '///',
               '/// Receives the preference key and the exception. Use this to forward',
               '/// errors to a crash reporter (Crashlytics, Sentry, etc.).',
-              '///',
-              '/// Set to `null` (the default) to disable.',
             ])
             ..type = refer('void Function(String key, Object error)?'),
         ),
@@ -206,7 +204,16 @@ Class _buildSyncClass(
                   ..name = '_prefs'
                   ..toThis = true,
               ),
-            ),
+            )
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
+            ..initializers.add(Code('_onReadError = onReadError')),
         ),
       )
       ..methods.add(
@@ -243,9 +250,17 @@ Class _buildSyncClass(
             ..docs.add('/// and do not trigger additional I/O.')
             ..returns = refer('Future<$publicClassName>')
             ..static = true
-            ..body = const Code(
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
+            ..body = Code(
               'if (_instance != null) return Future.value(_instance!);\n'
-              'return _initFuture ??= _doInit();',
+              'return _initFuture ??= _doInit(onReadError: onReadError);',
             ),
         ),
       )
@@ -256,10 +271,18 @@ Class _buildSyncClass(
             ..static = true
             ..returns = refer('Future<$publicClassName>')
             ..modifier = MethodModifier.async
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
             ..body = Code(
               'try {\n'
               '  final prefs = await $prefsClassName.create(cacheOptions: const $prefsOptionsName());\n'
-              '  return _instance = $publicClassName(prefs);\n'
+              '  return _instance = $publicClassName(prefs, onReadError: onReadError);\n'
               '} catch (e) {\n'
               '  _initFuture = null;\n'
               '  rethrow;\n'
@@ -329,16 +352,14 @@ Class _buildAsyncClass(
       ..fields.add(
         Field(
           (f) => f
-            ..name = 'onReadError'
-            ..static = true
+            ..name = '_onReadError'
+            ..modifier = FieldModifier.final$
             ..docs.addAll([
               '/// Optional callback invoked when a stored value cannot be cast to its',
               '/// expected type (e.g. after a field type change between app versions).',
               '///',
               '/// Receives the preference key and the exception. Use this to forward',
               '/// errors to a crash reporter (Crashlytics, Sentry, etc.).',
-              '///',
-              '/// Set to `null` (the default) to disable.',
             ])
             ..type = refer('void Function(String key, Object error)?'),
         ),
@@ -366,7 +387,16 @@ Class _buildAsyncClass(
                   ..name = '_prefs'
                   ..toThis = true,
               ),
-            ),
+            )
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
+            ..initializers.add(Code('_onReadError = onReadError')),
         ),
       )
       ..methods.add(
@@ -403,9 +433,17 @@ Class _buildAsyncClass(
             ..docs.add('/// and do not trigger additional I/O.')
             ..returns = refer('Future<$publicClassName>')
             ..static = true
-            ..body = const Code(
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
+            ..body = Code(
               'if (_instance != null) return Future.value(_instance!);\n'
-              'return _initFuture ??= _doInit();',
+              'return _initFuture ??= _doInit(onReadError: onReadError);',
             ),
         ),
       )
@@ -415,8 +453,16 @@ Class _buildAsyncClass(
             ..name = '_doInit'
             ..static = true
             ..returns = refer('Future<$publicClassName>')
+            ..optionalParameters.add(
+              Parameter(
+                (p) => p
+                  ..name = 'onReadError'
+                  ..named = true
+                  ..type = refer('void Function(String key, Object error)?'),
+              ),
+            )
             ..body = Code(
-              'return Future.value(_instance = $publicClassName($prefsClassName()));',
+              'return Future.value(_instance = $publicClassName($prefsClassName(), onReadError: onReadError));',
             ),
         ),
       )
@@ -538,7 +584,7 @@ Method _generateSyncGetter(_SharedPrefField field) {
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
       '} catch (e) {\n'
       "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-      "  onReadError?.call('$key', e);\n"
+      "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
     );
@@ -590,7 +636,7 @@ Method _generateAsyncGetter(_SharedPrefField field) {
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
       '} catch (e) {\n'
       "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-      "  onReadError?.call('$key', e);\n"
+      "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
     );
@@ -725,7 +771,7 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (e) {\n'
         "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-        "  onReadError?.call('$key', e);\n"
+        "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
   }
@@ -735,7 +781,7 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
       'return DateTime.parse(raw);\n'
       '} catch (e) {\n'
       "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-      "  onReadError?.call('$key', e);\n"
+      "  _onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
 }
@@ -751,7 +797,7 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (e) {\n'
         "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-        "  onReadError?.call('$key', e);\n"
+        "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
   }
@@ -761,7 +807,7 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
       'return DateTime.parse(raw);\n'
       '} catch (e) {\n'
       "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
-      "  onReadError?.call('$key', e);\n"
+      "  _onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
 }

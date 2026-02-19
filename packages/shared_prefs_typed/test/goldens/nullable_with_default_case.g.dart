@@ -26,7 +26,10 @@ class NullableWithDefaultPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  NullableWithDefaultPrefs(this._prefs);
+  NullableWithDefaultPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static NullableWithDefaultPrefs? _instance;
 
@@ -37,9 +40,7 @@ class NullableWithDefaultPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,24 @@ class NullableWithDefaultPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<NullableWithDefaultPrefs> init() {
+  static Future<NullableWithDefaultPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<NullableWithDefaultPrefs> _doInit() async {
+  static Future<NullableWithDefaultPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = NullableWithDefaultPrefs(prefs);
+      return _instance = NullableWithDefaultPrefs(
+        prefs,
+        onReadError: onReadError,
+      );
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -94,7 +102,7 @@ class NullableWithDefaultPrefs {
         '[shared_prefs_typed] Failed to read "retryCount": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('retryCount', e);
+      _onReadError?.call('retryCount', e);
       return 3;
     }
   }
@@ -134,7 +142,7 @@ class NullableWithDefaultPrefs {
         '[shared_prefs_typed] Failed to read "threshold": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('threshold', e);
+      _onReadError?.call('threshold', e);
       return 0.5;
     }
   }
@@ -174,7 +182,7 @@ class NullableWithDefaultPrefs {
         '[shared_prefs_typed] Failed to read "featureEnabled": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('featureEnabled', e);
+      _onReadError?.call('featureEnabled', e);
       return true;
     }
   }
@@ -214,7 +222,7 @@ class NullableWithDefaultPrefs {
         '[shared_prefs_typed] Failed to read "greeting": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('greeting', e);
+      _onReadError?.call('greeting', e);
       return 'Hello';
     }
   }

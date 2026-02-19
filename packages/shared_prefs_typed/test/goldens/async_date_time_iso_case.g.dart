@@ -26,7 +26,10 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AsyncDateTimeIsoPrefs(this._prefs);
+  AsyncDateTimeIsoPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AsyncDateTimeIsoPrefs? _instance;
 
@@ -37,9 +40,7 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -59,14 +60,21 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AsyncDateTimeIsoPrefs> init() {
+  static Future<AsyncDateTimeIsoPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AsyncDateTimeIsoPrefs> _doInit() {
+  static Future<AsyncDateTimeIsoPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) {
     return Future.value(
-      _instance = AsyncDateTimeIsoPrefs(SharedPreferencesAsync()),
+      _instance = AsyncDateTimeIsoPrefs(
+        SharedPreferencesAsync(),
+        onReadError: onReadError,
+      ),
     );
   }
 
@@ -90,7 +98,7 @@ class AsyncDateTimeIsoPrefs {
         '[shared_prefs_typed] Failed to read "lastLogin": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('lastLogin', e);
+      _onReadError?.call('lastLogin', e);
       return null;
     }
   }
@@ -132,7 +140,7 @@ class AsyncDateTimeIsoPrefs {
         '[shared_prefs_typed] Failed to read "updatedAt": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('updatedAt', e);
+      _onReadError?.call('updatedAt', e);
       return null;
     }
   }

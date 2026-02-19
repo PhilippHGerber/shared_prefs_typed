@@ -26,7 +26,10 @@ class FieldNamingPrefs {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  FieldNamingPrefs(this._prefs);
+  FieldNamingPrefs(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static FieldNamingPrefs? _instance;
 
@@ -37,9 +40,7 @@ class FieldNamingPrefs {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +60,21 @@ class FieldNamingPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<FieldNamingPrefs> init() {
+  static Future<FieldNamingPrefs> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<FieldNamingPrefs> _doInit() async {
+  static Future<FieldNamingPrefs> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = FieldNamingPrefs(prefs);
+      return _instance = FieldNamingPrefs(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -94,7 +99,7 @@ class FieldNamingPrefs {
         '[shared_prefs_typed] Failed to read "underscoreField": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('underscoreField', e);
+      _onReadError?.call('underscoreField', e);
       return 5;
     }
   }
@@ -129,7 +134,7 @@ class FieldNamingPrefs {
         '[shared_prefs_typed] Failed to read "a": ${e.runtimeType}. Default will be used.',
         name: 'shared_prefs_typed',
       );
-      onReadError?.call('a', e);
+      _onReadError?.call('a', e);
       return false;
     }
   }
