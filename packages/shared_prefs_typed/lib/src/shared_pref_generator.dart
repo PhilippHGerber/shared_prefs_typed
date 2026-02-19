@@ -610,11 +610,9 @@ Method _generateIsSet(_SharedPrefField field, {required bool isAsync}) => Method
     ..docs.add('///')
     ..docs.add('/// Returns `true` if the key exists in persistent storage, `false` otherwise.')
     ..returns = refer(isAsync ? 'Future<bool>' : 'bool')
-    ..body = refer('_prefs')
-        .property('containsKey')
-        .call([literalString(field.keyName)])
-        .returned
-        .statement,
+    ..body = refer(
+      '_prefs',
+    ).property('containsKey').call([literalString(field.keyName)]).returned.statement,
 );
 
 Method _generateRemover(_SharedPrefField field) => Method(
@@ -626,11 +624,9 @@ Method _generateRemover(_SharedPrefField field) => Method(
       '/// After calling this, the getter will return the default value (`${field.defaultValue}`).',
     )
     ..returns = refer('Future<void>')
-    ..body = refer('_prefs')
-        .property('remove')
-        .call([literalString(field.keyName)])
-        .returned
-        .statement,
+    ..body = refer(
+      '_prefs',
+    ).property('remove').call([literalString(field.keyName)]).returned.statement,
 );
 
 //--- DateTime helpers ---//
@@ -794,8 +790,7 @@ class _SharedPrefField {
   bool get hasNonNullDefault => isNullable && defaultValue != 'null';
 
   /// Return type for getters: narrows to non-nullable when [hasNonNullDefault].
-  Reference get getterTypeReference =>
-      hasNonNullDefault ? nonNullableTypeReference : typeReference;
+  Reference get getterTypeReference => hasNonNullDefault ? nonNullableTypeReference : typeReference;
 
   bool get isEnum {
     final element = field.type.element;
@@ -822,7 +817,13 @@ class _SharedPrefField {
   }
 
   static const _supportedTypes = {
-    'int', 'double', 'bool', 'String', 'List<String>', 'List<int>', 'List<double>'
+    'int',
+    'double',
+    'bool',
+    'String',
+    'List<String>',
+    'List<int>',
+    'List<double>',
   };
 
   /// True when the non-nullable type is `List<String>` (not a numeric list).

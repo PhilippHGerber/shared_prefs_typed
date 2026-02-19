@@ -189,10 +189,10 @@ class _MyAppDIState extends State<MyAppDI> {
 
 /// Converts the stored `bool?` preference to a [ThemeMode].
 ThemeMode _themeModeFor(bool? isLight) => switch (isLight) {
-      true => ThemeMode.light,
-      false => ThemeMode.dark,
-      null => ThemeMode.system,
-    };
+  true => ThemeMode.light,
+  false => ThemeMode.dark,
+  null => ThemeMode.system,
+};
 
 /// A [SegmentedButton] for picking System / Light / Dark.
 class _ThemeSelector extends StatelessWidget {

@@ -160,20 +160,20 @@ void main() async {
               (bytes) {
                 final content = utf8.decode(bytes);
                 // Backslash is doubled: path\to\file → 'path\\to\\file'
-                final hasBackslash = content.contains(r"'path\\to\\file'") ||
-                    content.contains(r'"path\\to\\file"');
+                final hasBackslash =
+                    content.contains(r"'path\\to\\file'") || content.contains(r'"path\\to\\file"');
                 // Dollar sign is escaped: cost is $10 → 'cost is \$10'
-                final hasDollar = content.contains(r"'cost is \$10'") ||
-                    content.contains(r'"cost is \$10"');
+                final hasDollar =
+                    content.contains(r"'cost is \$10'") || content.contains(r'"cost is \$10"');
                 // Actual newline char is represented as \n escape sequence
-                final hasNewline = content.contains(r"'line1\nline2'") ||
-                    content.contains(r'"line1\nline2"');
+                final hasNewline =
+                    content.contains(r"'line1\nline2'") || content.contains(r'"line1\nline2"');
                 // Actual tab char is represented as \t escape sequence
-                final hasTab = content.contains(r"'col1\tcol2'") ||
-                    content.contains(r'"col1\tcol2"');
+                final hasTab =
+                    content.contains(r"'col1\tcol2'") || content.contains(r'"col1\tcol2"');
                 // Single quote is escaped or string uses double quotes
-                final hasSingleQuote = content.contains(r"it\'s here") ||
-                    content.contains("it's here");
+                final hasSingleQuote =
+                    content.contains(r"it\'s here") || content.contains("it's here");
                 // ${...} interpolation is escaped: Hello ${world} → Hello \${world}
                 final hasInterpolation = content.contains(r'\${world}');
                 return hasBackslash &&
