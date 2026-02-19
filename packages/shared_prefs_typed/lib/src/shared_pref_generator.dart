@@ -168,7 +168,6 @@ Class _buildSyncClass(
       ..constructors.add(
         Constructor(
           (c) => c
-            ..constant = true
             ..docs.add(
               '/// Creates an instance backed by the given [$prefsClassName].',
             )
@@ -310,7 +309,6 @@ Class _buildAsyncClass(
       ..constructors.add(
         Constructor(
           (c) => c
-            ..constant = true
             ..docs.add(
               '/// Creates an instance backed by the given [$prefsClassName].',
             )
