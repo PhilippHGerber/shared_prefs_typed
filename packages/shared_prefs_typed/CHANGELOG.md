@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased — Breaking
+## 0.7.0
 
-> Re-run `flutter pub run build_runner build`. 
+> Re-run `flutter pub run build_runner build`.
 
 ### New
 
