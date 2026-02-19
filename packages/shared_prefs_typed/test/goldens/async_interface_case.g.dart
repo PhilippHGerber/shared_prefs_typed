@@ -82,7 +82,11 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// If the key does not exist, the default value `'hello'` is returned.
   Future<String> get message async {
-    return (await _prefs.getString('message')) ?? 'hello';
+    try {
+      return (await _prefs.getString('message')) ?? 'hello';
+    } catch (_) {
+      return 'hello';
+    }
   }
 
   /// Asynchronously sets the value for `message`.
@@ -108,7 +112,11 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// If the key does not exist, the default value `0` is returned.
   Future<int> get count async {
-    return (await _prefs.getInt('count')) ?? 0;
+    try {
+      return (await _prefs.getInt('count')) ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `count`.

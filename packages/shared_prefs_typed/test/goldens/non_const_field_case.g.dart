@@ -74,7 +74,11 @@ class MixedFieldsPrefs {
   ///
   /// If the key does not exist, the default value `100` is returned.
   int get constField {
-    return _prefs.getInt('constField') ?? 100;
+    try {
+      return _prefs.getInt('constField') ?? 100;
+    } catch (_) {
+      return 100;
+    }
   }
 
   /// Asynchronously sets the value for `constField`.

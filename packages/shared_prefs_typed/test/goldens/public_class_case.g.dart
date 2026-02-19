@@ -74,7 +74,11 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `0` is returned.
   int get counter {
-    return _prefs.getInt('counter') ?? 0;
+    try {
+      return _prefs.getInt('counter') ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `counter`.

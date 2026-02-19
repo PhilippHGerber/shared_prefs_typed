@@ -74,9 +74,13 @@ class DateTimeMillisPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   DateTime? get lastLogin {
-    final raw = _prefs.getInt('lastLogin');
-    if (raw == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(raw);
+    try {
+      final raw = _prefs.getInt('lastLogin');
+      if (raw == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `lastLogin`.
@@ -107,9 +111,13 @@ class DateTimeMillisPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   DateTime? get createdAt {
-    final raw = _prefs.getInt('createdAt');
-    if (raw == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(raw);
+    try {
+      final raw = _prefs.getInt('createdAt');
+      if (raw == null) return null;
+      return DateTime.fromMillisecondsSinceEpoch(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `createdAt`.

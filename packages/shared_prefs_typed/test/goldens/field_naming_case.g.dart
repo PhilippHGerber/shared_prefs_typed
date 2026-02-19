@@ -74,7 +74,11 @@ class FieldNamingPrefs {
   ///
   /// If the key does not exist, the default value `5` is returned.
   int get underscoreField {
-    return _prefs.getInt('underscoreField') ?? 5;
+    try {
+      return _prefs.getInt('underscoreField') ?? 5;
+    } catch (_) {
+      return 5;
+    }
   }
 
   /// Asynchronously sets the value for `underscoreField`.
@@ -100,7 +104,11 @@ class FieldNamingPrefs {
   ///
   /// If the key does not exist, the default value `false` is returned.
   bool get a {
-    return _prefs.getBool('a') ?? false;
+    try {
+      return _prefs.getBool('a') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Asynchronously sets the value for `a`.

@@ -472,12 +472,15 @@ Method _generateSyncGetter(_SharedPrefField field) {
   } else if (field.numericListElementType != null) {
     body = Code(_buildNumericListSyncGetterBody(field));
   } else {
-    final getCall = refer('_prefs')
-        .property('get${field.prefTypeName}')
-        .call([literalString(field.keyName)]);
-    body = field.defaultValue == 'null'
-        ? getCall.returned.statement
-        : getCall.ifNullThen(CodeExpression(Code(field.defaultValue))).returned.statement;
+    final getExpr = "_prefs.get${field.prefTypeName}('${field.keyName}')";
+    final defaultExpr = field.defaultValue;
+    body = Code(
+      'try {\n'
+      "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
+      '} catch (_) {\n'
+      '  return $defaultExpr;\n'
+      '}',
+    );
   }
 
   return Method(
@@ -519,9 +522,14 @@ Method _generateAsyncGetter(_SharedPrefField field) {
     body = Code(_buildNumericListAsyncGetterBody(field));
   } else {
     final getExpr = "(await _prefs.get${field.prefTypeName}('${field.keyName}'))";
-    body = field.defaultValue == 'null'
-        ? Code('return $getExpr;')
-        : Code('return $getExpr ?? ${field.defaultValue};');
+    final defaultExpr = field.defaultValue;
+    body = Code(
+      'try {\n'
+      "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
+      '} catch (_) {\n'
+      '  return $defaultExpr;\n'
+      '}',
+    );
   }
 
   return Method(
@@ -631,9 +639,13 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
   if (isMillis) {
-    return "final raw = _prefs.getInt('$key');\n"
-        'if (raw == null) return null;\n'
-        'return DateTime.fromMillisecondsSinceEpoch(raw);';
+    return 'try {\n'
+        "  final raw = _prefs.getInt('$key');\n"
+        '  if (raw == null) return null;\n'
+        '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
+        '} catch (_) {\n'
+        '  return null;\n'
+        '}';
   }
   return "final raw = _prefs.getString('$key');\n"
       'if (raw == null) return null;\n'
@@ -648,9 +660,13 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final isMillis = field.dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
   if (isMillis) {
-    return "final raw = (await _prefs.getInt('$key'));\n"
-        'if (raw == null) return null;\n'
-        'return DateTime.fromMillisecondsSinceEpoch(raw);';
+    return 'try {\n'
+        "  final raw = (await _prefs.getInt('$key'));\n"
+        '  if (raw == null) return null;\n'
+        '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
+        '} catch (_) {\n'
+        '  return null;\n'
+        '}';
   }
   return "final raw = (await _prefs.getString('$key'));\n"
       'if (raw == null) return null;\n'

@@ -12,4 +12,5 @@ abstract class _StringEscapingPrefs {
   static const String withNewline = 'line1\nline2';
   static const String withTab = 'col1\tcol2';
   static const String withSingleQuote = "it's here";
+  static const String withInterpolation = r"Hello ${world} with 'quotes'";
 }

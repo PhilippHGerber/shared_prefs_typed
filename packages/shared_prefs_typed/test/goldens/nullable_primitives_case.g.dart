@@ -76,7 +76,11 @@ class NullablePrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   int? get nullableInt {
-    return _prefs.getInt('nullableInt');
+    try {
+      return _prefs.getInt('nullableInt');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `nullableInt`.
@@ -107,7 +111,11 @@ class NullablePrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   double? get nullableDouble {
-    return _prefs.getDouble('nullableDouble');
+    try {
+      return _prefs.getDouble('nullableDouble');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `nullableDouble`.
@@ -138,7 +146,11 @@ class NullablePrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   bool? get nullableBool {
-    return _prefs.getBool('nullableBool');
+    try {
+      return _prefs.getBool('nullableBool');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `nullableBool`.

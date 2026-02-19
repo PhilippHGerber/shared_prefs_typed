@@ -66,7 +66,11 @@ class AsyncPrefs {
   ///
   /// If the key does not exist, the default value `10` is returned.
   Future<int> get testInt async {
-    return (await _prefs.getInt('testInt')) ?? 10;
+    try {
+      return (await _prefs.getInt('testInt')) ?? 10;
+    } catch (_) {
+      return 10;
+    }
   }
 
   /// Asynchronously sets the value for `testInt`.
@@ -92,7 +96,11 @@ class AsyncPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   Future<String?> get testNullableString async {
-    return (await _prefs.getString('testNullableString'));
+    try {
+      return (await _prefs.getString('testNullableString'));
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `testNullableString`.
@@ -123,7 +131,11 @@ class AsyncPrefs {
   ///
   /// If the key does not exist, the default value `true` is returned.
   Future<bool> get testBool async {
-    return (await _prefs.getBool('testBool')) ?? true;
+    try {
+      return (await _prefs.getBool('testBool')) ?? true;
+    } catch (_) {
+      return true;
+    }
   }
 
   /// Asynchronously sets the value for `testBool`.

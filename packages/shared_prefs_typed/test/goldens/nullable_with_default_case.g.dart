@@ -74,7 +74,11 @@ class NullableWithDefaultPrefs {
   ///
   /// If the key does not exist, the default value `3` is returned.
   int get retryCount {
-    return _prefs.getInt('retryCount') ?? 3;
+    try {
+      return _prefs.getInt('retryCount') ?? 3;
+    } catch (_) {
+      return 3;
+    }
   }
 
   /// Asynchronously sets the value for `retryCount`.
@@ -105,7 +109,11 @@ class NullableWithDefaultPrefs {
   ///
   /// If the key does not exist, the default value `0.5` is returned.
   double get threshold {
-    return _prefs.getDouble('threshold') ?? 0.5;
+    try {
+      return _prefs.getDouble('threshold') ?? 0.5;
+    } catch (_) {
+      return 0.5;
+    }
   }
 
   /// Asynchronously sets the value for `threshold`.
@@ -136,7 +144,11 @@ class NullableWithDefaultPrefs {
   ///
   /// If the key does not exist, the default value `true` is returned.
   bool get featureEnabled {
-    return _prefs.getBool('featureEnabled') ?? true;
+    try {
+      return _prefs.getBool('featureEnabled') ?? true;
+    } catch (_) {
+      return true;
+    }
   }
 
   /// Asynchronously sets the value for `featureEnabled`.
@@ -167,7 +179,11 @@ class NullableWithDefaultPrefs {
   ///
   /// If the key does not exist, the default value `'Hello'` is returned.
   String get greeting {
-    return _prefs.getString('greeting') ?? 'Hello';
+    try {
+      return _prefs.getString('greeting') ?? 'Hello';
+    } catch (_) {
+      return 'Hello';
+    }
   }
 
   /// Asynchronously sets the value for `greeting`.

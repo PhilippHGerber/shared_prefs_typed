@@ -174,7 +174,14 @@ void main() async {
                 // Single quote is escaped or string uses double quotes
                 final hasSingleQuote = content.contains(r"it\'s here") ||
                     content.contains("it's here");
-                return hasBackslash && hasDollar && hasNewline && hasTab && hasSingleQuote;
+                // ${...} interpolation is escaped: Hello ${world} → Hello \${world}
+                final hasInterpolation = content.contains(r'\${world}');
+                return hasBackslash &&
+                    hasDollar &&
+                    hasNewline &&
+                    hasTab &&
+                    hasSingleQuote &&
+                    hasInterpolation;
               },
               'contains correctly escaped string default values',
             ),

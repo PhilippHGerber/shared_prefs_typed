@@ -88,7 +88,11 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// If the key does not exist, the default value `0` is returned.
   int get counter {
-    return _prefs.getInt('counter') ?? 0;
+    try {
+      return _prefs.getInt('counter') ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `counter`.
@@ -114,7 +118,11 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get name {
-    return _prefs.getString('name');
+    try {
+      return _prefs.getString('name');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `name`.

@@ -76,7 +76,11 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `10` is returned.
   int get testInt {
-    return _prefs.getInt('testInt') ?? 10;
+    try {
+      return _prefs.getInt('testInt') ?? 10;
+    } catch (_) {
+      return 10;
+    }
   }
 
   /// Asynchronously sets the value for `testInt`.
@@ -102,7 +106,11 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `3.14` is returned.
   double get testDouble {
-    return _prefs.getDouble('testDouble') ?? 3.14;
+    try {
+      return _prefs.getDouble('testDouble') ?? 3.14;
+    } catch (_) {
+      return 3.14;
+    }
   }
 
   /// Asynchronously sets the value for `testDouble`.
@@ -128,7 +136,11 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `true` is returned.
   bool get testBool {
-    return _prefs.getBool('testBool') ?? true;
+    try {
+      return _prefs.getBool('testBool') ?? true;
+    } catch (_) {
+      return true;
+    }
   }
 
   /// Asynchronously sets the value for `testBool`.
@@ -154,7 +166,11 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `'Hello'` is returned.
   String get testString {
-    return _prefs.getString('testString') ?? 'Hello';
+    try {
+      return _prefs.getString('testString') ?? 'Hello';
+    } catch (_) {
+      return 'Hello';
+    }
   }
 
   /// Asynchronously sets the value for `testString`.
@@ -207,7 +223,11 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   String? get testNullableString {
-    return _prefs.getString('testNullableString');
+    try {
+      return _prefs.getString('testNullableString');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `testNullableString`.

@@ -74,7 +74,11 @@ class PrefKeyPrefs {
   ///
   /// If the key does not exist, the default value `0` is returned.
   int get counter {
-    return _prefs.getInt('legacy_counter') ?? 0;
+    try {
+      return _prefs.getInt('legacy_counter') ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Asynchronously sets the value for `legacy_counter`.
@@ -100,7 +104,11 @@ class PrefKeyPrefs {
   ///
   /// If the key does not exist, the default value `'anon'` is returned.
   String get name {
-    return _prefs.getString('name') ?? 'anon';
+    try {
+      return _prefs.getString('name') ?? 'anon';
+    } catch (_) {
+      return 'anon';
+    }
   }
 
   /// Asynchronously sets the value for `name`.
@@ -126,7 +134,11 @@ class PrefKeyPrefs {
   ///
   /// If the key does not exist, the default value `false` is returned.
   bool get isDarkMode {
-    return _prefs.getBool('usr_dark_mode') ?? false;
+    try {
+      return _prefs.getBool('usr_dark_mode') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Asynchronously sets the value for `usr_dark_mode`.
