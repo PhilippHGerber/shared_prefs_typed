@@ -112,12 +112,12 @@ await prefs.removeSessionId();
 
 ## Annotation Options
 
-### `@TypedPrefs(async: true)` — Async mode
+### `@TypedPrefs(mode: PrefsMode.async)` — Async mode
 
-By default, the generator uses `SharedPreferencesWithCache` for synchronous reads. Pass `async: true` to use `SharedPreferencesAsync` instead, which returns `Future`s for all getters:
+By default, the generator uses `SharedPreferencesWithCache` for synchronous reads. Pass `mode: PrefsMode.async` to use `SharedPreferencesAsync` instead, which returns `Future`s for all getters:
 
 ```dart
-@TypedPrefs(async: true)
+@TypedPrefs(mode: PrefsMode.async)
 abstract class AppPreferences {
   static const int counter = 0;
 }

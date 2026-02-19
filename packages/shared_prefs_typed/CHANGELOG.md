@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * **`XxxImplBase` renamed to `XxxBase`** — when `generateInterface: true` is used with a public class (`AppPreferences`), the generated interface is now `AppPreferencesBase` instead of `AppPreferencesImplBase`. Rename all usages in DI registration, type annotations, and mocks.
 * **`const` removed from generated constructor** — `ClassName(prefs)` is no longer `const`. The class holds mutable static fields (`_instance`, `_initFuture`), making `const` semantically incorrect and a source of silent equality bugs via Dart's constant canonicalization.
 * **`resetInstance()` annotated `@visibleForTesting`** — the analyzer now warns if `resetInstance()` is called from non-test code. No runtime impact.
+* **`async: bool` deprecated in favour of `mode: PrefsMode`** — replace `@TypedPrefs(async: true)` with `@TypedPrefs(mode: PrefsMode.async)`. The `async` parameter still works but will be removed in 1.0.0. `PrefsMode` is now exported from `shared_prefs_typed_annotations`.
 
 ## 0.7.0
 

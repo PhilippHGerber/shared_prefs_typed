@@ -120,10 +120,10 @@ class MyWidget extends StatelessWidget {
 
 ### Async mode
 
-Use `@TypedPrefs(async: true)` when preferences can be modified from another isolate or native code and you always need the freshest value from disk. Getters return `Future`s instead of plain values.
+Use `@TypedPrefs(mode: PrefsMode.async)` when preferences can be modified from another isolate or native code and you always need the freshest value from disk. Getters return `Future`s instead of plain values.
 
 ```dart
-@TypedPrefs(async: true)
+@TypedPrefs(mode: PrefsMode.async)
 abstract class AsyncPrefs {
   static const int pingCount = 0;
 }

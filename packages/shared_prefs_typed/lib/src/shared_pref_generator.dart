@@ -25,7 +25,10 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     }
 
     final classElement = element;
-    final isAsyncMode = annotation.read('async').boolValue;
+    final modeReader = annotation.read('mode');
+    final isAsyncMode = modeReader.isNull
+        ? annotation.read('async').boolValue
+        : modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
     final generateInterface = annotation.read('generateInterface').boolValue;
 
     final fields = classElement.fields
