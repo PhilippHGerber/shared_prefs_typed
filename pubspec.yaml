@@ -10,7 +10,6 @@ workspace:
   - packages/shared_prefs_typed
   - example/basic
   - example/advanced
-  - helper/golden_gen
 
 dependencies:
   analyzer: ^10.0.1
