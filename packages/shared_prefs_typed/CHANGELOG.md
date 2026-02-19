@@ -2,57 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## Unreleased — Breaking
+
+> Re-run `flutter pub run build_runner build`. 
 
 ### New
 
-* **Non-nullable getter for nullable fields with a non-null default** — when a field is declared `Type?` but has a compile-time non-null default (e.g. `static const int? retryCount = 3`), the generated getter now returns the non-nullable `Type` while the setter remains `Type?` (pass `null` to reset to the default). This eliminates unnecessary `!` null-assertion operators in call sites.
-* **Public (non-`_`) schema classes** — the annotated class no longer needs to start with `_`. If the class name starts with `_`, the leading underscore is stripped as before (`_AppPrefs` → `AppPrefs`). If it does not, `Impl` is appended (`AppPrefs` → `AppPrefsImpl`). The previous build-time error for non-`_` class names is removed.
-* **Immutable list getters** — all generated `List<T>` getters now return `UnmodifiableListView`, preventing silent mutation of the cached list. Callers must use the setter to persist changes. The generated file imports `dart:collection` only when list fields are present.
-
-### Improved
-
-* **`_generateIsSet` and `_generateRemover` use `code_builder` structured APIs** — replaced raw `Code('...')` string interpolation with `refer().property().call()` expression chains for the `isSet*()` and `remove*()` methods, and for simple primitive sync getters. This eliminates a class of string-escaping and quoting bugs in these methods.
-
-### Docs
-
-* **"Renaming Fields & Data Migration" section** added to both the package and root README with a concrete `@PrefKey` before/after example.
-* **"Out of Scope" section** added to both READMEs documenting scenarios the package intentionally does not cover (encryption, complex serialization, streams, multi-isolate sync, cloud backends).
-
----
-
-**Previous unreleased** — **Breaking change** — re-run `flutter pub run build_runner build` after upgrading. `create()` and `fromBackend()` are removed; use `init()` or the public constructor instead.
-
-### New (previous)
-
-* **`List<int>` and `List<double>` support** — numeric lists are transparently serialized to `List<String>` storage (via `.toString()`) and deserialized back (`int.parse` / `double.parse`). Nullable variants (`List<int>?`, `List<double>?`) are supported. Default values are rendered as typed literals (`const <int>[1, 2, 3]`).
-* **`@PrefKey('storage_key')` annotation** — override the SharedPreferences storage key per field while keeping the field-derived Dart API name. Generator rejects empty keys and duplicate resolved keys.
-* **Native `Enum` support** — enum fields are stored as `String` (via `.name`) and parsed back via `.values.byName()`. Non-nullable enums use the const default value; nullable enums return `null` when absent.
-* **`DateTime` support** (nullable only) — requires `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)` or `@PrefDateTime(DateTimeEncoding.iso8601)` per field. Generator reports a clear build-time error when the annotation is missing.
-* **Public `const` constructor** — `ClassName(prefs)` is now the single way to create an instance with a custom backend. Enables standard constructor injection for DI frameworks (GetIt, Riverpod) and clean per-test instances.
-* **Concurrency-safe `init()`** — memoizes the underlying `Future` so concurrent calls (e.g. from multiple widgets or isolates) share the same future and never double-initialize. Safe to call multiple times; returns immediately when already initialized.
-* **`resetInstance()`** now clears both `_instance` and the memoized `_initFuture`, giving tests a fully clean slate.
+* **Reserved name validation** — generator throws a build-time error when a field name collides with a built-in generated member (`init`, `instance`, `resetInstance`). Use `@PrefKey` to assign a different storage key.
+* **Non-nullable getter for nullable fields with non-null default** — `static const int? retryCount = 3` generates `int get retryCount` (non-nullable getter, nullable setter). Eliminates `!` at call sites.
+* **Public schema classes** — annotated class no longer needs a leading `_`. `_AppPrefs` → `AppPrefs`; `AppPrefs` → `AppPrefsImpl`.
+* **Immutable list getters** — all `List<T>` getters return `UnmodifiableListView`. `dart:collection` is only imported when list fields are present.
+* **`List<int>` / `List<double>` support** — serialized via `toString()` / `int.parse` / `double.parse`. Nullable variants and typed default literals supported.
+* **`@PrefKey('key')`** — overrides the storage key per field. Generator rejects empty and duplicate keys.
+* **Enum support** — stored as `.name`, parsed via `.values.byName()`.
+* **`DateTime` support** (nullable only) — requires `@PrefDateTime(DateTimeEncoding.millisecondsSinceEpoch)` or `.iso8601`.
+* **Public `const` constructor** — `ClassName(prefs)` for DI/testing.
+* **Concurrency-safe `init()`** — memoizes the future; safe to call multiple times.
+* **`resetInstance()`** — clears both `_instance` and `_initFuture` for test teardown.
 
 ### Removed
 
-* `create()` factory method — use `init()` for the singleton or `ClassName(prefs)` for DI/testing.
-* `fromBackend()` named constructor — replaced by the public `const` constructor `ClassName(prefs)`.
+* `create()` and `fromBackend()` — use `init()` or `ClassName(prefs)`.
 
 ### Fixed
 
-* **`DateTime.parse` crash** — getter now wraps `DateTime.parse()` in a `try-catch`; returns `null` on malformed stored data instead of throwing `FormatException`.
-* **Data-loss warning** — generated file now includes a header comment warning that renaming a field changes its storage key (causing silent data loss) unless `@PrefKey` is used.
-* **`analyzer` 10.0.1 compatibility** — `constantValue.type` is now null-checked before accessing `isDartCoreInt` / `isDartCoreDouble` / etc.
+* **Type-migration crash** — primitive getters (`int`, `double`, `bool`, `String`, `DateTime` millis) are wrapped in `try/catch`; a `TypeError` on stale storage data returns the field default instead of crashing.
+* **Data-loss warning** — generated file includes a header comment noting that renaming a field changes its storage key unless `@PrefKey` pins it.
+* `DateTime.parse` wrapped in `try-catch`; returns `null` on malformed data.
+* `analyzer` 10.0.1 compatibility — null-check `constantValue.type` before use.
 
-### Migration
+### Docs
 
-After upgrading, re-run:
-
-```bash
-flutter pub run build_runner build
-```
-
-Replace any calls to `ClassName.create()` or `ClassName.fromBackend(prefs)` with `ClassName(prefs)`.
+* Added "Renaming Fields & Data Migration" and "Out of Scope" sections to the README.
 
 ## 0.6.1
 
