@@ -71,4 +71,11 @@ class EmptyPrefs {
     _instance = null;
     _initFuture = null;
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.value();
+  }
 }

@@ -160,4 +160,15 @@ class EnumPrefs {
   Future<void> removeFontSize() {
     return _prefs.remove('fontSize');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('theme'),
+      _prefs.remove('optionalTheme'),
+      _prefs.remove('fontSize'),
+    ]);
+  }
 }

@@ -101,4 +101,11 @@ class AppPreferencesImpl {
   Future<void> removeCounter() {
     return _prefs.remove('counter');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([_prefs.remove('counter')]);
+  }
 }

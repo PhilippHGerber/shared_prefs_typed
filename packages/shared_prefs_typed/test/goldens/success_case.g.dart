@@ -255,4 +255,18 @@ class TestPrefs {
   Future<void> removeTestNullableString() {
     return _prefs.remove('testNullableString');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('testInt'),
+      _prefs.remove('testDouble'),
+      _prefs.remove('testBool'),
+      _prefs.remove('testString'),
+      _prefs.remove('testStringList'),
+      _prefs.remove('testNullableString'),
+    ]);
+  }
 }

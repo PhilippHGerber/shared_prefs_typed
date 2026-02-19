@@ -161,4 +161,15 @@ class PrefKeyPrefs {
   Future<void> removeIsDarkMode() {
     return _prefs.remove('usr_dark_mode');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('legacy_counter'),
+      _prefs.remove('name'),
+      _prefs.remove('usr_dark_mode'),
+    ]);
+  }
 }

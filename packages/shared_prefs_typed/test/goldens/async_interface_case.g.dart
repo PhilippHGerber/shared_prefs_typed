@@ -25,6 +25,7 @@ abstract class AsyncInterfacePrefsBase {
   Future<void> setCount(int value);
   Future<bool> containsCount();
   Future<void> removeCount();
+  Future<void> clearAll();
 }
 
 /// Provides type-safe, asynchronous access to application preferences.
@@ -138,5 +139,12 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   /// After calling this, the getter will return the default value (`0`).
   Future<void> removeCount() {
     return _prefs.remove('count');
+  }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([_prefs.remove('message'), _prefs.remove('count')]);
   }
 }

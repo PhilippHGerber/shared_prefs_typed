@@ -205,4 +205,16 @@ class NullablePrefs {
   Future<void> removeEmptyStringList() {
     return _prefs.remove('emptyStringList');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('nullableInt'),
+      _prefs.remove('nullableDouble'),
+      _prefs.remove('nullableBool'),
+      _prefs.remove('emptyStringList'),
+    ]);
+  }
 }

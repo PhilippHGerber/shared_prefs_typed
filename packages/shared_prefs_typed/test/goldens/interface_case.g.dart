@@ -25,6 +25,7 @@ abstract class InterfacePrefsBase {
   Future<void> setName(String? value);
   bool containsName();
   Future<void> removeName();
+  Future<void> clearAll();
 }
 
 /// Provides type-safe, cached access to application preferences.
@@ -149,5 +150,12 @@ class InterfacePrefs implements InterfacePrefsBase {
   /// After calling this, the getter will return the default value (`null`).
   Future<void> removeName() {
     return _prefs.remove('name');
+  }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([_prefs.remove('counter'), _prefs.remove('name')]);
   }
 }

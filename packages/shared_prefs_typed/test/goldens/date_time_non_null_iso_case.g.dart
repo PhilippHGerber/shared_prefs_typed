@@ -108,4 +108,11 @@ class DateTimeNonNullIsoPrefs {
   Future<void> removeInstallDate() {
     return _prefs.remove('installDate');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([_prefs.remove('installDate')]);
+  }
 }

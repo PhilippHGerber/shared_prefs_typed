@@ -211,4 +211,16 @@ class NullableWithDefaultPrefs {
   Future<void> removeGreeting() {
     return _prefs.remove('greeting');
   }
+
+  /// Removes all preferences managed by this class from storage.
+  ///
+  /// After calling this, all getters return their default values.
+  Future<void> clearAll() {
+    return Future.wait([
+      _prefs.remove('retryCount'),
+      _prefs.remove('threshold'),
+      _prefs.remove('featureEnabled'),
+      _prefs.remove('greeting'),
+    ]);
+  }
 }
