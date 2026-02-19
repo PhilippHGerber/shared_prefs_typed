@@ -41,11 +41,11 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  shared_prefs_typed_annotations: ^0.6.0
+  shared_prefs_typed_annotations: ^0.7.0
 
 dev_dependencies:
   build_runner: ^2.11.1
-  shared_prefs_typed: ^0.6.0
+  shared_prefs_typed: ^0.7.0
 ```
 
 ---
