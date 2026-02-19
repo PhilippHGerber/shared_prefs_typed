@@ -202,7 +202,7 @@ The generated class also exposes:
 | `AppPreferencesImpl(prefs)` | Public constructor for dependency injection |
 | `AppPreferencesImpl.instance` | Static accessor — throws `StateError` if not initialized via `init()` |
 | `static Future<void> init()` | Creates backend and sets the singleton instance |
-| `static void resetInstance()` | Clears the singleton — use in test teardown |
+| `@visibleForTesting static void resetInstance()` | Clears the singleton — test-only; analyzer warns if called outside a test file |
 
 ---
 
