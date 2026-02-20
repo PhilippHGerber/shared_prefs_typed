@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'date_time_millis_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'date_time_millis_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -97,10 +91,6 @@ class DateTimeMillisPrefs {
       if (raw == null) return null;
       return DateTime.fromMillisecondsSinceEpoch(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "lastLogin": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('lastLogin', e);
       return null;
     }
@@ -139,10 +129,6 @@ class DateTimeMillisPrefs {
       if (raw == null) return null;
       return DateTime.fromMillisecondsSinceEpoch(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "createdAt": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('createdAt', e);
       return null;
     }

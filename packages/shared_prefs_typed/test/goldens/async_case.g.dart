@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'async_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'async_case.dart';
 
 /// Provides type-safe, asynchronous access to application preferences.
 ///
@@ -92,10 +86,6 @@ class AsyncPrefs {
     try {
       return (await _prefs.getInt('testInt')) ?? 10;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testInt": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testInt', e);
       return 10;
     }
@@ -127,10 +117,6 @@ class AsyncPrefs {
     try {
       return (await _prefs.getString('testNullableString'));
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testNullableString": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testNullableString', e);
       return null;
     }
@@ -167,10 +153,6 @@ class AsyncPrefs {
     try {
       return (await _prefs.getBool('testBool')) ?? true;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testBool": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testBool', e);
       return true;
     }

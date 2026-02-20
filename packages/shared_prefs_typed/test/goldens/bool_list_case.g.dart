@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'bool_list_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:collection';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'bool_list_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -95,7 +89,7 @@ class BoolListPrefs {
     final raw = _prefs.getStringList('flags');
     return raw == null
         ? const <bool>[true, false, true]
-        : UnmodifiableListView(raw.map((e) => e == 'true').toList());
+        : List.unmodifiable(raw.map((e) => e == 'true').toList());
   }
 
   /// Asynchronously sets the value for `flags`.
@@ -127,7 +121,7 @@ class BoolListPrefs {
     final raw = _prefs.getStringList('optionalFlags');
     return raw == null
         ? null
-        : UnmodifiableListView(raw.map((e) => e == 'true').toList());
+        : List.unmodifiable(raw.map((e) => e == 'true').toList());
   }
 
   /// Asynchronously sets the value for `optionalFlags`.

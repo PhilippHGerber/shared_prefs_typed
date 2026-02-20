@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'nullable_with_default_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'nullable_with_default_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -98,10 +92,6 @@ class NullableWithDefaultPrefs {
     try {
       return _prefs.getInt('retryCount') ?? 3;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "retryCount": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('retryCount', e);
       return 3;
     }
@@ -138,10 +128,6 @@ class NullableWithDefaultPrefs {
     try {
       return _prefs.getDouble('threshold') ?? 0.5;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "threshold": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('threshold', e);
       return 0.5;
     }
@@ -178,10 +164,6 @@ class NullableWithDefaultPrefs {
     try {
       return _prefs.getBool('featureEnabled') ?? true;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "featureEnabled": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('featureEnabled', e);
       return true;
     }
@@ -218,10 +200,6 @@ class NullableWithDefaultPrefs {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "greeting": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('greeting', e);
       return 'Hello';
     }

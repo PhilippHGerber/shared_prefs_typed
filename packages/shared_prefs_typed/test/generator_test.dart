@@ -424,6 +424,29 @@ void main() async {
     );
 
     test(
+      'should report error when shared_preferences import is missing',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_missing_import.dart': await File(
+            'test/src/error_missing_import.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(contains('Missing required import')),
+        );
+      },
+    );
+
+    test(
       'should report error when a field name conflicts with a built-in generated member',
       () async {
         final sourceAssets = {

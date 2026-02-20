@@ -2,6 +2,7 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Tests that a field whose name collides with a built-in generated member is rejected.
 @TypedPrefs()

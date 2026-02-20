@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'interface_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'interface_case.dart';
 
 /// Abstract interface for [InterfacePrefs].
 ///
@@ -110,10 +104,6 @@ class InterfacePrefs implements InterfacePrefsBase {
     try {
       return _prefs.getInt('counter') ?? 0;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('counter', e);
       return 0;
     }
@@ -145,10 +135,6 @@ class InterfacePrefs implements InterfacePrefsBase {
     try {
       return _prefs.getString('name');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('name', e);
       return null;
     }

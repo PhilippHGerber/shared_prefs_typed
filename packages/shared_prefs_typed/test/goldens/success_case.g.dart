@@ -1,20 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'success_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:collection';
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'success_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -94,10 +87,6 @@ class TestPrefs {
     try {
       return _prefs.getInt('testInt') ?? 10;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testInt": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testInt', e);
       return 10;
     }
@@ -129,10 +118,6 @@ class TestPrefs {
     try {
       return _prefs.getDouble('testDouble') ?? 3.14;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testDouble": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testDouble', e);
       return 3.14;
     }
@@ -164,10 +149,6 @@ class TestPrefs {
     try {
       return _prefs.getBool('testBool') ?? true;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testBool": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testBool', e);
       return true;
     }
@@ -199,10 +180,6 @@ class TestPrefs {
     try {
       return _prefs.getString('testString') ?? 'Hello';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testString": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testString', e);
       return 'Hello';
     }
@@ -232,7 +209,7 @@ class TestPrefs {
   /// If the key does not exist, the default value `const <String>['a', 'b']` is returned.
   List<String> get testStringList {
     final raw = _prefs.getStringList('testStringList');
-    return raw == null ? const <String>['a', 'b'] : UnmodifiableListView(raw);
+    return raw == null ? const <String>['a', 'b'] : List.unmodifiable(raw);
   }
 
   /// Asynchronously sets the value for `testStringList`.
@@ -261,10 +238,6 @@ class TestPrefs {
     try {
       return _prefs.getString('testNullableString');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "testNullableString": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('testNullableString', e);
       return null;
     }

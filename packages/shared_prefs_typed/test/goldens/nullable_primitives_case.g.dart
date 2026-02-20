@@ -1,20 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'nullable_primitives_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:collection';
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'nullable_primitives_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -96,10 +89,6 @@ class NullablePrefs {
     try {
       return _prefs.getInt('nullableInt');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "nullableInt": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('nullableInt', e);
       return null;
     }
@@ -136,10 +125,6 @@ class NullablePrefs {
     try {
       return _prefs.getDouble('nullableDouble');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "nullableDouble": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('nullableDouble', e);
       return null;
     }
@@ -176,10 +161,6 @@ class NullablePrefs {
     try {
       return _prefs.getBool('nullableBool');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "nullableBool": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('nullableBool', e);
       return null;
     }
@@ -214,7 +195,7 @@ class NullablePrefs {
   /// If the key does not exist, the default value `const <String>[]` is returned.
   List<String> get emptyStringList {
     final raw = _prefs.getStringList('emptyStringList');
-    return raw == null ? const <String>[] : UnmodifiableListView(raw);
+    return raw == null ? const <String>[] : List.unmodifiable(raw);
   }
 
   /// Asynchronously sets the value for `emptyStringList`.

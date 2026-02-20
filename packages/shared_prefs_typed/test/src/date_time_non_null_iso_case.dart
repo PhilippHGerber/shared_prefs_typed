@@ -2,6 +2,9 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'date_time_non_null_iso_case.g.dart';
 
 // Tests that @PrefDateTime(defaultMillis:) with iso8601 encoding produces a non-nullable getter.
 @TypedPrefs()

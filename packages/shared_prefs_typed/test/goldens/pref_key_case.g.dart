@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'pref_key_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'pref_key_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -95,10 +89,6 @@ class PrefKeyPrefs {
     try {
       return _prefs.getInt('legacy_counter') ?? 0;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "legacy_counter": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('legacy_counter', e);
       return 0;
     }
@@ -130,10 +120,6 @@ class PrefKeyPrefs {
     try {
       return _prefs.getString('name') ?? 'anon';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "name": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('name', e);
       return 'anon';
     }
@@ -165,10 +151,6 @@ class PrefKeyPrefs {
     try {
       return _prefs.getBool('usr_dark_mode') ?? false;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "usr_dark_mode": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('usr_dark_mode', e);
       return false;
     }

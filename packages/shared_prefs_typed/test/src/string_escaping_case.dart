@@ -2,6 +2,9 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'string_escaping_case.g.dart';
 
 // Tests that special characters in string default values are correctly escaped
 // in generated code: backslashes, dollar signs, newlines, tabs, and single quotes.

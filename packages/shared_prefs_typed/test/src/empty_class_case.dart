@@ -2,6 +2,9 @@
 // ignore_for_file: unused_element
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'empty_class_case.g.dart';
 
 // Tests that a class with zero fields still generates a valid singleton class
 // with init(), instance getter, and resetInstance(), but no field-specific methods.

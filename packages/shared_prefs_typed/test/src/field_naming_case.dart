@@ -2,6 +2,9 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'field_naming_case.g.dart';
 
 // Tests edge cases in field naming:
 // - Fields starting with '_' have the leading underscore stripped from the key

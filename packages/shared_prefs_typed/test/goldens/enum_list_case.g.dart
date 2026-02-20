@@ -1,20 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'enum_list_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:collection';
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'enum_list_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -97,12 +90,8 @@ class EnumListPrefs {
       final raw = _prefs.getStringList('themes');
       return raw == null
           ? const <ThemeMode>[ThemeMode.light, ThemeMode.dark]
-          : UnmodifiableListView(raw.map(ThemeMode.values.byName).toList());
+          : List.unmodifiable(raw.map(ThemeMode.values.byName).toList());
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "themes": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('themes', e);
       return const <ThemeMode>[ThemeMode.light, ThemeMode.dark];
     }
@@ -135,12 +124,8 @@ class EnumListPrefs {
       final raw = _prefs.getStringList('priorities');
       return raw == null
           ? const <Priority>[Priority.medium]
-          : UnmodifiableListView(raw.map(Priority.values.byName).toList());
+          : List.unmodifiable(raw.map(Priority.values.byName).toList());
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "priorities": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('priorities', e);
       return const <Priority>[Priority.medium];
     }
@@ -176,12 +161,8 @@ class EnumListPrefs {
       final raw = _prefs.getStringList('optionalThemes');
       return raw == null
           ? null
-          : UnmodifiableListView(raw.map(ThemeMode.values.byName).toList());
+          : List.unmodifiable(raw.map(ThemeMode.values.byName).toList());
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "optionalThemes": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('optionalThemes', e);
       return null;
     }

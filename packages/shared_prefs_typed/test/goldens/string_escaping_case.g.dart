@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'string_escaping_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'string_escaping_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -95,10 +89,6 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withBackslash') ?? 'path\\to\\file';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withBackslash": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withBackslash', e);
       return 'path\\to\\file';
     }
@@ -130,10 +120,6 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withDollarSign') ?? 'cost is \$10';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withDollarSign": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withDollarSign', e);
       return 'cost is \$10';
     }
@@ -165,10 +151,6 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withNewline') ?? 'line1\nline2';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withNewline": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withNewline', e);
       return 'line1\nline2';
     }
@@ -200,10 +182,6 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withTab') ?? 'col1\tcol2';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withTab": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withTab', e);
       return 'col1\tcol2';
     }
@@ -235,10 +213,6 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withSingleQuote') ?? 'it\'s here';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withSingleQuote": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withSingleQuote', e);
       return 'it\'s here';
     }
@@ -271,10 +245,6 @@ class StringEscapingPrefs {
       return _prefs.getString('withInterpolation') ??
           'Hello \${world} with \'quotes\'';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "withInterpolation": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('withInterpolation', e);
       return 'Hello \${world} with \'quotes\'';
     }

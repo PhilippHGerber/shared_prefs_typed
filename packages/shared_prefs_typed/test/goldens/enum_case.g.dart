@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'enum_case.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'enum_case.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -95,10 +89,6 @@ class EnumPrefs {
       if (raw == null) return ThemeMode.dark;
       return ThemeMode.values.byName(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "theme": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('theme', e);
       return ThemeMode.dark;
     }
@@ -132,10 +122,6 @@ class EnumPrefs {
       if (raw == null) return null;
       return ThemeMode.values.byName(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "optionalTheme": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('optionalTheme', e);
       return null;
     }
@@ -174,10 +160,6 @@ class EnumPrefs {
       if (raw == null) return FontSize.medium;
       return FontSize.values.byName(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "fontSize": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
       _onReadError?.call('fontSize', e);
       return FontSize.medium;
     }
