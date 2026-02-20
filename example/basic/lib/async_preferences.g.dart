@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'async_preferences.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'async_preferences.dart';
 
 /// Provides type-safe, asynchronous access to application preferences.
 ///
@@ -26,7 +20,10 @@ class AsyncPreferencesImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AsyncPreferencesImpl(this._prefs);
+  AsyncPreferencesImpl(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AsyncPreferencesImpl? _instance;
 
@@ -37,9 +34,7 @@ class AsyncPreferencesImpl {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesAsync _prefs;
 
@@ -59,14 +54,21 @@ class AsyncPreferencesImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AsyncPreferencesImpl> init() {
+  static Future<AsyncPreferencesImpl> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AsyncPreferencesImpl> _doInit() {
+  static Future<AsyncPreferencesImpl> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) {
     return Future.value(
-      _instance = AsyncPreferencesImpl(SharedPreferencesAsync()),
+      _instance = AsyncPreferencesImpl(
+        SharedPreferencesAsync(),
+        onReadError: onReadError,
+      ),
     );
   }
 
@@ -84,11 +86,7 @@ class AsyncPreferencesImpl {
     try {
       return (await _prefs.getInt('pingCount')) ?? 0;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "pingCount": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('pingCount', e);
+      _onReadError?.call('pingCount', e);
       return 0;
     }
   }
@@ -119,11 +117,7 @@ class AsyncPreferencesImpl {
     try {
       return (await _prefs.getString('serverId'));
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "serverId": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('serverId', e);
+      _onReadError?.call('serverId', e);
       return null;
     }
   }
@@ -159,11 +153,7 @@ class AsyncPreferencesImpl {
     try {
       return (await _prefs.getBool('isCacheEnabled')) ?? true;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "isCacheEnabled": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('isCacheEnabled', e);
+      _onReadError?.call('isCacheEnabled', e);
       return true;
     }
   }
@@ -190,6 +180,9 @@ class AsyncPreferencesImpl {
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
+  ///
+  /// **Note:** This operation is not atomic. Concurrent writes during this
+  /// operation may result in keys remaining in storage.
   Future<void> clearAll() {
     return Future.wait([
       _prefs.remove('pingCount'),

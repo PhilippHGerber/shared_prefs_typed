@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_preferences.g.dart';
+import 'app_preferences.dart';
 
 /// The global service locator instance.
 final GetIt getIt = GetIt.instance;

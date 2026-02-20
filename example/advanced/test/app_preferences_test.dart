@@ -5,7 +5,8 @@
 /// the public constructor: clean, isolated test instances without global state.
 library;
 
-import 'package:advanced_example/app_preferences.g.dart';
+import 'package:advanced_example/app_preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -62,23 +63,23 @@ void main() {
       });
     });
 
-    group('isDarkMode (bool, default false)', () {
+    group('themeMode (ThemeMode, default ThemeMode.system)', () {
       test('returns default initially', () {
-        expect(prefs.isDarkMode, isFalse);
-        expect(prefs.containsIsDarkMode(), isFalse);
+        expect(prefs.themeMode, ThemeMode.system);
+        expect(prefs.containsThemeMode(), isFalse);
       });
 
       test('sets and retrieves a value', () async {
-        await prefs.setIsDarkMode(true);
-        expect(prefs.isDarkMode, isTrue);
-        expect(prefs.containsIsDarkMode(), isTrue);
+        await prefs.setThemeMode(ThemeMode.dark);
+        expect(prefs.themeMode, ThemeMode.dark);
+        expect(prefs.containsThemeMode(), isTrue);
       });
 
       test('remove reverts to default', () async {
-        await prefs.setIsDarkMode(true);
-        await prefs.removeIsDarkMode();
-        expect(prefs.isDarkMode, isFalse);
-        expect(prefs.containsIsDarkMode(), isFalse);
+        await prefs.setThemeMode(ThemeMode.dark);
+        await prefs.removeThemeMode();
+        expect(prefs.themeMode, ThemeMode.system);
+        expect(prefs.containsThemeMode(), isFalse);
       });
     });
 

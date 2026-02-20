@@ -3,7 +3,7 @@
 /// For full preference-layer coverage, see app_preferences_test.dart.
 library;
 
-import 'package:advanced_example/app_preferences.g.dart';
+import 'package:advanced_example/app_preferences.dart';
 import 'package:advanced_example/main.dart';
 import 'package:advanced_example/service_locator.dart';
 import 'package:flutter_test/flutter_test.dart';

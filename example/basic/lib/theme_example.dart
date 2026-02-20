@@ -1,18 +1,16 @@
 // ignore_for_file: unreachable_from_main // Definition for generated code.
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 
-import 'theme_example.g.dart';
+part 'theme_example.g.dart';
 
 /// Defines the data contract for the application's settings preferences.
 @TypedPrefs()
 abstract class SettingsPrefs {
-  /// This preference is stored as a nullable boolean with the following mapping:
-  /// - `true`:  ThemeMode.light
-  /// - `false`: ThemeMode.dark
-  /// - `null`:  ThemeMode.system (this is the default value)
-  static const bool? isLight = null;
+  /// The app's theme mode, stored as the enum's `.name` string.
+  static const ThemeMode themeMode = ThemeMode.system;
 }
 
 /// The main entry point for the application.
@@ -43,60 +41,29 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // The state variable that holds the current theme for the UI.
-  // It is initialized in `initState` to avoid using `late`.
   late ThemeMode _themeMode;
 
   @override
   void initState() {
     super.initState();
-    // On startup, read the saved preference and set the initial theme.
-    // We can safely access the singleton instance because `init()` was called in `main`.
-    final isLight = SettingsPrefsImpl.instance.isLight;
-    _themeMode = _getThemeModeFromPreference(isLight);
-  }
-
-  /// Converts the stored preference (`bool?`) into a Flutter [ThemeMode].
-  ThemeMode _getThemeModeFromPreference(bool? isLight) {
-    switch (isLight) {
-      case true:
-        return ThemeMode.light;
-      case false:
-        return ThemeMode.dark;
-      case null:
-        return ThemeMode.system;
-    }
+    _themeMode = SettingsPrefsImpl.instance.themeMode;
   }
 
   /// Updates the theme, persists the choice, and rebuilds the UI.
-  ///
-  /// This method is passed as a callback to child widgets, allowing them
-  /// to trigger a state change in this root widget.
-  Future<void> _changeTheme(bool? newIsLightPreference) async {
-    // 1. Persist the new choice to SharedPreferences using the generated setter.
-    await SettingsPrefsImpl.instance.setIsLight(newIsLightPreference);
-
-    // 2. Update the local state to trigger a UI rebuild with the new theme.
-    setState(() {
-      _themeMode = _getThemeModeFromPreference(newIsLightPreference);
-    });
+  Future<void> _changeTheme(ThemeMode newThemeMode) async {
+    await SettingsPrefsImpl.instance.setThemeMode(newThemeMode);
+    setState(() => _themeMode = newThemeMode);
   }
 
   @override
   Widget build(BuildContext context) {
-    // We get the current preference value here to pass it down to the UI.
-    final currentPreference = SettingsPrefsImpl.instance.isLight;
-
     return MaterialApp(
       title: 'Simple Theme Demo',
-      // Define both a light and a dark theme for the app.
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-      // Use the state variable to control which theme is currently active.
       themeMode: _themeMode,
       home: MyHomePage(
-        // Pass the current state and the change handler down to the UI.
-        currentPreference: currentPreference,
+        currentThemeMode: SettingsPrefsImpl.instance.themeMode,
         onThemeChanged: _changeTheme,
       ),
     );
@@ -106,23 +73,19 @@ class _MyAppState extends State<MyApp> {
 // --- UI Screen Widget ---
 
 /// The home page of the application, responsible for displaying the UI.
-///
-/// This is a [StatelessWidget] because it does not manage its own state.
-/// It receives its data (`currentPreference`) and behavior (`onThemeChanged`)
-/// from its parent widget.
 class MyHomePage extends StatelessWidget {
   /// Creates the home page widget.
   const MyHomePage({
-    required this.currentPreference,
+    required this.currentThemeMode,
     required this.onThemeChanged,
     super.key,
   });
 
-  /// The currently selected theme preference (`true`, `false`, or `null`).
-  final bool? currentPreference;
+  /// The currently selected [ThemeMode].
+  final ThemeMode currentThemeMode;
 
   /// A callback function to notify the parent widget of a theme change.
-  final ValueChanged<bool?> onThemeChanged;
+  final ValueChanged<ThemeMode> onThemeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -139,25 +102,25 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
-            SegmentedButton<bool?>(
+            SegmentedButton<ThemeMode>(
               segments: const [
                 ButtonSegment(
-                  value: null,
+                  value: ThemeMode.system,
                   label: Text('System'),
                   icon: Icon(Icons.brightness_auto),
                 ),
                 ButtonSegment(
-                  value: true,
+                  value: ThemeMode.light,
                   label: Text('Light'),
                   icon: Icon(Icons.wb_sunny),
                 ),
                 ButtonSegment(
-                  value: false,
+                  value: ThemeMode.dark,
                   label: Text('Dark'),
                   icon: Icon(Icons.nightlight_round),
                 ),
               ],
-              selected: {currentPreference},
+              selected: {currentThemeMode},
               onSelectionChanged: (newSelection) {
                 onThemeChanged(newSelection.first);
               },

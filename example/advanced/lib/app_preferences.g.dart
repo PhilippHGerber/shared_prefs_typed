@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'app_preferences.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'app_preferences.dart';
 
 /// Abstract interface for [AppPreferencesImpl].
 ///
@@ -23,10 +17,10 @@ abstract class AppPreferencesBase {
   Future<void> setCounter(int value);
   bool containsCounter();
   Future<void> removeCounter();
-  bool get isDarkMode;
-  Future<void> setIsDarkMode(bool value);
-  bool containsIsDarkMode();
-  Future<void> removeIsDarkMode();
+  ThemeMode get themeMode;
+  Future<void> setThemeMode(ThemeMode value);
+  bool containsThemeMode();
+  Future<void> removeThemeMode();
   String? get username;
   Future<void> setUsername(String? value);
   bool containsUsername();
@@ -45,7 +39,10 @@ class AppPreferencesImpl implements AppPreferencesBase {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AppPreferencesImpl(this._prefs);
+  AppPreferencesImpl(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AppPreferencesImpl? _instance;
 
@@ -56,9 +53,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -78,17 +73,21 @@ class AppPreferencesImpl implements AppPreferencesBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AppPreferencesImpl> init() {
+  static Future<AppPreferencesImpl> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AppPreferencesImpl> _doInit() async {
+  static Future<AppPreferencesImpl> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = AppPreferencesImpl(prefs);
+      return _instance = AppPreferencesImpl(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -109,11 +108,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
     try {
       return _prefs.getInt('counter') ?? 0;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('counter', e);
+      _onReadError?.call('counter', e);
       return 0;
     }
   }
@@ -137,39 +132,37 @@ class AppPreferencesImpl implements AppPreferencesBase {
     return _prefs.remove('counter');
   }
 
-  /// Gets the value for `isDarkMode` from the cache.
+  /// Gets the value for `themeMode` from the cache.
   ///
-  /// If the key does not exist, the default value `false` is returned.
-  bool get isDarkMode {
+  /// If the key does not exist, the default value `ThemeMode.system` is returned.
+  ThemeMode get themeMode {
     try {
-      return _prefs.getBool('isDarkMode') ?? false;
+      final raw = _prefs.getString('themeMode');
+      if (raw == null) return ThemeMode.system;
+      return ThemeMode.values.byName(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "isDarkMode": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('isDarkMode', e);
-      return false;
+      _onReadError?.call('themeMode', e);
+      return ThemeMode.system;
     }
   }
 
-  /// Asynchronously sets the value for `isDarkMode`.
-  Future<void> setIsDarkMode(bool value) {
-    return _prefs.setBool('isDarkMode', value);
+  /// Asynchronously sets the value for `themeMode`.
+  Future<void> setThemeMode(ThemeMode value) {
+    return _prefs.setString('themeMode', value.name);
   }
 
-  /// Checks if a value has been explicitly set for `isDarkMode`.
+  /// Checks if a value has been explicitly set for `themeMode`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool containsIsDarkMode() {
-    return _prefs.containsKey('isDarkMode');
+  bool containsThemeMode() {
+    return _prefs.containsKey('themeMode');
   }
 
-  /// Removes the stored value for `isDarkMode`.
+  /// Removes the stored value for `themeMode`.
   ///
-  /// After calling this, the getter will return the default value (`false`).
-  Future<void> removeIsDarkMode() {
-    return _prefs.remove('isDarkMode');
+  /// After calling this, the getter will return the default value (`ThemeMode.system`).
+  Future<void> removeThemeMode() {
+    return _prefs.remove('themeMode');
   }
 
   /// Gets the value for `username` from the cache.
@@ -179,11 +172,7 @@ class AppPreferencesImpl implements AppPreferencesBase {
     try {
       return _prefs.getString('username');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "username": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('username', e);
+      _onReadError?.call('username', e);
       return null;
     }
   }
@@ -215,10 +204,13 @@ class AppPreferencesImpl implements AppPreferencesBase {
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
+  ///
+  /// **Note:** This operation is not atomic. Concurrent writes during this
+  /// operation may result in keys remaining in storage.
   Future<void> clearAll() {
     return Future.wait([
       _prefs.remove('counter'),
-      _prefs.remove('isDarkMode'),
+      _prefs.remove('themeMode'),
       _prefs.remove('username'),
     ]);
   }

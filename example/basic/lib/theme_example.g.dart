@@ -1,19 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'theme_example.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'theme_example.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -26,7 +20,10 @@ class SettingsPrefsImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  SettingsPrefsImpl(this._prefs);
+  SettingsPrefsImpl(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static SettingsPrefsImpl? _instance;
 
@@ -37,9 +34,7 @@ class SettingsPrefsImpl {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -59,17 +54,21 @@ class SettingsPrefsImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<SettingsPrefsImpl> init() {
+  static Future<SettingsPrefsImpl> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<SettingsPrefsImpl> _doInit() async {
+  static Future<SettingsPrefsImpl> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = SettingsPrefsImpl(prefs);
+      return _instance = SettingsPrefsImpl(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -83,50 +82,46 @@ class SettingsPrefsImpl {
     _initFuture = null;
   }
 
-  /// Gets the value for `isLight` from the cache.
+  /// Gets the value for `themeMode` from the cache.
   ///
-  /// If the key does not exist, the default value `null` is returned.
-  bool? get isLight {
+  /// If the key does not exist, the default value `ThemeMode.system` is returned.
+  ThemeMode get themeMode {
     try {
-      return _prefs.getBool('isLight');
+      final raw = _prefs.getString('themeMode');
+      if (raw == null) return ThemeMode.system;
+      return ThemeMode.values.byName(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "isLight": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('isLight', e);
-      return null;
+      _onReadError?.call('themeMode', e);
+      return ThemeMode.system;
     }
   }
 
-  /// Asynchronously sets the value for `isLight`.
-  ///
-  /// If the provided [value] is `null`, the preference is removed from storage.
-  Future<void> setIsLight(bool? value) {
-    if (value == null) {
-      return _prefs.remove('isLight');
-    }
-    return _prefs.setBool('isLight', value);
+  /// Asynchronously sets the value for `themeMode`.
+  Future<void> setThemeMode(ThemeMode value) {
+    return _prefs.setString('themeMode', value.name);
   }
 
-  /// Checks if a value has been explicitly set for `isLight`.
+  /// Checks if a value has been explicitly set for `themeMode`.
   ///
   /// Returns `true` if the key exists in persistent storage, `false` otherwise.
-  bool containsIsLight() {
-    return _prefs.containsKey('isLight');
+  bool containsThemeMode() {
+    return _prefs.containsKey('themeMode');
   }
 
-  /// Removes the stored value for `isLight`.
+  /// Removes the stored value for `themeMode`.
   ///
-  /// After calling this, the getter will return the default value (`null`).
-  Future<void> removeIsLight() {
-    return _prefs.remove('isLight');
+  /// After calling this, the getter will return the default value (`ThemeMode.system`).
+  Future<void> removeThemeMode() {
+    return _prefs.remove('themeMode');
   }
 
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
+  ///
+  /// **Note:** This operation is not atomic. Concurrent writes during this
+  /// operation may result in keys remaining in storage.
   Future<void> clearAll() {
-    return Future.wait([_prefs.remove('isLight')]);
+    return Future.wait([_prefs.remove('themeMode')]);
   }
 }

@@ -16,7 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:textf/textf.dart';
 
-import 'app_preferences.g.dart';
+import 'app_preferences.dart';
 import 'service_locator.dart';
 
 /// The main entry point for the application.
@@ -50,18 +50,22 @@ class _MyAppState extends State<MyApp> {
   // Resolved via get_it — only the abstract base type is needed here.
   AppPreferencesBase get _prefs => getIt<AppPreferencesBase>();
 
-  late bool _isDarkMode;
+  late ThemeMode _themeMode;
 
   @override
   void initState() {
     super.initState();
-    _isDarkMode = _prefs.isDarkMode;
+    _themeMode = _prefs.themeMode;
   }
 
-  Future<void> _toggleTheme() async {
-    final next = !_isDarkMode;
-    await _prefs.setIsDarkMode(next);
-    setState(() => _isDarkMode = next);
+  Future<void> _cycleTheme() async {
+    final next = switch (_themeMode) {
+      ThemeMode.system => ThemeMode.light,
+      ThemeMode.light => ThemeMode.dark,
+      ThemeMode.dark => ThemeMode.system,
+    };
+    await _prefs.setThemeMode(next);
+    setState(() => _themeMode = next);
   }
 
   @override
@@ -69,7 +73,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Advanced Example: shared_prefs_typed with get_it',
-      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: _themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
@@ -81,7 +85,7 @@ class _MyAppState extends State<MyApp> {
         ),
         useMaterial3: true,
       ),
-      home: MyHomePage(onToggleTheme: _toggleTheme, isDarkMode: _isDarkMode),
+      home: MyHomePage(onCycleTheme: _cycleTheme, themeMode: _themeMode),
     );
   }
 }
@@ -89,16 +93,16 @@ class _MyAppState extends State<MyApp> {
 /// The main page.
 ///
 /// Reads/writes preferences via get_it ([AppPreferencesBase]) and relays
-/// theme-toggle requests up to [MyApp] via [onToggleTheme].
+/// theme-cycle requests up to [MyApp] via [onCycleTheme].
 class MyHomePage extends StatefulWidget {
   /// Creates the home page.
-  const MyHomePage({required this.onToggleTheme, required this.isDarkMode, super.key});
+  const MyHomePage({required this.onCycleTheme, required this.themeMode, super.key});
 
-  /// Callback invoked when the user taps the theme-toggle button.
-  final VoidCallback onToggleTheme;
+  /// Callback invoked when the user taps the theme-cycle button.
+  final VoidCallback onCycleTheme;
 
-  /// Current dark-mode state, reflected in the toggle icon.
-  final bool isDarkMode;
+  /// Current theme mode, reflected in the toggle icon.
+  final ThemeMode themeMode;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -139,15 +143,20 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final (icon, tooltip) = switch (widget.themeMode) {
+      ThemeMode.system => (Icons.brightness_auto, 'System theme — tap for Light'),
+      ThemeMode.light => (Icons.wb_sunny, 'Light theme — tap for Dark'),
+      ThemeMode.dark => (Icons.nightlight_round, 'Dark theme — tap for System'),
+    };
     return Scaffold(
       appBar: AppBar(
         title: const Text('Example: shared_prefs_typed with get_it'),
         actions: [
           Tooltip(
-            message: widget.isDarkMode ? 'Switch to light' : 'Switch to dark',
+            message: tooltip,
             child: IconButton(
-              icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: widget.onToggleTheme,
+              icon: Icon(icon),
+              onPressed: widget.onCycleTheme,
             ),
           ),
         ],

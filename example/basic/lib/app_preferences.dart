@@ -1,4 +1,7 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
 
 /// Defines the data contract for the application's preferences.
 ///

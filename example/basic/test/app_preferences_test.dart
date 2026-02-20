@@ -7,7 +7,7 @@
 library;
 
 // Import the generated code.
-import 'package:basic_example/app_preferences.g.dart';
+import 'package:basic_example/app_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -290,7 +290,6 @@ void main() {
         const SharedPreferencesOptions(),
       );
       AppPreferencesImpl.resetInstance();
-      AppPreferencesImpl.onReadError = null;
     });
 
     test('int field returns default when stored as String', () async {
@@ -359,17 +358,22 @@ void main() {
         'bad',
         const SharedPreferencesOptions(),
       );
-      await AppPreferencesImpl.init();
 
       String? capturedKey;
       Object? capturedError;
-      AppPreferencesImpl.onReadError = (key, error) {
-        capturedKey = key;
-        capturedError = error;
-      };
-      addTearDown(() => AppPreferencesImpl.onReadError = null);
+      final backend = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      final instance = AppPreferencesImpl(
+        backend,
+        onReadError: (key, error) {
+          capturedKey = key;
+          capturedError = error;
+        },
+      );
 
-      AppPreferencesImpl.instance.counter; // triggers the guard
+      // ignore: cascade_invocations for clarity.
+      instance.counter; // triggers the guard
 
       expect(capturedKey, 'counter');
       expect(capturedError, isNotNull);

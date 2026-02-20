@@ -20,7 +20,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'app_preferences.g.dart';
+import 'app_preferences.dart';
 
 /// The main entry point for the application.
 ///

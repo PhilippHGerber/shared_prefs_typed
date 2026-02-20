@@ -1,20 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format width=80
 
+part of 'app_preferences.dart';
+
 // **************************************************************************
 // TypedPrefsGenerator
 // **************************************************************************
 
 /// WARNING: Storage keys are derived from field names. Renaming a field changes its key and causes data loss unless @PrefKey is used to pin the key explicitly.
-// ignore_for_file: unused_element, unused_field
-
-import 'dart:collection';
-import 'dart:developer';
-
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'app_preferences.dart';
 
 /// Provides type-safe, cached access to application preferences.
 ///
@@ -27,7 +20,10 @@ class AppPreferencesImpl {
   ///
   /// Use this for dependency injection and testing.
   /// For global access, use [init] and [instance] instead.
-  AppPreferencesImpl(this._prefs);
+  AppPreferencesImpl(
+    this._prefs, {
+    void Function(String key, Object error)? onReadError,
+  }) : _onReadError = onReadError;
 
   static AppPreferencesImpl? _instance;
 
@@ -38,9 +34,7 @@ class AppPreferencesImpl {
   ///
   /// Receives the preference key and the exception. Use this to forward
   /// errors to a crash reporter (Crashlytics, Sentry, etc.).
-  ///
-  /// Set to `null` (the default) to disable.
-  static void Function(String key, Object error)? onReadError;
+  final void Function(String key, Object error)? _onReadError;
 
   final SharedPreferencesWithCache _prefs;
 
@@ -60,17 +54,21 @@ class AppPreferencesImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
-  static Future<AppPreferencesImpl> init() {
+  static Future<AppPreferencesImpl> init({
+    void Function(String key, Object error)? onReadError,
+  }) {
     if (_instance != null) return Future.value(_instance!);
-    return _initFuture ??= _doInit();
+    return _initFuture ??= _doInit(onReadError: onReadError);
   }
 
-  static Future<AppPreferencesImpl> _doInit() async {
+  static Future<AppPreferencesImpl> _doInit({
+    void Function(String key, Object error)? onReadError,
+  }) async {
     try {
       final prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(),
       );
-      return _instance = AppPreferencesImpl(prefs);
+      return _instance = AppPreferencesImpl(prefs, onReadError: onReadError);
     } catch (e) {
       _initFuture = null;
       rethrow;
@@ -91,11 +89,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getInt('counter') ?? 0;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "counter": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('counter', e);
+      _onReadError?.call('counter', e);
       return 0;
     }
   }
@@ -126,11 +120,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getString('displayGreeting');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "displayGreeting": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('displayGreeting', e);
+      _onReadError?.call('displayGreeting', e);
       return null;
     }
   }
@@ -166,11 +156,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getDouble('pi') ?? 3.14;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "pi": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('pi', e);
+      _onReadError?.call('pi', e);
       return 3.14;
     }
   }
@@ -201,11 +187,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getBool('isWelcomeScreenDone') ?? false;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "isWelcomeScreenDone": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('isWelcomeScreenDone', e);
+      _onReadError?.call('isWelcomeScreenDone', e);
       return false;
     }
   }
@@ -236,11 +218,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "greeting": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('greeting', e);
+      _onReadError?.call('greeting', e);
       return 'Hello';
     }
   }
@@ -269,7 +247,7 @@ class AppPreferencesImpl {
   /// If the key does not exist, the default value `const <String>['default']` is returned.
   List<String> get tagList {
     final raw = _prefs.getStringList('tagList');
-    return raw == null ? const <String>['default'] : UnmodifiableListView(raw);
+    return raw == null ? const <String>['default'] : List.unmodifiable(raw);
   }
 
   /// Asynchronously sets the value for `tagList`.
@@ -295,10 +273,15 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `const <int>[]` is returned.
   List<int> get recentItemIds {
-    final raw = _prefs.getStringList('recentItemIds');
-    return raw == null
-        ? const <int>[]
-        : UnmodifiableListView(raw.map(int.parse).toList());
+    try {
+      final raw = _prefs.getStringList('recentItemIds');
+      return raw == null
+          ? const <int>[]
+          : List.unmodifiable(raw.map(int.parse).toList());
+    } catch (e) {
+      _onReadError?.call('recentItemIds', e);
+      return const <int>[];
+    }
   }
 
   /// Asynchronously sets the value for `recentItemIds`.
@@ -327,10 +310,15 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `const <double>[9.99, 14.99, 19.99]` is returned.
   List<double> get priceHistory {
-    final raw = _prefs.getStringList('priceHistory');
-    return raw == null
-        ? const <double>[9.99, 14.99, 19.99]
-        : UnmodifiableListView(raw.map(double.parse).toList());
+    try {
+      final raw = _prefs.getStringList('priceHistory');
+      return raw == null
+          ? const <double>[9.99, 14.99, 19.99]
+          : List.unmodifiable(raw.map(double.parse).toList());
+    } catch (e) {
+      _onReadError?.call('priceHistory', e);
+      return const <double>[9.99, 14.99, 19.99];
+    }
   }
 
   /// Asynchronously sets the value for `priceHistory`.
@@ -362,11 +350,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getString('sessionId');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "sessionId": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('sessionId', e);
+      _onReadError?.call('sessionId', e);
       return null;
     }
   }
@@ -402,11 +386,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getInt('lastLoginTimestamp');
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "lastLoginTimestamp": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('lastLoginTimestamp', e);
+      _onReadError?.call('lastLoginTimestamp', e);
       return null;
     }
   }
@@ -442,11 +422,7 @@ class AppPreferencesImpl {
     try {
       return _prefs.getInt('nullableCounterWithDefault') ?? 100;
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "nullableCounterWithDefault": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('nullableCounterWithDefault', e);
+      _onReadError?.call('nullableCounterWithDefault', e);
       return 100;
     }
   }
@@ -484,11 +460,7 @@ class AppPreferencesImpl {
     try {
       return DateTime.parse(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "lastSyncDate": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('lastSyncDate', e);
+      _onReadError?.call('lastSyncDate', e);
       return null;
     }
   }
@@ -526,11 +498,7 @@ class AppPreferencesImpl {
       if (raw == null) return null;
       return DateTime.fromMillisecondsSinceEpoch(raw);
     } catch (e) {
-      log(
-        '[shared_prefs_typed] Failed to read "lastLoginDate": ${e.runtimeType}. Default will be used.',
-        name: 'shared_prefs_typed',
-      );
-      onReadError?.call('lastLoginDate', e);
+      _onReadError?.call('lastLoginDate', e);
       return null;
     }
   }
@@ -562,6 +530,9 @@ class AppPreferencesImpl {
   /// Removes all preferences managed by this class from storage.
   ///
   /// After calling this, all getters return their default values.
+  ///
+  /// **Note:** This operation is not atomic. Concurrent writes during this
+  /// operation may result in keys remaining in storage.
   Future<void> clearAll() {
     return Future.wait([
       _prefs.remove('counter'),
