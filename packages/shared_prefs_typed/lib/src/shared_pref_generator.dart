@@ -32,8 +32,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     final hasSharedPrefsImport = classElement.library.firstFragment.libraryImports.any(
       (import) {
         final uri = import.uri;
-        return uri is DirectiveUriWithRelativeUriString &&
-            uri.relativeUriString == requiredImport;
+        return uri is DirectiveUriWithRelativeUriString && uri.relativeUriString == requiredImport;
       },
     );
     if (!hasSharedPrefsImport) {
