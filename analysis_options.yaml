@@ -9,6 +9,7 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "test/.test_coverage.dart"
+    - "test/src/**.dart"
     - "bin/cache/**"
     - "lib/generated_plugin_registrant.dart"
     - "packages/shared_prefs_typed/example/**"
@@ -36,7 +37,6 @@ linter:
     avoid_types_on_closure_parameters: false
     # Allow TODOs without the Flutter-style format (e.g., missing author tags)
     flutter_style_todos: false
-
 
     # Prototyping and Development:
     # Allow public classes and members without documentation comments

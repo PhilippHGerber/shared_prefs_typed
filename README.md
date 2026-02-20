@@ -7,6 +7,11 @@
 
 ```dart
 // You write this...
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
+
 @TypedPrefs()
 abstract class AppPreferences {
   static const int counter = 0;
@@ -57,7 +62,10 @@ Create an abstract class annotated with `@TypedPrefs()`. Fields must be `static 
 
 ```dart
 // lib/app_preferences.dart
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
 
 @TypedPrefs()
 abstract class AppPreferences {
@@ -79,7 +87,7 @@ abstract class AppPreferences {
 flutter pub run build_runner build
 ```
 
-This produces `lib/app_preferences.g.dart` containing the `AppPreferencesImpl` class.
+This produces `lib/app_preferences.g.dart` containing the `AppPreferencesImpl` class. The `part` directive you added in step 1 links the generated file back to your source file so both share the same imports and scope.
 
 ### 3. Initialize and use
 
@@ -116,6 +124,11 @@ await prefs.removeSessionId();
 By default, the generator uses `SharedPreferencesWithCache` for synchronous reads. Pass `mode: PrefsMode.async` to use `SharedPreferencesAsync` instead, which returns `Future`s for all getters:
 
 ```dart
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
+
 @TypedPrefs(mode: PrefsMode.async)
 abstract class AppPreferences {
   static const int counter = 0;
@@ -133,6 +146,11 @@ The `init()` call remains identical between modes.
 Generates an abstract `${ClassName}Base` interface alongside the concrete class. This is recommended for projects using dependency injection frameworks or that need to mock preferences in tests:
 
 ```dart
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
+
 @TypedPrefs(generateInterface: true)
 abstract class AppPreferences {
   static const int counter = 0;

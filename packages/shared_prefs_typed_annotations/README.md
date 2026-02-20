@@ -11,7 +11,10 @@ You only need to use this package to annotate your preference schema. The main l
 **Example of a preference schema:**
 
 ```dart
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
 
 @TypedPrefs()
 abstract class _AppPreferences {

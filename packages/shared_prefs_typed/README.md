@@ -28,11 +28,14 @@ flutter pub add --dev build_runner shared_prefs_typed
 
 Create a Dart file (e.g., `lib/app_preferences.dart`) and define your preferences using an abstract class annotated with `@TypedPrefs()`.
 
-The supported field types are: `int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `DateTime` (via `@PrefDateTime`), and any `Enum` type — plus nullable variants of each.
+The supported field types are: `int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `List<bool>`, `List<Enum>`, `DateTime` (via `@PrefDateTime`), and any `Enum` type — plus nullable variants of each.
 
 ```dart
 // lib/app_preferences.dart
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
 
 @TypedPrefs()
 abstract class AppPreferences {
@@ -119,25 +122,58 @@ For every field `foo` of type `T`, the generator produces:
 
 > `resetInstance()` is annotated `@visibleForTesting` — it exists for test teardown only and should not be called from production code.
 
+### Initialization patterns
+
+**Singleton** — call `init()` once at startup and read values via `instance`:
+
+```dart
+await AppPreferencesImpl.init();
+// ...
+AppPreferencesImpl.instance.counter;
+```
+
+**Injection** — `init()` also returns the instance, making it easy to wire into a DI container or pass to `runApp` directly:
+
+```dart
+final prefs = await AppPreferencesImpl.init();
+runApp(MyApp(prefs: prefs));
+```
+
+Both patterns are safe to use concurrently — repeated `init()` calls share the same `Future`.
+
 ### Type migration & error observability
 
 When a stored value cannot be cast to its expected type (e.g. after a field type change between app versions), the generated getter silently falls back to the field's default. Two hooks let you observe these events:
 
 **`dart:developer` log** — the catch block emits a log under the `'shared_prefs_typed'` name with the key and exception type. This is a no-op in release builds and visible in Flutter DevTools / Observatory during development.
 
-**`onReadError` static callback** — set this once at startup to forward errors to a crash reporter:
+**`onReadError` callback** — pass it at construction time (or via `init()`) to forward errors to a crash reporter:
 
 ```dart
-AppPreferencesImpl.onReadError = (key, error) {
+// Via singleton init:
+await AppPreferencesImpl.init(
+  onReadError: (key, error) {
+    FirebaseCrashlytics.instance.recordError(error, null, reason: 'prefs read "$key"');
+  },
+);
+
+// Via constructor (DI pattern):
+final prefs = AppPreferencesImpl(backend, onReadError: (key, error) {
   FirebaseCrashlytics.instance.recordError(error, null, reason: 'prefs read "$key"');
-};
+});
 ```
 
-To verify the guard in tests, set `onReadError` and assert it is called:
+The callback is scoped to the instance — different instances can have different handlers, and tests never bleed state into each other.
+
+To verify the guard in tests:
 
 ```dart
-AppPreferencesImpl.onReadError = (key, error) { capturedKey = key; };
-addTearDown(() => AppPreferencesImpl.onReadError = null);
+Object? capturedError;
+final prefs = AppPreferencesImpl(backend, onReadError: (key, error) {
+  capturedError = error;
+});
+// ...
+expect(capturedError, isA<ArgumentError>());
 ```
 
 ### Async mode
@@ -278,7 +314,7 @@ static const int signInCount = 0;  // key: still 'loginCount'
 
 ## Performance Considerations
 
-`List<int>` and `List<double>` fields are serialized as `List<String>` under the hood — each element is converted via `toString()` on write and `int.parse` / `double.parse` on read. This is transparent but has two implications:
+`List<int>`, `List<double>`, `List<bool>`, and `List<Enum>` fields are serialized as `List<String>` under the hood — elements are converted on write and parsed back on read. This is transparent but has two implications:
 
 * **Keep lists small.** `SharedPreferences` (and its underlying platform storage) is designed for small scalar values. Storing hundreds or thousands of elements in a single key will cause noticeable I/O and parse overhead. For large collections, use a proper database (`sqflite`, `isar`, etc.) instead.
 * **No partial updates.** Every `setFoo(list)` call rewrites the entire serialized string. Frequent mutations of a large list are expensive.

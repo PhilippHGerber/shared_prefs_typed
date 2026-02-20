@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## 1.0.0
+
+### Breaking
+
+* **`@TypedPrefs(async: true)` removed** — the deprecated `async` parameter has been deleted. Replace with `@TypedPrefs(mode: PrefsMode.async)`.
+
 ## 0.7.0
 
 ### New
