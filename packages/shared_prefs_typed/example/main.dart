@@ -1,11 +1,11 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // main.g.dart is produced by `flutter pub run build_runner build`.
-import 'main.g.dart';
+part 'main.g.dart';
 
 /// Defines the preference schema for this app.
 ///
