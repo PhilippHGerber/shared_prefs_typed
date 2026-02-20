@@ -2,6 +2,8 @@ import 'package:meta/meta_meta.dart';
 
 import 'src/prefs_mode.dart';
 
+export 'package:meta/meta.dart';
+
 export 'src/pref_date_time.dart';
 export 'src/pref_key.dart';
 export 'src/prefs_mode.dart';

@@ -2,23 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.0
 
 ### Breaking
 
-* **`XxxImplBase` renamed to `XxxBase`** — when `generateInterface: true` is used with a public class (`AppPreferences`), the generated interface is now `AppPreferencesBase` instead of `AppPreferencesImplBase`. Rename all usages in DI registration, type annotations, and mocks.
-* **`const` removed from generated constructor** — `ClassName(prefs)` is no longer `const`. The class holds mutable static fields (`_instance`, `_initFuture`), making `const` semantically incorrect and a source of silent equality bugs via Dart's constant canonicalization.
-* **`resetInstance()` annotated `@visibleForTesting`** — the analyzer now warns if `resetInstance()` is called from non-test code. No runtime impact.
-* **`async: bool` deprecated in favour of `mode: PrefsMode`** — replace `@TypedPrefs(async: true)` with `@TypedPrefs(mode: PrefsMode.async)`. The `async` parameter still works but will be removed in 1.0.0. `PrefsMode` is now exported from `shared_prefs_typed_annotations`.
-* **`isSetFoo()` renamed to `containsFoo()`** — aligns with idiomatic Dart (`Map.containsKey`, `Set.contains`). Rename all call sites.
+* **Generated files are now `part` files** — add `part 'filename.g.dart';` to your schema file (below your imports). Without this directive the build will fail. See the README Quick Start for the updated template.
+* **`onReadError` is now a constructor parameter** — pass it at construction time: `ClassName(backend, onReadError: cb)` or `ClassName.init(onReadError: cb)`.
+* **`@TypedPrefs(async: true)` removed** — use `@TypedPrefs(mode: PrefsMode.async)`.
+* **`XxxImplBase` renamed to `XxxBase`** — update DI registrations, type annotations, and mocks.
+* **`isSetFoo()` renamed to `containsFoo()`**.
+* **`const` removed from generated constructor**
+* **`resetInstance()` annotated `@visibleForTesting`**.
 
 ### New
 
-* **Non-nullable `DateTime` getters via `@PrefDateTime(encoding, defaultMillis: N)`** — pass `defaultMillis` to produce a non-nullable `DateTime` getter with the given epoch milliseconds as fallback. The field must still be declared `DateTime?` (no const DateTime constructors exist in Dart).
-* **`clearAll()`** — generated on every class (and on the interface when `generateInterface: true`). Removes all keys owned by the class via `Future.wait`, scoped to known keys rather than wiping the entire store.
-* **`onReadError` static hook** — every generated class exposes `static void Function(String key, Object error)? onReadError`. Set it to forward type-migration errors to a crash reporter. Defaults to `null` (no-op).
-* **`dart:developer` log on read failure** — when a stored value cannot be cast to its expected type, the catch block calls `log(...)` under the `'shared_prefs_typed'` logger name (no-op in release builds). Message includes the key and exception type.
-* **Reserved names expanded** — `clearAll` and `onReadError` are now rejected as field names (they conflict with generated members).
+* **`List<bool>` support** — stored as `List<String>` (`"true"`/`"false"`).
+* **`List<Enum>` support** — stored as `List<String>` via `.name`; read back via `.values.byName` (with crash guard).
+* **Non-nullable `DateTime` getters** — via `@PrefDateTime(encoding, defaultMillis: N)`.
+* **`clearAll()`** — removes all keys owned by the class.
+* **`onReadError` callback** — pass to constructor or `init()` to forward read errors to a crash reporter.
+* **`dart:developer` log on read failure** — emitted under the `'shared_prefs_typed'` name; no-op in release builds.
+
+### Fixed
+
+* **Enum getters no longer crash on stale stored values** — `values.byName` is now wrapped in try/catch; returns the default instead of throwing `ArgumentError`.
+* **`List<int>` / `List<double>` getters no longer crash on corrupted elements** — `parse` is now wrapped in try/catch; returns the default list instead of throwing `FormatException`.
+* **`clearAll()` docstring** — explicitly notes the operation is not atomic.
 
 ## 0.7.0
 

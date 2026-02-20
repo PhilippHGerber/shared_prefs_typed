@@ -26,9 +26,27 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     }
 
     final classElement = element;
+
+    // Validate shared_preferences import is present (required for generated part file).
+    const requiredImport = 'package:shared_preferences/shared_preferences.dart';
+    final hasSharedPrefsImport = classElement.library.firstFragment.libraryImports.any(
+      (import) {
+        final uri = import.uri;
+        return uri is DirectiveUriWithRelativeUriString &&
+            uri.relativeUriString == requiredImport;
+      },
+    );
+    if (!hasSharedPrefsImport) {
+      throw InvalidGenerationSourceError(
+        'Missing required import for generated code. '
+        "Add: import '$requiredImport';",
+        element: element,
+      );
+    }
+
     final modeReader = annotation.read('mode');
-    final isAsyncMode = !modeReader.isNull &&
-        modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
+    final isAsyncMode =
+        !modeReader.isNull && modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
     final generateInterface = annotation.read('generateInterface').boolValue;
 
     final fields = classElement.fields
@@ -97,37 +115,17 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
           : _buildSyncClass(classElement, fields, generateInterface: generateInterface),
     );
 
-    final hasListField = fields.any(
-      (f) => f.nonNullableTypeReference.symbol!.startsWith('List<'),
-    );
-    // Fields that generate a try/catch guard need dart:developer for log().
-    final hasMigrationGuard = fields.any(
-      (f) => !f.isStringList && !f.isBoolList,
-    );
-
-    final library = Library(
-      (b) => b
-        ..ignoreForFile.addAll(['unused_element', 'unused_field'])
-        ..directives.addAll([
-          if (hasMigrationGuard) Directive.import('dart:developer'),
-          if (hasListField) Directive.import('dart:collection'),
-          Directive.import('package:meta/meta.dart'),
-          Directive.import('package:shared_preferences/shared_preferences.dart'),
-          Directive.import(buildStep.inputId.pathSegments.last),
-        ])
-        ..body.addAll(bodyItems),
-    );
-
     const warning =
         '/// WARNING: Storage keys are derived from field names. '
         'Renaming a field changes its key and causes data loss '
         'unless @PrefKey is used to pin the key explicitly.\n';
 
     final emitter = DartEmitter(useNullSafetySyntax: true, orderDirectives: true);
-    final formatted = DartFormatter(
-      languageVersion: Version(3, 9, 0),
-    ).format(library.accept(emitter).toString());
-    return '$warning$formatted';
+    final buffer = StringBuffer()..writeln(warning);
+    for (final item in bodyItems) {
+      buffer.writeln(item.accept(emitter));
+    }
+    return DartFormatter(languageVersion: Version(3, 9, 0)).format(buffer.toString());
   }
 }
 
@@ -565,7 +563,6 @@ Method _generateSyncGetter(_SharedPrefField field) {
         '  if (raw == null) return null;\n'
         '  return ${field.enumTypeName}.values.byName(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return null;\n'
         '}',
@@ -577,7 +574,6 @@ Method _generateSyncGetter(_SharedPrefField field) {
         '  if (raw == null) return $defaultExpr;\n'
         '  return ${field.enumTypeName}.values.byName(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}',
@@ -601,7 +597,6 @@ Method _generateSyncGetter(_SharedPrefField field) {
       'try {\n'
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
@@ -635,7 +630,6 @@ Method _generateAsyncGetter(_SharedPrefField field) {
         '  if (raw == null) return null;\n'
         '  return ${field.enumTypeName}.values.byName(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return null;\n'
         '}',
@@ -647,7 +641,6 @@ Method _generateAsyncGetter(_SharedPrefField field) {
         '  if (raw == null) return $defaultExpr;\n'
         '  return ${field.enumTypeName}.values.byName(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}',
@@ -671,7 +664,6 @@ Method _generateAsyncGetter(_SharedPrefField field) {
       'try {\n'
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}',
@@ -831,7 +823,6 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
         '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
@@ -841,7 +832,6 @@ String _buildDateTimeSyncGetterBody(_SharedPrefField field) {
       'try {\n'
       'return DateTime.parse(raw);\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
@@ -857,7 +847,6 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
         '  if (raw == null) return $defaultExpr;\n'
         '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
         '} catch (e) {\n'
-        "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
         "  _onReadError?.call('$key', e);\n"
         '  return $defaultExpr;\n'
         '}';
@@ -867,7 +856,6 @@ String _buildDateTimeAsyncGetterBody(_SharedPrefField field) {
       'try {\n'
       'return DateTime.parse(raw);\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       'return $defaultExpr;\n'
       '}';
@@ -890,10 +878,10 @@ String _buildStringListSyncGetterBody(_SharedPrefField field) {
   final rawExpr = "_prefs.getStringList('$key')";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
-        'return raw == null ? null : UnmodifiableListView(raw);';
+        'return raw == null ? null : List.unmodifiable(raw);';
   }
   return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw);';
+      'return raw == null ? ${field.defaultValue} : List.unmodifiable(raw);';
 }
 
 String _buildStringListAsyncGetterBody(_SharedPrefField field) {
@@ -901,10 +889,10 @@ String _buildStringListAsyncGetterBody(_SharedPrefField field) {
   final rawExpr = "await _prefs.getStringList('$key')";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
-        'return raw == null ? null : UnmodifiableListView(raw);';
+        'return raw == null ? null : List.unmodifiable(raw);';
   }
   return 'final raw = $rawExpr;\n'
-      'return raw == null ? ${field.defaultValue} : UnmodifiableListView(raw);';
+      'return raw == null ? ${field.defaultValue} : List.unmodifiable(raw);';
 }
 
 //--- Numeric list helpers ---//
@@ -914,12 +902,11 @@ String _buildNumericListSyncGetterBody(_SharedPrefField field) {
   final elementType = field.numericListElementType!;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "_prefs.getStringList('$key')";
-  final successExpr = 'UnmodifiableListView(raw.map($elementType.parse).toList())';
+  final successExpr = 'List.unmodifiable(raw.map($elementType.parse).toList())';
   return 'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}';
@@ -930,12 +917,11 @@ String _buildNumericListAsyncGetterBody(_SharedPrefField field) {
   final elementType = field.numericListElementType!;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "await _prefs.getStringList('$key')";
-  final successExpr = 'UnmodifiableListView(raw.map($elementType.parse).toList())';
+  final successExpr = 'List.unmodifiable(raw.map($elementType.parse).toList())';
   return 'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}';
@@ -948,12 +934,11 @@ String _buildEnumListSyncGetterBody(_SharedPrefField field) {
   final typeName = field.enumListElementTypeName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "_prefs.getStringList('$key')";
-  final successExpr = 'UnmodifiableListView(raw.map($typeName.values.byName).toList())';
+  final successExpr = 'List.unmodifiable(raw.map($typeName.values.byName).toList())';
   return 'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}';
@@ -964,12 +949,11 @@ String _buildEnumListAsyncGetterBody(_SharedPrefField field) {
   final typeName = field.enumListElementTypeName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "await _prefs.getStringList('$key')";
-  final successExpr = 'UnmodifiableListView(raw.map($typeName.values.byName).toList())';
+  final successExpr = 'List.unmodifiable(raw.map($typeName.values.byName).toList())';
   return 'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
       '} catch (e) {\n'
-      "  log('[shared_prefs_typed] Failed to read \"$key\": \${e.runtimeType}. Default will be used.', name: 'shared_prefs_typed');\n"
       "  _onReadError?.call('$key', e);\n"
       '  return $defaultExpr;\n'
       '}';
@@ -981,7 +965,7 @@ String _buildBoolListSyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "_prefs.getStringList('$key')";
-  const successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
+  const successExpr = "List.unmodifiable(raw.map((e) => e == 'true').toList())";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
         'return raw == null ? $defaultExpr : $successExpr;';
@@ -994,7 +978,7 @@ String _buildBoolListAsyncGetterBody(_SharedPrefField field) {
   final key = field.keyName;
   final defaultExpr = field.isNullable && !field.hasNonNullDefault ? 'null' : field.defaultValue;
   final rawExpr = "await _prefs.getStringList('$key')";
-  const successExpr = "UnmodifiableListView(raw.map((e) => e == 'true').toList())";
+  const successExpr = "List.unmodifiable(raw.map((e) => e == 'true').toList())";
   if (field.isNullable && !field.hasNonNullDefault) {
     return 'final raw = $rawExpr;\n'
         'return raw == null ? $defaultExpr : $successExpr;';
