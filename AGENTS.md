@@ -4,7 +4,7 @@ Type-safe SharedPreferences for Flutter via `build_runner` code generation.
 
 ## What It Does
 
-Annotate a **private abstract class** with `@TypedPrefs()` and declare `static const` fields. The generator produces a public class with a shared-instance accessor and typed getters, setters, `contains` checks, and `remove` methods for each field.
+Annotate an abstract class with `@TypedPrefs()` and declare `static const` fields. The generator produces a public class with typed getters, setters, `contains` checks, and `remove` methods for each field. Generated `.g.dart` files use `part of` — source files must include `part 'filename.g.dart';`.
 
 ## Setup
 
@@ -26,9 +26,9 @@ flutter pub run build_runner build
 
 ## Supported Types
 
-`int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>` — plus nullable variants (`int?`, `double?`, `bool?`, `String?`).
+`int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `List<bool>` — plus nullable variants (`int?`, `double?`, `bool?`, `String?`).
 
-Also supported: **Enum types** (any Dart enum) and **`DateTime`** (requires `@PrefDateTime` annotation; nullable by default, non-nullable when `defaultMillis:` is provided).
+Also supported: **Enum types** (any Dart enum), **`List<Enum>`**, and **`DateTime`** (requires `@PrefDateTime` annotation; nullable by default, non-nullable when `defaultMillis:` is provided).
 
 ## Usage Pattern
 
@@ -37,7 +37,10 @@ Also supported: **Enum types** (any Dart enum) and **`DateTime`** (requires `@Pr
 Create a file (e.g. `lib/app_preferences.dart`):
 
 ```dart
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+
+part 'app_preferences.g.dart';
 
 @TypedPrefs()
 abstract class _AppPreferences {
@@ -58,14 +61,16 @@ abstract class _AppPreferences {
 
 ### 2. Generated output (`app_preferences.g.dart`)
 
-The generator creates class `AppPreferences` (leading `_` stripped) with:
+**Naming:** A private class `_Foo` generates `Foo`; a public class `Foo` generates `FooImpl`.
+
+The generator creates the class with:
 
 - **Constructor**: `AppPreferences(SharedPreferencesWithCache prefs)` — for DI/testing
 - **Singleton**: `static Future<AppPreferences> init()` (concurrency-safe, idempotent) + `static AppPreferences get instance` (throws `StateError` if `init` not called)
 - **Teardown**: `@visibleForTesting static void resetInstance()` — clears both `_instance` and `_initFuture`; use in test teardown only
-- **Error hook**: `static void Function(String key, Object error)? onReadError` — optional callback invoked when a stored value cannot be cast to its expected type; defaults to `null`
+- **Error hook**: `onReadError` constructor parameter — optional `void Function(String key, Object error)?` callback invoked when a stored value cannot be cast to its expected type; defaults to `null`
 - **Per field** (e.g. `counter`):
-  - `int get counter` — sync getter, returns default if unset; catch block calls `dart:developer log()` and `onReadError` on type mismatch
+  - `int get counter` — sync getter, returns default if unset; catch block calls `onReadError` on type mismatch
   - `Future<void> setCounter(int value)` — async setter
   - `bool containsCounter()` — checks if key exists
   - `Future<void> removeCounter()` — removes key
@@ -158,14 +163,14 @@ static const ThemeMode theme = ThemeMode.system;
 
 ## Rules and Constraints
 
-- Class name **must** start with `_` (e.g. `_AppPreferences` generates `AppPreferences`)
+- **Naming**: private class `_Foo` → generates `Foo`; public class `Foo` → generates `FooImpl`
 - `@TypedPrefs` must annotate a **class** (not a function, mixin, etc.)
 - Only `static const` fields are processed; non-const fields are silently ignored
 - Field names starting with `_` have the underscore stripped from the preference key
 - `DateTime` fields require `@PrefDateTime`; omitting it is a generator error
 - Duplicate storage keys (after `@PrefKey` resolution) are a generator error
-- Reserved field names (generator error): `init`, `instance`, `resetInstance`, `clearAll`, `onReadError`
-- Generated files use standalone imports (no `part`/`part of` directives)
+- Reserved field names (generator error): `init`, `instance`, `resetInstance`, `clearAll`
+- Generated files use `part of` — source files must include `part 'filename.g.dart';`
 - Run `flutter pub run build_runner build` after any schema change
 
 ## Testing
@@ -174,27 +179,34 @@ For tests, use the constructor directly with an in-memory backend:
 
 ```dart
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+
+late AppPreferences prefs;
 
 setUp(() async {
   SharedPreferencesAsyncPlatform.instance =
       InMemorySharedPreferencesAsync.empty();
-  await AppPreferences.init();
+  final backend = await SharedPreferencesWithCache.create(
+    cacheOptions: const SharedPreferencesWithCacheOptions(),
+  );
+  prefs = AppPreferences(backend);
 });
 
 tearDown(() {
-  AppPreferences.resetInstance(); // clears _instance and _initFuture
+  AppPreferences.resetInstance();
 });
 ```
 
-To test the type-migration guard (or the `onReadError` callback), write a wrong-type value to the platform store *before* calling `init()` so the cache loads it:
+To test the type-migration guard (or the `onReadError` callback), write a wrong-type value to the platform store *before* creating the backend so the cache loads it:
 
 ```dart
 test('int field returns default on type mismatch', () async {
   await SharedPreferencesAsyncPlatform.instance!
       .setString('counter', 'bad', const SharedPreferencesOptions());
-  await AppPreferences.init();
-  expect(AppPreferences.instance.counter, 0); // default, not a crash
+  final backend = await SharedPreferencesWithCache.create(
+    cacheOptions: const SharedPreferencesWithCacheOptions(),
+  );
+  final prefs = AppPreferences(backend);
+  expect(prefs.counter, 0); // default, not a crash
 });
 ```
-
-Note: `onReadError` is NOT reset by `resetInstance()`; set it to `null` explicitly in `tearDown` when testing it.
