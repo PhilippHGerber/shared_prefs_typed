@@ -1,7 +1,7 @@
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
-import 'src/shared_pref_generator.dart';
+import 'src/typed_prefs_generator.dart';
 
 /// Builder factory for the `TypedPrefs` generator.
 Builder typedPrefsBuilder(BuilderOptions options) {

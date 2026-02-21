@@ -14,11 +14,17 @@ void main() async {
     'shared_prefs_typed_annotations|lib/shared_prefs_typed_annotations.dart': await File(
       '../shared_prefs_typed_annotations/lib/shared_prefs_typed_annotations.dart',
     ).readAsString(),
+    'shared_prefs_typed_annotations|lib/src/typed_prefs.dart': await File(
+      '../shared_prefs_typed_annotations/lib/src/typed_prefs.dart',
+    ).readAsString(),
     'shared_prefs_typed_annotations|lib/src/pref_key.dart': await File(
       '../shared_prefs_typed_annotations/lib/src/pref_key.dart',
     ).readAsString(),
     'shared_prefs_typed_annotations|lib/src/pref_date_time.dart': await File(
       '../shared_prefs_typed_annotations/lib/src/pref_date_time.dart',
+    ).readAsString(),
+    'shared_prefs_typed_annotations|lib/src/date_time_encoding.dart': await File(
+      '../shared_prefs_typed_annotations/lib/src/date_time_encoding.dart',
     ).readAsString(),
     'shared_prefs_typed_annotations|lib/src/prefs_mode.dart': await File(
       '../shared_prefs_typed_annotations/lib/src/prefs_mode.dart',
