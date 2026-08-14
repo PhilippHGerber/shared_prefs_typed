@@ -1,193 +1,30 @@
 import 'package:code_builder/code_builder.dart';
 
 import 'shared_pref_field.dart';
-import 'type_body_builders.dart';
 
-/// Generates the synchronous getter [Method] for the given [field].
-Method generateSyncGetter(SharedPrefField field) {
-  final Code body;
-  if (field.isEnum) {
-    final key = field.keyName;
-    final defaultExpr = field.defaultValue;
-    final rawExpr = "_prefs.getString('$key')";
-    if (field.isNullable && !field.hasNonNullDefault) {
-      body = Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return null;\n'
-        '  return ${field.enumTypeName}.values.byName(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return null;\n'
-        '}',
-      );
-    } else {
-      body = Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return $defaultExpr;\n'
-        '  return ${field.enumTypeName}.values.byName(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return $defaultExpr;\n'
-        '}',
-      );
-    }
-  } else if (field.isEnumList) {
-    body = Code(buildEnumListSyncGetterBody(field));
-  } else if (field.isDateTime) {
-    body = Code(buildDateTimeSyncGetterBody(field));
-  } else if (field.isStringList) {
-    body = Code(buildStringListSyncGetterBody(field));
-  } else if (field.isBoolList) {
-    body = Code(buildBoolListSyncGetterBody(field));
-  } else if (field.numericListElementType != null) {
-    body = Code(buildNumericListSyncGetterBody(field));
-  } else {
-    final key = field.keyName;
-    final defaultExpr = field.defaultValue;
-    final getExpr = "_prefs.get${field.prefTypeName}('$key')";
-    body = Code(
-      'try {\n'
-      "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
-    );
-  }
-
-  return Method(
-    (b) => b
-      ..name = field.paramName
-      ..docs.add('/// Gets the value for `${field.keyName}` from the cache.')
-      ..docs.add('///')
-      ..docs.add(
-        '/// If the key does not exist, the default value `${field.defaultValue}` is returned.',
-      )
-      ..type = MethodType.getter
-      ..returns = field.getterTypeReference
-      ..body = body,
-  );
-}
-
-/// Generates the asynchronous getter [Method] for the given [field].
-Method generateAsyncGetter(SharedPrefField field) {
-  final Code body;
-  if (field.isEnum) {
-    final key = field.keyName;
-    final defaultExpr = field.defaultValue;
-    final rawExpr = "(await _prefs.getString('$key'))";
-    if (field.isNullable && !field.hasNonNullDefault) {
-      body = Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return null;\n'
-        '  return ${field.enumTypeName}.values.byName(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return null;\n'
-        '}',
-      );
-    } else {
-      body = Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return $defaultExpr;\n'
-        '  return ${field.enumTypeName}.values.byName(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return $defaultExpr;\n'
-        '}',
-      );
-    }
-  } else if (field.isEnumList) {
-    body = Code(buildEnumListAsyncGetterBody(field));
-  } else if (field.isDateTime) {
-    body = Code(buildDateTimeAsyncGetterBody(field));
-  } else if (field.isStringList) {
-    body = Code(buildStringListAsyncGetterBody(field));
-  } else if (field.isBoolList) {
-    body = Code(buildBoolListAsyncGetterBody(field));
-  } else if (field.numericListElementType != null) {
-    body = Code(buildNumericListAsyncGetterBody(field));
-  } else {
-    final key = field.keyName;
-    final defaultExpr = field.defaultValue;
-    final getExpr = "(await _prefs.get${field.prefTypeName}('$key'))";
-    body = Code(
-      'try {\n'
-      "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
-    );
-  }
-
-  return Method(
-    (b) => b
-      ..name = field.paramName
-      ..docs.add('/// Asynchronously gets the value for `${field.keyName}`.')
-      ..docs.add('///')
-      ..docs.add(
-        '/// If the key does not exist, the default value `${field.defaultValue}` is returned.',
-      )
-      ..type = MethodType.getter
-      ..returns = refer('Future<${field.getterTypeReference.symbol}>')
-      ..modifier = MethodModifier.async
-      ..body = body,
-  );
-}
+/// Generates the getter [Method] for the given [field].
+Method generateGetter(SharedPrefField field, {required bool isAsync}) => Method(
+  (b) => b
+    ..name = field.paramName
+    ..docs.add(
+      isAsync
+          ? '/// Asynchronously gets the value for `${field.keyName}`.'
+          : '/// Gets the value for `${field.keyName}` from the cache.',
+    )
+    ..docs.add('///')
+    ..docs.add(
+      '/// If the key does not exist, the default value `${field.defaultValue}` is returned.',
+    )
+    ..type = MethodType.getter
+    ..returns = isAsync
+        ? refer('Future<${field.getterTypeReference.symbol}>')
+        : field.getterTypeReference
+    ..modifier = isAsync ? MethodModifier.async : null
+    ..body = field.getterBody(isAsync: isAsync),
+);
 
 /// Generates the setter [Method] for the given [field].
 Method generateSetter(SharedPrefField field) {
-  final Code body;
-  if (field.isEnum) {
-    body = field.isNullable
-        ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.setString('${field.keyName}', value.name);",
-          )
-        : Code("return _prefs.setString('${field.keyName}', value.name);");
-  } else if (field.isEnumList) {
-    body = field.isNullable
-        ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.name).toList());",
-          )
-        : Code(
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.name).toList());",
-          );
-  } else if (field.isBoolList) {
-    body = field.isNullable
-        ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
-          )
-        : Code(
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
-          );
-  } else if (field.isDateTime) {
-    body = buildDateTimeSetterBody(field);
-  } else if (field.numericListElementType != null) {
-    body = field.isNullable
-        ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
-          )
-        : Code(
-            "return _prefs.setStringList('${field.keyName}', value.map((e) => e.toString()).toList());",
-          );
-  } else {
-    body = field.isNullable
-        ? Code(
-            "if (value == null) { return _prefs.remove('${field.keyName}'); } "
-            "return _prefs.set${field.prefTypeName}('${field.keyName}', value);",
-          )
-        : Code("return _prefs.set${field.prefTypeName}('${field.keyName}', value);");
-  }
-
   final docComments = <String>[
     '/// Asynchronously sets the value for `${field.keyName}`.',
   ];
@@ -211,7 +48,7 @@ Method generateSetter(SharedPrefField field) {
             ..type = field.typeReference,
         ),
       )
-      ..body = body,
+      ..body = field.setterBody,
   );
 }
 

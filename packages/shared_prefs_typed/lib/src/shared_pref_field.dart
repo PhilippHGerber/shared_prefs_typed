@@ -8,6 +8,15 @@ import 'package:source_gen/source_gen.dart';
 
 import 'extensions.dart';
 
+/// Wraps [expr] in `await` when generating async code.
+///
+/// Set [parenthesize] when the awaited expression is embedded in a larger
+/// expression (e.g. combined with `??`) so operator precedence is explicit.
+String _awaitExpr(String expr, {required bool isAsync, bool parenthesize = false}) {
+  if (!isAsync) return expr;
+  return parenthesize ? '(await $expr)' : 'await $expr';
+}
+
 /// Wraps a [FieldElement] with computed properties used during code generation.
 class SharedPrefField {
   /// Creates a [SharedPrefField] for the given [field].
@@ -87,19 +96,20 @@ class SharedPrefField {
 
   /// True when the field is nullable but its default is not null.
   /// In this case the getter can safely return the non-nullable type.
-  bool get hasNonNullDefault => isNullable && defaultValue != 'null';
+  bool get _hasNonNullDefault => isNullable && defaultValue != 'null';
 
-  /// Return type for getters: narrows to non-nullable when [hasNonNullDefault].
-  Reference get getterTypeReference => hasNonNullDefault ? nonNullableTypeReference : typeReference;
+  /// Return type for getters: narrows to non-nullable when [_hasNonNullDefault].
+  Reference get getterTypeReference =>
+      _hasNonNullDefault ? nonNullableTypeReference : typeReference;
 
   /// Whether the field type is an enum.
-  bool get isEnum {
+  bool get _isEnum {
     final element = field.type.element;
     return element is EnumElement;
   }
 
-  /// The enum type name (e.g. `'ThemeMode'`), only valid when [isEnum] is true.
-  String get enumTypeName => nonNullableTypeReference.symbol!;
+  /// The enum type name (e.g. `'ThemeMode'`), only valid when [_isEnum] is true.
+  String get _enumTypeName => nonNullableTypeReference.symbol!;
 
   /// Whether the field type is [DateTime].
   bool get isDateTime => nonNullableTypeReference.symbol == 'DateTime';
@@ -115,13 +125,13 @@ class SharedPrefField {
   }
 
   /// True when the non-nullable type is `List<String>` (not a numeric list).
-  bool get isStringList => nonNullableTypeReference.symbol == 'List<String>';
+  bool get _isStringList => nonNullableTypeReference.symbol == 'List<String>';
 
   /// True when the non-nullable type is `List<bool>`.
-  bool get isBoolList => nonNullableTypeReference.symbol == 'List<bool>';
+  bool get _isBoolList => nonNullableTypeReference.symbol == 'List<bool>';
 
   /// True when the field is a `List` whose element type is an enum.
-  bool get isEnumList {
+  bool get _isEnumList {
     final type = field.type;
     if (type is! InterfaceType) return false;
     if (type.typeArguments.isEmpty) return false;
@@ -129,12 +139,12 @@ class SharedPrefField {
   }
 
   /// The enum element type name for `List<EnumType>` fields (e.g. `'ThemeMode'`).
-  String get enumListElementTypeName {
+  String get _enumListElementTypeName {
     return (field.type as InterfaceType).typeArguments.first.element!.name!;
   }
 
   /// Returns `'int'` or `'double'` for `List<int>`/`List<double>`, `null` otherwise.
-  String? get numericListElementType {
+  String? get _numericListElementType {
     final typeString = nonNullableTypeReference.symbol!;
     if (typeString == 'List<int>') return 'int';
     if (typeString == 'List<double>') return 'double';
@@ -143,8 +153,8 @@ class SharedPrefField {
 
   /// Maps the field type to its SharedPreferences method suffix (e.g. `'Int'`, `'String'`).
   String get prefTypeName {
-    if (isEnum) return 'String';
-    if (isEnumList) return 'StringList';
+    if (_isEnum) return 'String';
+    if (_isEnumList) return 'StringList';
     if (isDateTime) {
       final encoding = dateTimeEncoding;
       if (encoding == null) {
@@ -188,9 +198,9 @@ class SharedPrefField {
 
     final type = constantValue.type;
     if (type == null) return 'null';
-    if (isEnum) {
+    if (_isEnum) {
       final enumName = constantValue.getField('_name')?.toStringValue();
-      if (enumName != null) return '$enumTypeName.$enumName';
+      if (enumName != null) return '$_enumTypeName.$enumName';
       return 'null';
     }
     if (type.isDartCoreInt) return constantValue.toIntValue()?.toString() ?? 'null';
@@ -203,8 +213,8 @@ class SharedPrefField {
     if (type.isDartCoreList) {
       final listValues = constantValue.toListValue()!;
       final typeStr = nonNullableTypeReference.symbol!;
-      if (isEnumList) {
-        final typeName = enumListElementTypeName;
+      if (_isEnumList) {
+        final typeName = _enumListElementTypeName;
         final values = listValues
             .map((e) {
               final enumName = e.getField('_name')?.toStringValue();
@@ -232,6 +242,214 @@ class SharedPrefField {
     }
     return 'null';
   }
+
+  /// Returns the [Code] for this field's getter body.
+  Code getterBody({required bool isAsync}) => switch (this) {
+    _ when _isEnum => _enumGetterBody(isAsync: isAsync),
+    _ when _isEnumList => _enumListGetterBody(isAsync: isAsync),
+    _ when isDateTime => _dateTimeGetterBody(isAsync: isAsync),
+    _ when _isStringList => _stringListGetterBody(isAsync: isAsync),
+    _ when _isBoolList => _boolListGetterBody(isAsync: isAsync),
+    _ when _numericListElementType != null => _numericListGetterBody(isAsync: isAsync),
+    _ => _defaultGetterBody(isAsync: isAsync),
+  };
+
+  /// Returns the [Code] for this field's setter body.
+  Code get setterBody => switch (this) {
+    _ when _isEnum => _enumSetterBody(),
+    _ when _isEnumList => _enumListSetterBody(),
+    _ when _isBoolList => _boolListSetterBody(),
+    _ when isDateTime => _dateTimeSetterBody(),
+    _ when _numericListElementType != null => _numericListSetterBody(),
+    _ => _defaultSetterBody(),
+  };
+
+  Code _enumGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final defaultExpr = defaultValue;
+    final rawExpr = _awaitExpr("_prefs.getString('$key')", isAsync: isAsync, parenthesize: true);
+    if (isNullable && !_hasNonNullDefault) {
+      return Code(
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return null;\n'
+        '  return $_enumTypeName.values.byName(raw);\n'
+        '} catch (e) {\n'
+        "  _onReadError?.call('$key', e);\n"
+        '  return null;\n'
+        '}',
+      );
+    }
+    return Code(
+      'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  if (raw == null) return $defaultExpr;\n'
+      '  return $_enumTypeName.values.byName(raw);\n'
+      '} catch (e) {\n'
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}',
+    );
+  }
+
+  Code _enumListGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final typeName = _enumListElementTypeName;
+    final defaultExpr = isNullable && !_hasNonNullDefault ? 'null' : defaultValue;
+    final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
+    final successExpr = 'List.unmodifiable(raw.map($typeName.values.byName).toList())';
+    return Code(
+      'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}',
+    );
+  }
+
+  Code _dateTimeGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final defaultExpr = defaultValue;
+    final isMillis = dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
+    if (isMillis) {
+      final rawExpr = _awaitExpr("_prefs.getInt('$key')", isAsync: isAsync, parenthesize: true);
+      return Code(
+        'try {\n'
+        '  final raw = $rawExpr;\n'
+        '  if (raw == null) return $defaultExpr;\n'
+        '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
+        '} catch (e) {\n'
+        "  _onReadError?.call('$key', e);\n"
+        '  return $defaultExpr;\n'
+        '}',
+      );
+    }
+    final rawExpr = _awaitExpr("_prefs.getString('$key')", isAsync: isAsync, parenthesize: true);
+    return Code(
+      'final raw = $rawExpr;\n'
+      'if (raw == null) return $defaultExpr;\n'
+      'try {\n'
+      'return DateTime.parse(raw);\n'
+      '} catch (e) {\n'
+      "  _onReadError?.call('$key', e);\n"
+      'return $defaultExpr;\n'
+      '}',
+    );
+  }
+
+  Code _stringListGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
+    if (isNullable && !_hasNonNullDefault) {
+      return Code(
+        'final raw = $rawExpr;\n'
+        'return raw == null ? null : List.unmodifiable(raw);',
+      );
+    }
+    return Code(
+      'final raw = $rawExpr;\n'
+      'return raw == null ? $defaultValue : List.unmodifiable(raw);',
+    );
+  }
+
+  Code _numericListGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final elementType = _numericListElementType!;
+    final defaultExpr = isNullable && !_hasNonNullDefault ? 'null' : defaultValue;
+    final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
+    final successExpr = 'List.unmodifiable(raw.map($elementType.parse).toList())';
+    return Code(
+      'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '} catch (e) {\n'
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}',
+    );
+  }
+
+  Code _boolListGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final defaultExpr = isNullable && !_hasNonNullDefault ? 'null' : defaultValue;
+    final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
+    const successExpr = "List.unmodifiable(raw.map((e) => e == 'true').toList())";
+    return Code(
+      'final raw = $rawExpr;\n'
+      'return raw == null ? $defaultExpr : $successExpr;',
+    );
+  }
+
+  Code _defaultGetterBody({required bool isAsync}) {
+    final key = keyName;
+    final defaultExpr = defaultValue;
+    final getExpr = _awaitExpr(
+      "_prefs.get$prefTypeName('$key')",
+      isAsync: isAsync,
+      parenthesize: true,
+    );
+    return Code(
+      'try {\n'
+      "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
+      '} catch (e) {\n'
+      "  _onReadError?.call('$key', e);\n"
+      '  return $defaultExpr;\n'
+      '}',
+    );
+  }
+
+  Code _enumSetterBody() => isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('$keyName'); } "
+          "return _prefs.setString('$keyName', value.name);",
+        )
+      : Code("return _prefs.setString('$keyName', value.name);");
+
+  Code _enumListSetterBody() => isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('$keyName'); } "
+          "return _prefs.setStringList('$keyName', value.map((e) => e.name).toList());",
+        )
+      : Code(
+          "return _prefs.setStringList('$keyName', value.map((e) => e.name).toList());",
+        );
+
+  Code _boolListSetterBody() => isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('$keyName'); } "
+          "return _prefs.setStringList('$keyName', value.map((e) => e.toString()).toList());",
+        )
+      : Code(
+          "return _prefs.setStringList('$keyName', value.map((e) => e.toString()).toList());",
+        );
+
+  Code _dateTimeSetterBody() {
+    final key = keyName;
+    final isMillis = dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
+    final setExpr = isMillis
+        ? "return _prefs.setInt('$key', value.millisecondsSinceEpoch);"
+        : "return _prefs.setString('$key', value.toIso8601String());";
+    // DateTime fields are always nullable.
+    return Code("if (value == null) { return _prefs.remove('$key'); } $setExpr");
+  }
+
+  Code _numericListSetterBody() => isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('$keyName'); } "
+          "return _prefs.setStringList('$keyName', value.map((e) => e.toString()).toList());",
+        )
+      : Code(
+          "return _prefs.setStringList('$keyName', value.map((e) => e.toString()).toList());",
+        );
+
+  Code _defaultSetterBody() => isNullable
+      ? Code(
+          "if (value == null) { return _prefs.remove('$keyName'); } "
+          "return _prefs.set$prefTypeName('$keyName', value);",
+        )
+      : Code("return _prefs.set$prefTypeName('$keyName', value);");
 }
 
 /// Escapes a string value for use in a single-quoted Dart string literal.

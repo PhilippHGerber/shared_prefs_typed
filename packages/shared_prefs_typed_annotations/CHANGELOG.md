@@ -2,6 +2,12 @@
 
 All notable changes to this package will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+* Raised minimum Dart SDK to `^3.13.0`.
+
 ## 1.0.0
 
 ### Breaking

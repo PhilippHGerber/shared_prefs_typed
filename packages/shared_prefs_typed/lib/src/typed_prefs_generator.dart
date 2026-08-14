@@ -110,9 +110,7 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
     }
 
     bodyItems.add(
-      isAsyncMode
-          ? buildAsyncClass(classElement, fields, generateInterface: generateInterface)
-          : buildSyncClass(classElement, fields, generateInterface: generateInterface),
+      buildClass(classElement, fields, isAsync: isAsyncMode, generateInterface: generateInterface),
     );
 
     const warning =

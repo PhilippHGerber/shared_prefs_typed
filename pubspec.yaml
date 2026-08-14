@@ -2,8 +2,8 @@ name: workspace
 description: Code generator for creating type-safe, boilerplate-free SharedPreferences classes in Dart & Flutter.
 publish_to: none
 environment:
-  sdk: ^3.9.0
-  flutter: ">=3.35.0"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 workspace:
   - packages/shared_prefs_typed_annotations
@@ -12,7 +12,7 @@ workspace:
   - example/advanced
 
 dependencies:
-  analyzer: ^10.0.1
+  analyzer: ^13.3.0
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.4

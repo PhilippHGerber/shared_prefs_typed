@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+* Raised minimum Dart SDK to `^3.13.0` and `analyzer` to `^13.3.0`.
+
+### Internal
+
+* Unified sync/async code generation for getters, setters, and class scaffolding into single functions parameterised by `isAsync`, and moved type dispatch into `SharedPrefField`. Generated output is unchanged — verified against golden files.
+
 ## 1.0.0
 
 ### Breaking

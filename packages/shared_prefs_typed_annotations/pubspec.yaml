@@ -4,7 +4,7 @@ repository: https://github.com/PhilippHGerber/shared_prefs_typed.git
 version: 1.0.0
 
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.13.0
 
 resolution: workspace
 
