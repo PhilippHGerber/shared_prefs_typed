@@ -54,6 +54,9 @@ class SettingsPrefsImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<SettingsPrefsImpl> init({
     void Function(String key, Object error)? onReadError,
   }) {

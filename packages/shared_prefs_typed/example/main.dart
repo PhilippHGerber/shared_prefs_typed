@@ -1,5 +1,7 @@
 // ignore_for_file: unused_element, unused_field
 
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -133,7 +135,7 @@ Future<void> mainDI() async {
     cacheOptions: const SharedPreferencesWithCacheOptions(),
   );
 
-  // Inject the backend via the public const constructor.
+  // Inject the backend via the public constructor.
   // No global singleton is touched.
   final prefs = SettingsPrefsImpl(backend);
 
