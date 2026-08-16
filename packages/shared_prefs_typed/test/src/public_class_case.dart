@@ -2,6 +2,8 @@
 // Tests that a public (non-underscore-prefixed) class produces a generated class
 // with an 'Impl' suffix (AppPreferences → AppPreferencesImpl).
 
+import 'dart:developer';
+
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

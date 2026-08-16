@@ -69,6 +69,9 @@ class InterfacePrefs implements InterfacePrefsBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<InterfacePrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -103,7 +106,13 @@ class InterfacePrefs implements InterfacePrefsBase {
   int get counter {
     try {
       return _prefs.getInt('counter') ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "counter"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('counter', e);
       return 0;
     }
@@ -134,7 +143,13 @@ class InterfacePrefs implements InterfacePrefsBase {
   String? get name {
     try {
       return _prefs.getString('name');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "name"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('name', e);
       return null;
     }

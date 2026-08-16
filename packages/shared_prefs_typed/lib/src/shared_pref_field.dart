@@ -264,31 +264,29 @@ class SharedPrefField {
     _ => _defaultSetterBody(),
   };
 
+  String _catchBlock(String key, String defaultExpr) {
+    return '} catch (e, s) {\n'
+        '  developer.log(\n'
+        "    'Read error for key \"$key\"',\n"
+        "    name: 'shared_prefs_typed',\n"
+        '    error: e,\n'
+        '    stackTrace: s,\n'
+        '  );\n'
+        "  _onReadError?.call('$key', e);\n"
+        '  return $defaultExpr;\n'
+        '}';
+  }
+
   Code _enumGetterBody({required bool isAsync}) {
     final key = keyName;
     final defaultExpr = defaultValue;
     final rawExpr = _awaitExpr("_prefs.getString('$key')", isAsync: isAsync, parenthesize: true);
-    if (isNullable && !_hasNonNullDefault) {
-      return Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return null;\n'
-        '  return $_enumTypeName.values.byName(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return null;\n'
-        '}',
-      );
-    }
     return Code(
       'try {\n'
       '  final raw = $rawExpr;\n'
       '  if (raw == null) return $defaultExpr;\n'
       '  return $_enumTypeName.values.byName(raw);\n'
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
@@ -302,10 +300,7 @@ class SharedPrefField {
       'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
@@ -313,44 +308,30 @@ class SharedPrefField {
     final key = keyName;
     final defaultExpr = defaultValue;
     final isMillis = dateTimeEncoding == DateTimeEncoding.millisecondsSinceEpoch;
-    if (isMillis) {
-      final rawExpr = _awaitExpr("_prefs.getInt('$key')", isAsync: isAsync, parenthesize: true);
-      return Code(
-        'try {\n'
-        '  final raw = $rawExpr;\n'
-        '  if (raw == null) return $defaultExpr;\n'
-        '  return DateTime.fromMillisecondsSinceEpoch(raw);\n'
-        '} catch (e) {\n'
-        "  _onReadError?.call('$key', e);\n"
-        '  return $defaultExpr;\n'
-        '}',
-      );
-    }
-    final rawExpr = _awaitExpr("_prefs.getString('$key')", isAsync: isAsync, parenthesize: true);
+    final rawExpr = isMillis
+        ? _awaitExpr("_prefs.getInt('$key')", isAsync: isAsync, parenthesize: true)
+        : _awaitExpr("_prefs.getString('$key')", isAsync: isAsync, parenthesize: true);
+    final parseExpr = isMillis
+        ? 'DateTime.fromMillisecondsSinceEpoch(raw)'
+        : 'DateTime.parse(raw)';
     return Code(
-      'final raw = $rawExpr;\n'
-      'if (raw == null) return $defaultExpr;\n'
       'try {\n'
-      'return DateTime.parse(raw);\n'
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      'return $defaultExpr;\n'
-      '}',
+      '  final raw = $rawExpr;\n'
+      '  if (raw == null) return $defaultExpr;\n'
+      '  return $parseExpr;\n'
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
   Code _stringListGetterBody({required bool isAsync}) {
     final key = keyName;
+    final defaultExpr = isNullable && !_hasNonNullDefault ? 'null' : defaultValue;
     final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
-    if (isNullable && !_hasNonNullDefault) {
-      return Code(
-        'final raw = $rawExpr;\n'
-        'return raw == null ? null : List.unmodifiable(raw);',
-      );
-    }
     return Code(
-      'final raw = $rawExpr;\n'
-      'return raw == null ? $defaultValue : List.unmodifiable(raw);',
+      'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : List.unmodifiable(raw);\n'
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
@@ -364,10 +345,7 @@ class SharedPrefField {
       'try {\n'
       '  final raw = $rawExpr;\n'
       '  return raw == null ? $defaultExpr : $successExpr;\n'
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
@@ -377,8 +355,10 @@ class SharedPrefField {
     final rawExpr = _awaitExpr("_prefs.getStringList('$key')", isAsync: isAsync);
     const successExpr = "List.unmodifiable(raw.map((e) => e == 'true').toList())";
     return Code(
-      'final raw = $rawExpr;\n'
-      'return raw == null ? $defaultExpr : $successExpr;',
+      'try {\n'
+      '  final raw = $rawExpr;\n'
+      '  return raw == null ? $defaultExpr : $successExpr;\n'
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 
@@ -393,10 +373,7 @@ class SharedPrefField {
     return Code(
       'try {\n'
       "  return $getExpr${defaultExpr == 'null' ? '' : ' ?? $defaultExpr'};\n"
-      '} catch (e) {\n'
-      "  _onReadError?.call('$key', e);\n"
-      '  return $defaultExpr;\n'
-      '}',
+      '${_catchBlock(key, defaultExpr)}',
     );
   }
 

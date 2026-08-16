@@ -52,6 +52,9 @@ class TestPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<TestPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -86,7 +89,13 @@ class TestPrefs {
   int get testInt {
     try {
       return _prefs.getInt('testInt') ?? 10;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testInt"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testInt', e);
       return 10;
     }
@@ -117,7 +126,13 @@ class TestPrefs {
   double get testDouble {
     try {
       return _prefs.getDouble('testDouble') ?? 3.14;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testDouble"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testDouble', e);
       return 3.14;
     }
@@ -148,7 +163,13 @@ class TestPrefs {
   bool get testBool {
     try {
       return _prefs.getBool('testBool') ?? true;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testBool"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testBool', e);
       return true;
     }
@@ -179,7 +200,13 @@ class TestPrefs {
   String get testString {
     try {
       return _prefs.getString('testString') ?? 'Hello';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testString"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testString', e);
       return 'Hello';
     }
@@ -208,8 +235,19 @@ class TestPrefs {
   ///
   /// If the key does not exist, the default value `const <String>['a', 'b']` is returned.
   List<String> get testStringList {
-    final raw = _prefs.getStringList('testStringList');
-    return raw == null ? const <String>['a', 'b'] : List.unmodifiable(raw);
+    try {
+      final raw = _prefs.getStringList('testStringList');
+      return raw == null ? const <String>['a', 'b'] : List.unmodifiable(raw);
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testStringList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
+      _onReadError?.call('testStringList', e);
+      return const <String>['a', 'b'];
+    }
   }
 
   /// Asynchronously sets the value for `testStringList`.
@@ -237,7 +275,13 @@ class TestPrefs {
   String? get testNullableString {
     try {
       return _prefs.getString('testNullableString');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testNullableString"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testNullableString', e);
       return null;
     }

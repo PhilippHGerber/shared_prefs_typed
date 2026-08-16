@@ -54,6 +54,9 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AsyncDateTimeIsoPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -63,13 +66,16 @@ class AsyncDateTimeIsoPrefs {
 
   static Future<AsyncDateTimeIsoPrefs> _doInit({
     void Function(String key, Object error)? onReadError,
-  }) {
-    return Future.value(
-      _instance = AsyncDateTimeIsoPrefs(
+  }) async {
+    try {
+      return _instance = AsyncDateTimeIsoPrefs(
         SharedPreferencesAsync(),
         onReadError: onReadError,
-      ),
-    );
+      );
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
@@ -83,11 +89,17 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   Future<DateTime?> get lastLogin async {
-    final raw = (await _prefs.getString('lastLogin'));
-    if (raw == null) return null;
     try {
+      final raw = (await _prefs.getString('lastLogin'));
+      if (raw == null) return null;
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "lastLogin"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('lastLogin', e);
       return null;
     }
@@ -121,11 +133,17 @@ class AsyncDateTimeIsoPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   Future<DateTime?> get updatedAt async {
-    final raw = (await _prefs.getString('updatedAt'));
-    if (raw == null) return null;
     try {
+      final raw = (await _prefs.getString('updatedAt'));
+      if (raw == null) return null;
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "updatedAt"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('updatedAt', e);
       return null;
     }

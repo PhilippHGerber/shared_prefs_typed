@@ -52,6 +52,9 @@ class EnumPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<EnumPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class EnumPrefs {
       final raw = _prefs.getString('theme');
       if (raw == null) return ThemeMode.dark;
       return ThemeMode.values.byName(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "theme"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('theme', e);
       return ThemeMode.dark;
     }
@@ -121,7 +130,13 @@ class EnumPrefs {
       final raw = _prefs.getString('optionalTheme');
       if (raw == null) return null;
       return ThemeMode.values.byName(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "optionalTheme"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('optionalTheme', e);
       return null;
     }
@@ -159,7 +174,13 @@ class EnumPrefs {
       final raw = _prefs.getString('fontSize');
       if (raw == null) return FontSize.medium;
       return FontSize.values.byName(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "fontSize"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('fontSize', e);
       return FontSize.medium;
     }

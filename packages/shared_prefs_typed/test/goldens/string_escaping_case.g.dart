@@ -54,6 +54,9 @@ class StringEscapingPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<StringEscapingPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class StringEscapingPrefs {
   String get withBackslash {
     try {
       return _prefs.getString('withBackslash') ?? 'path\\to\\file';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withBackslash"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withBackslash', e);
       return 'path\\to\\file';
     }
@@ -119,7 +128,13 @@ class StringEscapingPrefs {
   String get withDollarSign {
     try {
       return _prefs.getString('withDollarSign') ?? 'cost is \$10';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withDollarSign"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withDollarSign', e);
       return 'cost is \$10';
     }
@@ -150,7 +165,13 @@ class StringEscapingPrefs {
   String get withNewline {
     try {
       return _prefs.getString('withNewline') ?? 'line1\nline2';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withNewline"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withNewline', e);
       return 'line1\nline2';
     }
@@ -181,7 +202,13 @@ class StringEscapingPrefs {
   String get withTab {
     try {
       return _prefs.getString('withTab') ?? 'col1\tcol2';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withTab"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withTab', e);
       return 'col1\tcol2';
     }
@@ -212,7 +239,13 @@ class StringEscapingPrefs {
   String get withSingleQuote {
     try {
       return _prefs.getString('withSingleQuote') ?? 'it\'s here';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withSingleQuote"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withSingleQuote', e);
       return 'it\'s here';
     }
@@ -244,7 +277,13 @@ class StringEscapingPrefs {
     try {
       return _prefs.getString('withInterpolation') ??
           'Hello \${world} with \'quotes\'';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "withInterpolation"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('withInterpolation', e);
       return 'Hello \${world} with \'quotes\'';
     }

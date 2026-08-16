@@ -54,6 +54,9 @@ class DateTimeNonNullIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<DateTimeNonNullIsoPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -89,11 +92,17 @@ class DateTimeNonNullIsoPrefs {
   ///
   /// If the key does not exist, the default value `DateTime.fromMillisecondsSinceEpoch(0)` is returned.
   DateTime get installDate {
-    final raw = _prefs.getString('installDate');
-    if (raw == null) return DateTime.fromMillisecondsSinceEpoch(0);
     try {
+      final raw = _prefs.getString('installDate');
+      if (raw == null) return DateTime.fromMillisecondsSinceEpoch(0);
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "installDate"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('installDate', e);
       return DateTime.fromMillisecondsSinceEpoch(0);
     }

@@ -44,6 +44,23 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       );
     }
 
+    // Validate dart:developer import is present (required for error boundary logging).
+    const requiredDeveloperImport = 'dart:developer';
+    final hasDeveloperImport = classElement.library.firstFragment.libraryImports.any(
+      (import) {
+        final uri = import.uri;
+        return uri is DirectiveUriWithRelativeUriString &&
+            uri.relativeUriString == requiredDeveloperImport;
+      },
+    );
+    if (!hasDeveloperImport) {
+      throw InvalidGenerationSourceError(
+        'Missing required import for generated code. '
+        "Add: import '$requiredDeveloperImport';",
+        element: element,
+      );
+    }
+
     final modeReader = annotation.read('mode');
     final isAsyncMode =
         !modeReader.isNull && modeReader.objectValue.getField('_name')?.toStringValue() == 'async';
@@ -81,7 +98,15 @@ class TypedPrefsGenerator extends GeneratorForAnnotation<TypedPrefs> {
       }
 
       // Validate against reserved generated-class member names.
-      const reservedNames = {'init', 'instance', 'resetInstance', 'clearAll'};
+      const reservedNames = {
+        'init',
+        'instance',
+        'resetInstance',
+        'clearAll',
+        'prefs',
+        'initFuture',
+        'onReadError',
+      };
       if (reservedNames.contains(field.paramName)) {
         throw InvalidGenerationSourceError(
           'Field `${field.name}` produces a generated API name `${field.paramName}` '

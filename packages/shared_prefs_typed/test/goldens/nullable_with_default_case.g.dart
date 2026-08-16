@@ -54,6 +54,9 @@ class NullableWithDefaultPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<NullableWithDefaultPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -91,7 +94,13 @@ class NullableWithDefaultPrefs {
   int get retryCount {
     try {
       return _prefs.getInt('retryCount') ?? 3;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "retryCount"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('retryCount', e);
       return 3;
     }
@@ -127,7 +136,13 @@ class NullableWithDefaultPrefs {
   double get threshold {
     try {
       return _prefs.getDouble('threshold') ?? 0.5;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "threshold"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('threshold', e);
       return 0.5;
     }
@@ -163,7 +178,13 @@ class NullableWithDefaultPrefs {
   bool get featureEnabled {
     try {
       return _prefs.getBool('featureEnabled') ?? true;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "featureEnabled"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('featureEnabled', e);
       return true;
     }
@@ -199,7 +220,13 @@ class NullableWithDefaultPrefs {
   String get greeting {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "greeting"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('greeting', e);
       return 'Hello';
     }

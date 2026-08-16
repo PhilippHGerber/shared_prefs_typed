@@ -54,6 +54,9 @@ class PrefKeyPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<PrefKeyPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class PrefKeyPrefs {
   int get counter {
     try {
       return _prefs.getInt('legacy_counter') ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "legacy_counter"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('legacy_counter', e);
       return 0;
     }
@@ -119,7 +128,13 @@ class PrefKeyPrefs {
   String get name {
     try {
       return _prefs.getString('name') ?? 'anon';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "name"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('name', e);
       return 'anon';
     }
@@ -150,7 +165,13 @@ class PrefKeyPrefs {
   bool get isDarkMode {
     try {
       return _prefs.getBool('usr_dark_mode') ?? false;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "usr_dark_mode"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('usr_dark_mode', e);
       return false;
     }

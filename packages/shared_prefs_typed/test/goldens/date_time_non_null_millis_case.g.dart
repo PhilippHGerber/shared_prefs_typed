@@ -54,6 +54,9 @@ class DateTimeNonNullMillisPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<DateTimeNonNullMillisPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -93,7 +96,13 @@ class DateTimeNonNullMillisPrefs {
       final raw = _prefs.getInt('installDate');
       if (raw == null) return DateTime.fromMillisecondsSinceEpoch(0);
       return DateTime.fromMillisecondsSinceEpoch(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "installDate"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('installDate', e);
       return DateTime.fromMillisecondsSinceEpoch(0);
     }

@@ -54,6 +54,9 @@ class DateTimeIsoPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<DateTimeIsoPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -86,11 +89,17 @@ class DateTimeIsoPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   DateTime? get lastLogin {
-    final raw = _prefs.getString('lastLogin');
-    if (raw == null) return null;
     try {
+      final raw = _prefs.getString('lastLogin');
+      if (raw == null) return null;
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "lastLogin"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('lastLogin', e);
       return null;
     }
@@ -124,11 +133,17 @@ class DateTimeIsoPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   DateTime? get updatedAt {
-    final raw = _prefs.getString('updatedAt');
-    if (raw == null) return null;
     try {
+      final raw = _prefs.getString('updatedAt');
+      if (raw == null) return null;
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "updatedAt"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('updatedAt', e);
       return null;
     }

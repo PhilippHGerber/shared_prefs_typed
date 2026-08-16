@@ -54,6 +54,9 @@ class MixedFieldsPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<MixedFieldsPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class MixedFieldsPrefs {
   int get constField {
     try {
       return _prefs.getInt('constField') ?? 100;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "constField"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('constField', e);
       return 100;
     }

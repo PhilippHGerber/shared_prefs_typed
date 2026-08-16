@@ -1,5 +1,7 @@
 // ignore_for_file: unused_field, unused_element // Specification for code generation only.
 
+import 'dart:developer';
+
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

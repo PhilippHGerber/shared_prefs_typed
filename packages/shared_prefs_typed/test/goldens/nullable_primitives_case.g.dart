@@ -54,6 +54,9 @@ class NullablePrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<NullablePrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class NullablePrefs {
   int? get nullableInt {
     try {
       return _prefs.getInt('nullableInt');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableInt"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableInt', e);
       return null;
     }
@@ -124,7 +133,13 @@ class NullablePrefs {
   double? get nullableDouble {
     try {
       return _prefs.getDouble('nullableDouble');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableDouble"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableDouble', e);
       return null;
     }
@@ -160,7 +175,13 @@ class NullablePrefs {
   bool? get nullableBool {
     try {
       return _prefs.getBool('nullableBool');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableBool"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableBool', e);
       return null;
     }
@@ -194,8 +215,19 @@ class NullablePrefs {
   ///
   /// If the key does not exist, the default value `const <String>[]` is returned.
   List<String> get emptyStringList {
-    final raw = _prefs.getStringList('emptyStringList');
-    return raw == null ? const <String>[] : List.unmodifiable(raw);
+    try {
+      final raw = _prefs.getStringList('emptyStringList');
+      return raw == null ? const <String>[] : List.unmodifiable(raw);
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "emptyStringList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
+      _onReadError?.call('emptyStringList', e);
+      return const <String>[];
+    }
   }
 
   /// Asynchronously sets the value for `emptyStringList`.

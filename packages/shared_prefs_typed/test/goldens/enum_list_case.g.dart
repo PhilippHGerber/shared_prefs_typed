@@ -54,6 +54,9 @@ class EnumListPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<EnumListPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -91,7 +94,13 @@ class EnumListPrefs {
       return raw == null
           ? const <ThemeMode>[ThemeMode.light, ThemeMode.dark]
           : List.unmodifiable(raw.map(ThemeMode.values.byName).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "themes"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('themes', e);
       return const <ThemeMode>[ThemeMode.light, ThemeMode.dark];
     }
@@ -125,7 +134,13 @@ class EnumListPrefs {
       return raw == null
           ? const <Priority>[Priority.medium]
           : List.unmodifiable(raw.map(Priority.values.byName).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "priorities"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('priorities', e);
       return const <Priority>[Priority.medium];
     }
@@ -162,7 +177,13 @@ class EnumListPrefs {
       return raw == null
           ? null
           : List.unmodifiable(raw.map(ThemeMode.values.byName).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "optionalThemes"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('optionalThemes', e);
       return null;
     }

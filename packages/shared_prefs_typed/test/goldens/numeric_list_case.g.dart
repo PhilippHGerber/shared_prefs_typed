@@ -54,6 +54,9 @@ class NumericListPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<NumericListPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -91,7 +94,13 @@ class NumericListPrefs {
       return raw == null
           ? const <int>[1, 2, 3]
           : List.unmodifiable(raw.map(int.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "intList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('intList', e);
       return const <int>[1, 2, 3];
     }
@@ -128,7 +137,13 @@ class NumericListPrefs {
       return raw == null
           ? const <double>[1.5, 2.5]
           : List.unmodifiable(raw.map(double.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "doubleList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('doubleList', e);
       return const <double>[1.5, 2.5];
     }
@@ -165,7 +180,13 @@ class NumericListPrefs {
       return raw == null
           ? null
           : List.unmodifiable(raw.map(int.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableIntList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableIntList', e);
       return null;
     }
@@ -207,7 +228,13 @@ class NumericListPrefs {
       return raw == null
           ? null
           : List.unmodifiable(raw.map(double.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableDoubleList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableDoubleList', e);
       return null;
     }

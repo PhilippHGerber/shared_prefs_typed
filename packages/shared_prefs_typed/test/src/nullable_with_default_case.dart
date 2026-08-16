@@ -1,6 +1,8 @@
 // This file is used as test input for code generation.
 // ignore_for_file: unused_element, unused_field, unnecessary_nullable_for_final_variable_declarations
 
+import 'dart:developer';
+
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

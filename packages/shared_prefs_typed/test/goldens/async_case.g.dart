@@ -54,6 +54,9 @@ class AsyncPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AsyncPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -63,13 +66,16 @@ class AsyncPrefs {
 
   static Future<AsyncPrefs> _doInit({
     void Function(String key, Object error)? onReadError,
-  }) {
-    return Future.value(
-      _instance = AsyncPrefs(
+  }) async {
+    try {
+      return _instance = AsyncPrefs(
         SharedPreferencesAsync(),
         onReadError: onReadError,
-      ),
-    );
+      );
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
@@ -85,7 +91,13 @@ class AsyncPrefs {
   Future<int> get testInt async {
     try {
       return (await _prefs.getInt('testInt')) ?? 10;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testInt"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testInt', e);
       return 10;
     }
@@ -116,7 +128,13 @@ class AsyncPrefs {
   Future<String?> get testNullableString async {
     try {
       return (await _prefs.getString('testNullableString'));
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testNullableString"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testNullableString', e);
       return null;
     }
@@ -152,7 +170,13 @@ class AsyncPrefs {
   Future<bool> get testBool async {
     try {
       return (await _prefs.getBool('testBool')) ?? true;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "testBool"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('testBool', e);
       return true;
     }

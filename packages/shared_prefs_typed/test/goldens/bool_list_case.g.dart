@@ -54,6 +54,9 @@ class BoolListPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<BoolListPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -86,10 +89,21 @@ class BoolListPrefs {
   ///
   /// If the key does not exist, the default value `const <bool>[true, false, true]` is returned.
   List<bool> get flags {
-    final raw = _prefs.getStringList('flags');
-    return raw == null
-        ? const <bool>[true, false, true]
-        : List.unmodifiable(raw.map((e) => e == 'true').toList());
+    try {
+      final raw = _prefs.getStringList('flags');
+      return raw == null
+          ? const <bool>[true, false, true]
+          : List.unmodifiable(raw.map((e) => e == 'true').toList());
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "flags"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
+      _onReadError?.call('flags', e);
+      return const <bool>[true, false, true];
+    }
   }
 
   /// Asynchronously sets the value for `flags`.
@@ -118,10 +132,21 @@ class BoolListPrefs {
   ///
   /// If the key does not exist, the default value `null` is returned.
   List<bool>? get optionalFlags {
-    final raw = _prefs.getStringList('optionalFlags');
-    return raw == null
-        ? null
-        : List.unmodifiable(raw.map((e) => e == 'true').toList());
+    try {
+      final raw = _prefs.getStringList('optionalFlags');
+      return raw == null
+          ? null
+          : List.unmodifiable(raw.map((e) => e == 'true').toList());
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "optionalFlags"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
+      _onReadError?.call('optionalFlags', e);
+      return null;
+    }
   }
 
   /// Asynchronously sets the value for `optionalFlags`.

@@ -453,6 +453,95 @@ void main() async {
     );
 
     test(
+      'should report error when dart:developer import is missing',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/error_missing_developer_import.dart': await File(
+            'test/src/error_missing_developer_import.dart',
+          ).readAsString(),
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        expect(
+          logs.map((l) => l.message),
+          contains(
+            contains(
+              "Missing required import for generated code. Add: import 'dart:developer';",
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'should succeed when dart:developer is imported directly',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/direct_developer.dart': '''
+import 'dart:developer';
+
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'direct_developer.g.dart';
+
+@TypedPrefs()
+abstract class _DirectDeveloperPrefs {
+  static const int count = 0;
+}
+''',
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        final errors = logs.where((l) => l.level >= Level.SEVERE);
+        expect(errors, isEmpty);
+      },
+    );
+
+    test(
+      'should succeed when dart:developer is imported with prefix',
+      () async {
+        final sourceAssets = {
+          ...commonAssets,
+          'my_package|lib/prefixed_developer.dart': '''
+import 'dart:developer' as developer;
+
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'prefixed_developer.g.dart';
+
+@TypedPrefs()
+abstract class _PrefixedDeveloperPrefs {
+  static const int count = 0;
+}
+''',
+        };
+        final logs = <LogRecord>[];
+        await testBuilder(
+          builder,
+          sourceAssets,
+          rootPackage: 'my_package',
+          onLog: logs.add,
+        );
+        final errors = logs.where((l) => l.level >= Level.SEVERE);
+        expect(errors, isEmpty);
+      },
+    );
+
+    test(
       'should report error when a field name conflicts with a built-in generated member',
       () async {
         final sourceAssets = {
@@ -474,6 +563,55 @@ void main() async {
         );
       },
     );
+
+    for (final reservedName in [
+      'init',
+      'instance',
+      'resetInstance',
+      'clearAll',
+      'prefs',
+      'initFuture',
+      'onReadError',
+    ]) {
+      test(
+        'should report error when a field name conflicts with reserved member "$reservedName"',
+        () async {
+          final sourceAssets = {
+            ...commonAssets,
+            'my_package|lib/reserved_$reservedName.dart': '''
+import 'dart:developer';
+
+import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+part 'reserved_$reservedName.g.dart';
+
+@TypedPrefs()
+abstract class _ReservedPrefs {
+  static const int $reservedName = 0;
+}
+''',
+          };
+          final logs = <LogRecord>[];
+          await testBuilder(
+            builder,
+            sourceAssets,
+            rootPackage: 'my_package',
+            onLog: logs.add,
+          );
+          expect(
+            logs.map((l) => l.message),
+            contains(
+              contains(
+                'Field `$reservedName` produces a generated API name `$reservedName` '
+                'that conflicts with a built-in member of the generated class. '
+                'Rename the field or use @PrefKey to assign a different storage key.',
+              ),
+            ),
+          );
+        },
+      );
+    }
 
     test(
       'should generate a class with Impl suffix for public (non-underscore) class names',

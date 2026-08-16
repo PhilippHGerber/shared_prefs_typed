@@ -129,6 +129,13 @@ Class buildClass(
               '/// Safe to call multiple times — concurrent calls share the same future',
             )
             ..docs.add('/// and do not trigger additional I/O.')
+            ..docs.add('///')
+            ..docs.add(
+              '/// Note: [onReadError] is captured only during the initial call to [init].',
+            )
+            ..docs.add(
+              '/// Subsequent calls will return the existing instance and ignore new callbacks.',
+            )
             ..returns = refer('Future<$publicClassName>')
             ..static = true
             ..optionalParameters.add(
@@ -151,11 +158,7 @@ Class buildClass(
             ..name = '_doInit'
             ..static = true
             ..returns = refer('Future<$publicClassName>')
-            // Sync mode awaits `SharedPreferencesWithCache.create`, which can throw
-            // (e.g. platform channel failure), so the future must be reset on error
-            // to allow retry. Async mode's `SharedPreferencesAsync()` constructor
-            // cannot throw, so no try/catch is needed.
-            ..modifier = isAsync ? null : MethodModifier.async
+            ..modifier = MethodModifier.async
             ..optionalParameters.add(
               Parameter(
                 (p) => p
@@ -166,7 +169,12 @@ Class buildClass(
             )
             ..body = isAsync
                 ? Code(
-                    'return Future.value(_instance = $publicClassName($prefsClassName(), onReadError: onReadError));',
+                    'try {\n'
+                    '  return _instance = $publicClassName($prefsClassName(), onReadError: onReadError);\n'
+                    '} catch (e) {\n'
+                    '  _initFuture = null;\n'
+                    '  rethrow;\n'
+                    '}',
                   )
                 : Code(
                     'try {\n'

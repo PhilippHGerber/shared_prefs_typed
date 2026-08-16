@@ -54,6 +54,9 @@ class FieldNamingPrefs {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<FieldNamingPrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class FieldNamingPrefs {
   int get underscoreField {
     try {
       return _prefs.getInt('underscoreField') ?? 5;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "underscoreField"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('underscoreField', e);
       return 5;
     }
@@ -119,7 +128,13 @@ class FieldNamingPrefs {
   bool get a {
     try {
       return _prefs.getBool('a') ?? false;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "a"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('a', e);
       return false;
     }

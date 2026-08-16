@@ -69,6 +69,9 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AsyncInterfacePrefs> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -78,13 +81,16 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
 
   static Future<AsyncInterfacePrefs> _doInit({
     void Function(String key, Object error)? onReadError,
-  }) {
-    return Future.value(
-      _instance = AsyncInterfacePrefs(
+  }) async {
+    try {
+      return _instance = AsyncInterfacePrefs(
         SharedPreferencesAsync(),
         onReadError: onReadError,
-      ),
-    );
+      );
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
@@ -100,7 +106,13 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   Future<String> get message async {
     try {
       return (await _prefs.getString('message')) ?? 'hello';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "message"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('message', e);
       return 'hello';
     }
@@ -131,7 +143,13 @@ class AsyncInterfacePrefs implements AsyncInterfacePrefsBase {
   Future<int> get count async {
     try {
       return (await _prefs.getInt('count')) ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "count"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('count', e);
       return 0;
     }
