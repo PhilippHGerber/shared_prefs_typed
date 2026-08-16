@@ -9,6 +9,7 @@ library;
 // Import the generated code for the asynchronous preferences.
 import 'package:basic_example/async_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
@@ -149,6 +150,89 @@ void main() {
           isFalse,
           reason: 'Key should no longer be set',
         );
+      });
+    });
+
+    group('clearAll', () {
+      test('clears all preferences and reverts to defaults', () async {
+        // ARRANGE
+        await prefs.setPingCount(99);
+        await prefs.setServerId('srv-1');
+        await prefs.setIsCacheEnabled(false);
+
+        expect(await prefs.pingCount, 99);
+        expect(await prefs.serverId, 'srv-1');
+        expect(await prefs.isCacheEnabled, isFalse);
+
+        // ACT
+        await prefs.clearAll();
+
+        // ASSERT
+        expect(await prefs.pingCount, 0);
+        expect(await prefs.serverId, isNull);
+        expect(await prefs.isCacheEnabled, isTrue);
+      });
+    });
+
+    group('AsyncPreferences (lifecycle and initialization)', () {
+      test('instance getter throws StateError before init()', () {
+        AsyncPreferencesImpl.resetInstance();
+        expect(() => AsyncPreferencesImpl.instance, throwsStateError);
+      });
+
+      test('init() initializes singleton instance', () async {
+        AsyncPreferencesImpl.resetInstance();
+        final instance = await AsyncPreferencesImpl.init();
+        expect(instance, isNotNull);
+        expect(AsyncPreferencesImpl.instance, same(instance));
+      });
+
+      test('subsequent init() calls return the existing instance', () async {
+        AsyncPreferencesImpl.resetInstance();
+        final first = await AsyncPreferencesImpl.init();
+        final second = await AsyncPreferencesImpl.init();
+        expect(first, same(second));
+      });
+
+      test('concurrent init() calls share the same future and return identical instance', () async {
+        AsyncPreferencesImpl.resetInstance();
+        final results = await Future.wait([
+          AsyncPreferencesImpl.init(),
+          AsyncPreferencesImpl.init(),
+          AsyncPreferencesImpl.init(),
+        ]);
+        expect(results[0], same(results[1]));
+        expect(results[1], same(results[2]));
+        expect(AsyncPreferencesImpl.instance, same(results[0]));
+      });
+
+      test('resetInstance() clears the singleton instance and allows re-init', () async {
+        AsyncPreferencesImpl.resetInstance();
+        final first = await AsyncPreferencesImpl.init();
+        expect(AsyncPreferencesImpl.instance, same(first));
+
+        AsyncPreferencesImpl.resetInstance();
+        expect(() => AsyncPreferencesImpl.instance, throwsStateError);
+
+        final second = await AsyncPreferencesImpl.init();
+        expect(second, isNotNull);
+        expect(AsyncPreferencesImpl.instance, same(second));
+      });
+    });
+
+    group('AsyncPreferences (constructor injection)', () {
+      late AsyncPreferencesImpl customPrefs;
+
+      setUp(() {
+        customPrefs = AsyncPreferencesImpl(SharedPreferencesAsync());
+      });
+
+      test('operates independently of singleton instance', () async {
+        AsyncPreferencesImpl.resetInstance();
+        expect(() => AsyncPreferencesImpl.instance, throwsStateError);
+        expect(await customPrefs.pingCount, 0);
+        await customPrefs.setPingCount(42);
+        expect(await customPrefs.pingCount, 42);
       });
     });
   });

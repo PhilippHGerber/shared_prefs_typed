@@ -73,6 +73,9 @@ class AppPreferencesImpl implements AppPreferencesBase {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AppPreferencesImpl> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -107,7 +110,13 @@ class AppPreferencesImpl implements AppPreferencesBase {
   int get counter {
     try {
       return _prefs.getInt('counter') ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "counter"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('counter', e);
       return 0;
     }
@@ -140,7 +149,13 @@ class AppPreferencesImpl implements AppPreferencesBase {
       final raw = _prefs.getString('themeMode');
       if (raw == null) return ThemeMode.system;
       return ThemeMode.values.byName(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "themeMode"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('themeMode', e);
       return ThemeMode.system;
     }
@@ -171,7 +186,13 @@ class AppPreferencesImpl implements AppPreferencesBase {
   String? get username {
     try {
       return _prefs.getString('username');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "username"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('username', e);
       return null;
     }

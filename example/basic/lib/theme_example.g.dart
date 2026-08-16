@@ -54,6 +54,9 @@ class SettingsPrefsImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<SettingsPrefsImpl> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -90,7 +93,13 @@ class SettingsPrefsImpl {
       final raw = _prefs.getString('themeMode');
       if (raw == null) return ThemeMode.system;
       return ThemeMode.values.byName(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "themeMode"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('themeMode', e);
       return ThemeMode.system;
     }

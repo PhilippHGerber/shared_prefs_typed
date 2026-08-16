@@ -352,7 +352,7 @@ void main() {
       expect(AppPreferencesImpl.instance.lastLoginDate, isNull);
     });
 
-    test('onReadError callback is invoked on type mismatch', () async {
+    test('onReadError callback is invoked on type mismatch for int (counter)', () async {
       await SharedPreferencesAsyncPlatform.instance!.setString(
         'counter',
         'bad',
@@ -372,12 +372,183 @@ void main() {
         },
       );
 
-      // ignore: cascade_invocations for clarity.
-      instance.counter; // triggers the guard
+      final result = instance.counter; // triggers the guard
 
+      expect(result, 0); // returns default
       expect(capturedKey, 'counter');
       expect(capturedError, isNotNull);
     });
+
+    test('onReadError callback is invoked on type mismatch for List<String> (tagList)', () async {
+      await SharedPreferencesAsyncPlatform.instance!.setInt(
+        'tagList',
+        42,
+        const SharedPreferencesOptions(),
+      );
+
+      String? capturedKey;
+      Object? capturedError;
+      final backend = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      final instance = AppPreferencesImpl(
+        backend,
+        onReadError: (key, error) {
+          capturedKey = key;
+          capturedError = error;
+        },
+      );
+
+      final result = instance.tagList;
+
+      expect(result, const <String>['default']);
+      expect(capturedKey, 'tagList');
+      expect(capturedError, isNotNull);
+    });
+
+    test('onReadError callback is invoked on unparseable List<int> (recentItemIds)', () async {
+      await SharedPreferencesAsyncPlatform.instance!.setStringList(
+        'recentItemIds',
+        ['invalid_int'],
+        const SharedPreferencesOptions(),
+      );
+
+      String? capturedKey;
+      Object? capturedError;
+      final backend = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      final instance = AppPreferencesImpl(
+        backend,
+        onReadError: (key, error) {
+          capturedKey = key;
+          capturedError = error;
+        },
+      );
+
+      final result = instance.recentItemIds;
+
+      expect(result, const <int>[]);
+      expect(capturedKey, 'recentItemIds');
+      expect(capturedError, isA<FormatException>());
+    });
+
+    test('onReadError callback is invoked on unparseable List<double> (priceHistory)', () async {
+      await SharedPreferencesAsyncPlatform.instance!.setStringList(
+        'priceHistory',
+        ['invalid_double'],
+        const SharedPreferencesOptions(),
+      );
+
+      String? capturedKey;
+      Object? capturedError;
+      final backend = await SharedPreferencesWithCache.create(
+        cacheOptions: const SharedPreferencesWithCacheOptions(),
+      );
+      final instance = AppPreferencesImpl(
+        backend,
+        onReadError: (key, error) {
+          capturedKey = key;
+          capturedError = error;
+        },
+      );
+
+      final result = instance.priceHistory;
+
+      expect(result, const <double>[9.99, 14.99, 19.99]);
+      expect(capturedKey, 'priceHistory');
+      expect(capturedError, isA<FormatException>());
+    });
+
+    test(
+      'onReadError callback is invoked on type mismatch for ISO 8601 DateTime (lastSyncDate)',
+      () async {
+        await SharedPreferencesAsyncPlatform.instance!.setInt(
+          'lastSyncDate',
+          12345,
+          const SharedPreferencesOptions(),
+        );
+
+        String? capturedKey;
+        Object? capturedError;
+        final backend = await SharedPreferencesWithCache.create(
+          cacheOptions: const SharedPreferencesWithCacheOptions(),
+        );
+        final instance = AppPreferencesImpl(
+          backend,
+          onReadError: (key, error) {
+            capturedKey = key;
+            capturedError = error;
+          },
+        );
+
+        final result = instance.lastSyncDate;
+
+        expect(result, isNull);
+        expect(capturedKey, 'lastSyncDate');
+        expect(capturedError, isNotNull);
+      },
+    );
+
+    test(
+      'onReadError callback is invoked on unparseable ISO 8601 DateTime (lastSyncDate)',
+      () async {
+        await SharedPreferencesAsyncPlatform.instance!.setString(
+          'lastSyncDate',
+          'not-a-valid-date',
+          const SharedPreferencesOptions(),
+        );
+
+        String? capturedKey;
+        Object? capturedError;
+        final backend = await SharedPreferencesWithCache.create(
+          cacheOptions: const SharedPreferencesWithCacheOptions(),
+        );
+        final instance = AppPreferencesImpl(
+          backend,
+          onReadError: (key, error) {
+            capturedKey = key;
+            capturedError = error;
+          },
+        );
+
+        final result = instance.lastSyncDate;
+
+        expect(result, isNull);
+        expect(capturedKey, 'lastSyncDate');
+        expect(capturedError, isA<FormatException>());
+      },
+    );
+
+    test(
+      'onReadError callback is invoked on type mismatch for Millis DateTime (lastLoginDate)',
+      () async {
+        await SharedPreferencesAsyncPlatform.instance!.setString(
+          'lastLoginDate',
+          'invalid_millis',
+          const SharedPreferencesOptions(),
+        );
+
+        String? capturedKey;
+        Object? capturedError;
+        final backend = await SharedPreferencesWithCache.create(
+          cacheOptions: const SharedPreferencesWithCacheOptions(),
+        );
+        final instance = AppPreferencesImpl(
+          backend,
+          onReadError: (key, error) {
+            capturedKey = key;
+            capturedError = error;
+          },
+        );
+
+        final result = instance.lastLoginDate;
+
+        expect(result, isNull);
+        expect(capturedKey, 'lastLoginDate');
+        expect(capturedError, isNotNull);
+      },
+    );
   });
 
   // Demonstrates constructor injection: no singleton management required.

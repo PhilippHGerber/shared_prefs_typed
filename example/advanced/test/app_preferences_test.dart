@@ -81,6 +81,60 @@ void main() {
         expect(prefs.themeMode, ThemeMode.system);
         expect(prefs.containsThemeMode(), isFalse);
       });
+
+      test('falls back to default on invalid enum name and invokes onReadError', () async {
+        await SharedPreferencesAsyncPlatform.instance!.setString(
+          'themeMode',
+          'nonExistentMode',
+          const SharedPreferencesOptions(),
+        );
+
+        String? capturedKey;
+        Object? capturedError;
+        final backend = await SharedPreferencesWithCache.create(
+          cacheOptions: const SharedPreferencesWithCacheOptions(),
+        );
+        final instance = AppPreferencesImpl(
+          backend,
+          onReadError: (key, error) {
+            capturedKey = key;
+            capturedError = error;
+          },
+        );
+
+        final result = instance.themeMode;
+
+        expect(result, ThemeMode.system);
+        expect(capturedKey, 'themeMode');
+        expect(capturedError, isA<ArgumentError>());
+      });
+
+      test('falls back to default on type mismatch (int stored) and invokes onReadError', () async {
+        await SharedPreferencesAsyncPlatform.instance!.setInt(
+          'themeMode',
+          1,
+          const SharedPreferencesOptions(),
+        );
+
+        String? capturedKey;
+        Object? capturedError;
+        final backend = await SharedPreferencesWithCache.create(
+          cacheOptions: const SharedPreferencesWithCacheOptions(),
+        );
+        final instance = AppPreferencesImpl(
+          backend,
+          onReadError: (key, error) {
+            capturedKey = key;
+            capturedError = error;
+          },
+        );
+
+        final result = instance.themeMode;
+
+        expect(result, ThemeMode.system);
+        expect(capturedKey, 'themeMode');
+        expect(capturedError, isNotNull);
+      });
     });
 
     group('username (String?, default null)', () {

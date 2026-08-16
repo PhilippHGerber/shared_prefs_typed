@@ -54,6 +54,9 @@ class AppPreferencesImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AppPreferencesImpl> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -88,7 +91,13 @@ class AppPreferencesImpl {
   int get counter {
     try {
       return _prefs.getInt('counter') ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "counter"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('counter', e);
       return 0;
     }
@@ -119,7 +128,13 @@ class AppPreferencesImpl {
   String? get displayGreeting {
     try {
       return _prefs.getString('displayGreeting');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "displayGreeting"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('displayGreeting', e);
       return null;
     }
@@ -155,7 +170,13 @@ class AppPreferencesImpl {
   double get pi {
     try {
       return _prefs.getDouble('pi') ?? 3.14;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "pi"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('pi', e);
       return 3.14;
     }
@@ -186,7 +207,13 @@ class AppPreferencesImpl {
   bool get isWelcomeScreenDone {
     try {
       return _prefs.getBool('isWelcomeScreenDone') ?? false;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "isWelcomeScreenDone"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('isWelcomeScreenDone', e);
       return false;
     }
@@ -217,7 +244,13 @@ class AppPreferencesImpl {
   String get greeting {
     try {
       return _prefs.getString('greeting') ?? 'Hello';
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "greeting"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('greeting', e);
       return 'Hello';
     }
@@ -246,8 +279,19 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `const <String>['default']` is returned.
   List<String> get tagList {
-    final raw = _prefs.getStringList('tagList');
-    return raw == null ? const <String>['default'] : List.unmodifiable(raw);
+    try {
+      final raw = _prefs.getStringList('tagList');
+      return raw == null ? const <String>['default'] : List.unmodifiable(raw);
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "tagList"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
+      _onReadError?.call('tagList', e);
+      return const <String>['default'];
+    }
   }
 
   /// Asynchronously sets the value for `tagList`.
@@ -278,7 +322,13 @@ class AppPreferencesImpl {
       return raw == null
           ? const <int>[]
           : List.unmodifiable(raw.map(int.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "recentItemIds"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('recentItemIds', e);
       return const <int>[];
     }
@@ -315,7 +365,13 @@ class AppPreferencesImpl {
       return raw == null
           ? const <double>[9.99, 14.99, 19.99]
           : List.unmodifiable(raw.map(double.parse).toList());
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "priceHistory"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('priceHistory', e);
       return const <double>[9.99, 14.99, 19.99];
     }
@@ -349,7 +405,13 @@ class AppPreferencesImpl {
   String? get sessionId {
     try {
       return _prefs.getString('sessionId');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "sessionId"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('sessionId', e);
       return null;
     }
@@ -385,7 +447,13 @@ class AppPreferencesImpl {
   int? get lastLoginTimestamp {
     try {
       return _prefs.getInt('lastLoginTimestamp');
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "lastLoginTimestamp"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('lastLoginTimestamp', e);
       return null;
     }
@@ -421,7 +489,13 @@ class AppPreferencesImpl {
   int get nullableCounterWithDefault {
     try {
       return _prefs.getInt('nullableCounterWithDefault') ?? 100;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "nullableCounterWithDefault"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('nullableCounterWithDefault', e);
       return 100;
     }
@@ -455,11 +529,17 @@ class AppPreferencesImpl {
   ///
   /// If the key does not exist, the default value `null` is returned.
   DateTime? get lastSyncDate {
-    final raw = _prefs.getString('lastSyncDate');
-    if (raw == null) return null;
     try {
+      final raw = _prefs.getString('lastSyncDate');
+      if (raw == null) return null;
       return DateTime.parse(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "lastSyncDate"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('lastSyncDate', e);
       return null;
     }
@@ -497,7 +577,13 @@ class AppPreferencesImpl {
       final raw = _prefs.getInt('lastLoginDate');
       if (raw == null) return null;
       return DateTime.fromMillisecondsSinceEpoch(raw);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "lastLoginDate"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('lastLoginDate', e);
       return null;
     }

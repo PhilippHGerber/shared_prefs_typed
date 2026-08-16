@@ -54,6 +54,9 @@ class AsyncPreferencesImpl {
   ///
   /// Safe to call multiple times — concurrent calls share the same future
   /// and do not trigger additional I/O.
+  ///
+  /// Note: [onReadError] is captured only during the initial call to [init].
+  /// Subsequent calls will return the existing instance and ignore new callbacks.
   static Future<AsyncPreferencesImpl> init({
     void Function(String key, Object error)? onReadError,
   }) {
@@ -63,13 +66,16 @@ class AsyncPreferencesImpl {
 
   static Future<AsyncPreferencesImpl> _doInit({
     void Function(String key, Object error)? onReadError,
-  }) {
-    return Future.value(
-      _instance = AsyncPreferencesImpl(
+  }) async {
+    try {
+      return _instance = AsyncPreferencesImpl(
         SharedPreferencesAsync(),
         onReadError: onReadError,
-      ),
-    );
+      );
+    } catch (e) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   /// Resets the singleton instance to `null`. Useful for test teardown.
@@ -85,7 +91,13 @@ class AsyncPreferencesImpl {
   Future<int> get pingCount async {
     try {
       return (await _prefs.getInt('pingCount')) ?? 0;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "pingCount"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('pingCount', e);
       return 0;
     }
@@ -116,7 +128,13 @@ class AsyncPreferencesImpl {
   Future<String?> get serverId async {
     try {
       return (await _prefs.getString('serverId'));
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "serverId"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('serverId', e);
       return null;
     }
@@ -152,7 +170,13 @@ class AsyncPreferencesImpl {
   Future<bool> get isCacheEnabled async {
     try {
       return (await _prefs.getBool('isCacheEnabled')) ?? true;
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Read error for key "isCacheEnabled"',
+        name: 'shared_prefs_typed',
+        error: e,
+        stackTrace: s,
+      );
       _onReadError?.call('isCacheEnabled', e);
       return true;
     }

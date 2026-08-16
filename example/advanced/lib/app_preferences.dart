@@ -1,5 +1,7 @@
 // Run `flutter pub run build_runner build` to regenerate app_preferences.g.dart.
 
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.dart';
