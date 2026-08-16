@@ -2,10 +2,13 @@ import 'package:meta/meta_meta.dart';
 
 import 'prefs_mode.dart';
 
-/// Annotates a private abstract class to generate a type-safe singleton
-/// service for the modern `shared_preferences` plugin APIs.
+/// Annotates an abstract class to generate a type-safe singleton service
+/// for the modern `shared_preferences` plugin APIs.
 ///
-/// The annotated class name **must** start with an underscore (`_`).
+/// Supports both public and private class names:
+/// - A public class `Foo` generates `FooImpl` (and `FooBase` if `generateInterface: true`).
+/// - A private class `_Foo` generates `Foo` (and `FooBase` if `generateInterface: true`).
+///
 /// The generator creates methods for accessing preferences based on the
 /// `static const` fields defined in the annotated class.
 @Target({TargetKind.classType})

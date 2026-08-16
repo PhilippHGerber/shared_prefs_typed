@@ -17,7 +17,7 @@ import 'package:shared_prefs_typed_annotations/shared_prefs_typed_annotations.da
 part 'app_preferences.g.dart';
 
 @TypedPrefs()
-abstract class _AppPreferences {
+abstract class AppPreferences {
   static const int counter = 0;
   static const String? username = null;
 }
