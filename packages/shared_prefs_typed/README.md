@@ -143,11 +143,20 @@ Both patterns are safe to use concurrently — repeated `init()` calls share the
 
 ### Type migration & error observability
 
-When a stored value cannot be cast to its expected type (e.g. after a field type change between app versions), the generated getter silently falls back to the field's default. Two hooks let you observe these events:
+When a stored value cannot be cast to its expected type (e.g. after a field type change between app versions or data corruption), the generated getter safely falls back to the field's default value without throwing exceptions. Two hooks let you observe these events:
 
-**`dart:developer` log** — the catch block emits a log under the `'shared_prefs_typed'` name with the key and exception type. This is a no-op in release builds and visible in Flutter DevTools / Observatory during development.
+**`dart:developer` log** — the catch block emits a diagnostic log via `developer.log` under the `'shared_prefs_typed'` logger name containing the read error and stack trace:
+```dart
+developer.log(
+  'Read error for key "$key"',
+  name: 'shared_prefs_typed',
+  error: e,
+  stackTrace: s,
+);
+```
+This is visible in Flutter DevTools / Observatory during development and debugging.
 
-**`onReadError` callback** — pass it at construction time (or via `init()`) to forward errors to a crash reporter:
+**`onReadError` callback** — pass it at construction time (or via `init()`) to forward errors to a crash reporter (such as Sentry or Firebase Crashlytics):
 
 ```dart
 // Via singleton init:
@@ -163,7 +172,7 @@ final prefs = AppPreferencesImpl(backend, onReadError: (key, error) {
 });
 ```
 
-The callback is scoped to the instance — different instances can have different handlers, and tests never bleed state into each other.
+The callback is scoped to the instance — different instances can have different handlers, and tests never bleed state into each other. Note that `AppPreferencesImpl.init(onReadError: ...)` captures the callback only during the initial `init()` call; subsequent calls return the existing instance and ignore any new callback passed.
 
 To verify the guard in tests:
 
@@ -173,7 +182,7 @@ final prefs = AppPreferencesImpl(backend, onReadError: (key, error) {
   capturedError = error;
 });
 // ...
-expect(capturedError, isA<ArgumentError>());
+expect(capturedError, isA<TypeError>());
 ```
 
 ### Async mode
@@ -191,13 +200,34 @@ final count = await prefs.pingCount;     // Future getter
 await prefs.setPingCount(count + 1);
 ```
 
+### Unmodifiable collections & list updates
+
+All list getters (`List<String>`, `List<int>`, `List<double>`, `List<bool>`, and `List<Enum>`) return an unmodifiable list view (`UnmodifiableListView<T>`).
+
+Attempting in-place mutations on the returned list (such as `prefs.tagList.add('item')`) throws an `UnsupportedError`. To modify a list preference, use the **copy-modify-set** pattern:
+
+```dart
+// 1. Create a modified copy
+final updated = [...prefs.tagList, 'new_tag'];
+
+// 2. Persist the updated list
+await prefs.setTagList(updated);
+```
+
+Or using `List.from`:
+
+```dart
+final updated = List<String>.from(prefs.tagList)..add('new_tag');
+await prefs.setTagList(updated);
+```
+
 ---
 
 ## 🔵 Advanced Usage — DI & Testing
 
 **Best for:** Large apps, testable architectures, and any test file that needs isolated preference state.
 
-The generated class exposes a **public `const` constructor** that accepts the storage backend directly. This is the preferred pattern for both dependency injection and testing: pass a real or in-memory backend explicitly, touch no global state.
+The generated class exposes a **public constructor** that accepts the storage backend directly. This is the preferred pattern for both dependency injection and testing: pass a real or in-memory backend explicitly, touch no global state.
 
 ```dart
 final backend = await SharedPreferencesWithCache.create(

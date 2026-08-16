@@ -2,7 +2,11 @@
 
 All notable changes to this package will be documented in this file.
 
-## Unreleased
+## 1.0.1
+
+### Docs
+
+* Updated `@TypedPrefs` doc comments to clearly document support for both public (`Foo` -> `FooImpl`) and private (`_Foo` -> `Foo`) annotated schema classes.
 
 ### Changed
 

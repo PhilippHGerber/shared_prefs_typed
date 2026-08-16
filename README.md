@@ -20,7 +20,7 @@ abstract class AppPreferences {
 }
 
 // ...and use this (generated):
-await AppPreferencesImpl.init();
+final prefs = await AppPreferencesImpl.init();
 prefs.counter;               // int — sync, type-safe
 await prefs.setCounter(42);  // Future<void>
 prefs.containsUsername();       // bool
@@ -192,6 +192,8 @@ when(() => prefs.counter).thenReturn(42);
 | `List<String>` | *(not supported)* |
 | `List<int>` | *(not supported)* |
 | `List<double>` | *(not supported)* |
+| `List<bool>` | *(not supported)* |
+| `List<Enum>` | *(not supported)* |
 | `DateTime?` (requires `@PrefDateTime`) | — |
 | Any `Enum` type | nullable variant |
 
@@ -220,10 +222,37 @@ The generated class also exposes:
 
 | Member | Description |
 |---|---|
-| `AppPreferencesImpl(prefs)` | Public constructor for dependency injection |
+| `AppPreferencesImpl(prefs, {onReadError})` | Public constructor for dependency injection and testing |
 | `AppPreferencesImpl.instance` | Static accessor — throws `StateError` if not initialized via `init()` |
-| `static Future<void> init()` | Creates backend and sets the singleton instance |
+| `static Future<AppPreferencesImpl> init({onReadError})` | Initializes backend and returns the singleton instance |
+| `Future<void> clearAll()` | Removes all keys owned by this class |
 | `@visibleForTesting static void resetInstance()` | Clears the singleton — test-only; analyzer warns if called outside a test file |
+
+---
+
+## Error Handling & Observability
+
+When a stored value cannot be cast to its expected type (e.g. due to schema migration or corrupted storage), getters safely catch the error and return the declared compile-time default fallback.
+
+- **`dart:developer` logging**: Every read error is automatically logged under the `'shared_prefs_typed'` namespace with the key name, error, and stack trace.
+- **`onReadError` callback**: Pass `onReadError: (key, error) { ... }` to `init()` or the constructor to route errors to crash reporting services (e.g. Sentry, Firebase Crashlytics).
+- **`init()` callback capture**: `init(onReadError: ...)` captures the callback during initial initialization. Subsequent `init()` calls return the active singleton and ignore new callbacks.
+
+---
+
+## Unmodifiable Collections & List Updates
+
+All list getters (`List<String>`, `List<int>`, `List<double>`, `List<bool>`, and `List<Enum>`) return an unmodifiable list view (`UnmodifiableListView<T>`).
+
+Attempting in-place mutations (e.g. `prefs.tagList.add('item')`) throws an `UnsupportedError`. To modify a list preference, use the **copy-modify-set** pattern:
+
+```dart
+// 1. Create a modified copy
+final updated = [...prefs.tagList, 'new_item'];
+
+// 2. Persist the updated list
+await prefs.setTagList(updated);
+```
 
 ---
 

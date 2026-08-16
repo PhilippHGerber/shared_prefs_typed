@@ -1,7 +1,7 @@
 name: shared_prefs_typed_annotations
 description: Annotations for generating type-safe SharedPreferences code (shared_prefs_typed)
 repository: https://github.com/PhilippHGerber/shared_prefs_typed.git
-version: 1.0.0
+version: 1.0.1
 
 environment:
   sdk: ^3.13.0

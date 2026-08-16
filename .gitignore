@@ -49,3 +49,6 @@ app.*.map.json
 llms.txt
 llms.txt
 llmifierrc.yaml
+
+**/ephemeral/flutter_export_environment.sh
+**/ephemeral/Flutter-Generated.xcconfig

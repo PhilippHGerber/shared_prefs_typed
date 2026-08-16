@@ -2,7 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.1
+
+### Fixed
+
+* **Uniform Read Error Boundaries**: All preference getters (`int`, `double`, `bool`, `String`, `List<String>`, `List<int>`, `List<double>`, `List<bool>`, `List<Enum>`, `DateTime` millis/ISO-8601) now safely catch both storage type mismatches and parse errors within a uniform `try/catch` boundary, returning compile-time defaults instead of throwing uncaught exceptions.
+* **Dual Observability**: Every read failure automatically logs diagnostics to `developer.log` under the `'shared_prefs_typed'` name (with error and stack trace) and triggers the optional `onReadError` callback.
+* **Async `init()` Error Recovery**: Failed asynchronous initializations now reset `_initFuture = null`, allowing subsequent `init()` attempts to retry cleanly without requiring a process restart.
+
+### New
+
+* **Build-Time Import Validation**: The generator now verifies that `dart:developer` is imported in schema files and provides actionable error guidance if missing.
+* **Expanded Reserved Member Validation**: Added build-time conflict validation for `init`, `instance`, `resetInstance`, `clearAll`, `prefs`, `initFuture`, and `onReadError`.
+
+### Docs
+
+* Clarified that `init(onReadError: ...)` captures `onReadError` during the initial `init()` call only.
+* Documented `developer.log` error logging and unmodifiable list copy-modify-set patterns.
+* Removed obsolete `const` constructor claims.
 
 ### Changed
 
@@ -10,7 +27,7 @@ All notable changes to this project will be documented in this file.
 
 ### Internal
 
-* Unified sync/async code generation for getters, setters, and class scaffolding into single functions parameterised by `isAsync`, and moved type dispatch into `SharedPrefField`. Generated output is unchanged — verified against golden files.
+* Unified sync/async code generation for getters, setters, and class scaffolding into single functions parameterised by `isAsync`, and moved type dispatch into `SharedPrefField`.
 
 ## 1.0.0
 
